@@ -15,6 +15,12 @@ Requires JDK 21+ and Android SDK platform 37.2.
 ./gradlew :app:assembleDebug
 ```
 
+## Testing
+- Unit tests: `./gradlew testDebugUnitTest`
+- UI tests: `./run-ui-tests.sh [.qa]` runs `app/src/androidTest` one test per instrumentation process (DataStore allows one instance per file per process). Compose tests drive the clock manually: the app has endless animations and the Cloudflare solver polls forever, so auto-advance would never reach idle.
+- QA hook (debug builds only): `adb shell am start -n <appId>/com.borovas.animadroid.MainActivity --ez debug_force_cf true` makes every non-image request fail as a Cloudflare challenge until the in-app verification sheet finishes loading.
+- Hilt/KSP: the occasional `MissingBinding` after a clean build of `:provider:hianime` / `:feature:aniskip` did not reproduce here (`./gradlew clean :app:assembleDebug` succeeds). If it appears, run `./gradlew --stop`, delete `.gradle/` and `*/build/`, and rebuild; the cause is a stale KSP incremental cache.
+
 ## Modules
 `app` · `core/{model,network,database,datastore,designsystem}` · `provider/{api,hianime}` · `feature/{search,details,player,aniskip,library,downloads,settings,recommend}`
 
