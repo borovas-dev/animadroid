@@ -35,6 +35,10 @@ import androidx.compose.material3.adaptive.navigation3.ListDetailSceneStrategy
 import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -90,10 +94,9 @@ fun AnimadroidApp(aiRecommendationsEnabled: Boolean) {
         if (route != LibraryRoute) backStack.add(route)
     }
 
-    val onCloudflare: (String) -> Unit = { url ->
-        // TODO: replace with the in-app WebView Cloudflare solver once available.
-        runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
-    }
+    var solverUrl by rememberSaveable { mutableStateOf<String?>(null) }
+    val onCloudflare: (String) -> Unit = { url -> solverUrl = url }
+    CloudflareHost(solverUrl, onDismiss = { solverUrl = null })
     val onPlay: (Anime, List<Episode>, Int) -> Unit = { anime, episodes, index ->
         backStack.add(PlayerRoute(anime.providerId, anime, episodes, index))
     }
@@ -135,7 +138,7 @@ fun AnimadroidApp(aiRecommendationsEnabled: Boolean) {
                 onOpenSettings = { selectTab(SettingsRoute) },
                 onBack = { backStack.removeLastOrNull() },
             )
-            playerEntry(onBack = { backStack.removeLastOrNull() })
+            playerEntry(onBack = { backStack.removeLastOrNull() }, onCloudflare = onCloudflare)
             detailsEntry(
                 onBack = { backStack.removeLastOrNull() },
                 onPlay = onPlay,

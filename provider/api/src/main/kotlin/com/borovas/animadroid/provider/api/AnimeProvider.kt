@@ -25,3 +25,13 @@ class ProviderException(message: String, cause: Throwable? = null) : Exception(m
 
 /** Thrown when Cloudflare blocks a request; UI should launch the WebView solver for [url]. */
 class CloudflareChallengeException(val url: String) : Exception("Cloudflare challenge at $url")
+
+/**
+ * Process-wide signal emitted by the app once the in-app Cloudflare solver obtained a clearance,
+ * so screens whose request failed with [CloudflareChallengeException] can retry automatically.
+ */
+object CloudflareSolved {
+    private val _events = kotlinx.coroutines.flow.MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val events: kotlinx.coroutines.flow.SharedFlow<Unit> = _events
+    fun notifySolved() { _events.tryEmit(Unit) }
+}

@@ -28,8 +28,10 @@ import com.borovas.animadroid.feature.aniskip.MalIdResolver
 import com.borovas.animadroid.feature.aniskip.SkipAction
 import com.borovas.animadroid.feature.aniskip.SkipController
 import com.borovas.animadroid.feature.aniskip.SkipSegment
+import com.borovas.animadroid.feature.aniskip.mergeSkipTimes
 import com.borovas.animadroid.provider.api.AnimeProvider
 import com.borovas.animadroid.provider.api.CloudflareChallengeException
+import com.borovas.animadroid.provider.api.CloudflareSolved
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -153,6 +155,9 @@ class PlayerViewModel @AssistedInject constructor(
 
     init {
         viewModelScope.launch {
+            CloudflareSolved.events.collect { if (_state.value.error is PlayerError.Cloudflare) retry() }
+        }
+        viewModelScope.launch {
             connect()
             loadEpisode(currentIndex, resumeFromProgress = true)
         }
@@ -182,6 +187,8 @@ class PlayerViewModel @AssistedInject constructor(
     fun loadEpisode(index: Int, resumeFromProgress: Boolean = true, startOverrideMs: Long? = null) {
         if (index !in route.episodes.indices) return
         saveProgress()
+        // Drop the previous item so late ticks cannot save its position under the new episode.
+        controller?.run { pause(); clearMediaItems() }
         currentIndex = index
         lastSavedMs = -1L
         skipController = null
@@ -239,11 +246,13 @@ class PlayerViewModel @AssistedInject constructor(
 
     private fun loadSkipTimes(set: StreamSet) {
         if (!settings.aniSkipEnabled) return
-        val epNum = episode.number.toDoubleOrNull()?.toInt() ?: return
+        val epNum = episode.number.toDoubleOrNull()?.toInt()
         val forEpisode = currentIndex
         viewModelScope.launch {
-            val malId = set.malId ?: route.anime.malId ?: malIdResolver.resolve(route.anime.title) ?: return@launch
-            val times = skipTimesRepository.skipTimes(malId, epNum) ?: return@launch
+            val malId = if (epNum == null) null else (set.malId ?: route.anime.malId ?: malIdResolver.resolve(route.anime.title))
+            val aniSkip = if (malId != null && epNum != null) skipTimesRepository.skipTimes(malId, epNum) else null
+            // Fall back to the embed's own intro/outro markers when ani-skip has no data.
+            val times = mergeSkipTimes(aniSkip, set.intro, set.outro) ?: return@launch
             if (forEpisode != currentIndex) return@launch
             skipController = SkipController(times, settings.skipOffsetSec, settings.skipBehavior)
             _state.update { it.copy(skipTimes = times) }

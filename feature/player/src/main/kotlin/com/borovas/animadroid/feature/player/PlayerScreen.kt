@@ -80,7 +80,7 @@ private const val DOUBLE_TAP_SEEK_MS = 10_000L
 
 /** Full-screen immersive player. Hosts the controls overlay, gestures, PiP and system-bar handling. */
 @Composable
-fun PlayerScreen(route: PlayerRoute, onBack: () -> Unit, modifier: Modifier = Modifier) {
+fun PlayerScreen(route: PlayerRoute, onBack: () -> Unit, modifier: Modifier = Modifier, onCloudflare: (String) -> Unit = {}) {
     val vm = hiltViewModel<PlayerViewModel, PlayerViewModel.Factory>(creationCallback = { it.create(route) })
     val state by vm.state.collectAsStateWithLifecycle()
     val player by vm.player.collectAsStateWithLifecycle()
@@ -182,7 +182,8 @@ fun PlayerScreen(route: PlayerRoute, onBack: () -> Unit, modifier: Modifier = Mo
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     Text(err.message, color = Color.White, textAlign = TextAlign.Center)
-                    Button(onClick = vm::retry) { Text("Retry") }
+                    if (err is PlayerError.Cloudflare) Button(onClick = { onCloudflare(err.url) }) { Text("Verify in browser") }
+                    else Button(onClick = vm::retry) { Text("Retry") }
                     TextButtonLike("Back", onBack)
                 }
             }
