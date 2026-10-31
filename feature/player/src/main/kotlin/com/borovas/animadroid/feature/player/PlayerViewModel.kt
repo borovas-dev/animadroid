@@ -214,6 +214,7 @@ class PlayerViewModel @AssistedInject constructor(
                     provider.streams(route.anime, episode, settings.mode)
                 }
                 streams = set
+                android.util.Log.i("AnimadroidPlayer", "stream mode=${settings.mode} ep=${episode.number} master=${set.masterUrl} offline=${offline != null}")
                 val start = startOverrideMs ?: if (resumeFromProgress) resumePosition() else 0L
                 play(set, settings.quality, null, start)
                 _state.update { s ->

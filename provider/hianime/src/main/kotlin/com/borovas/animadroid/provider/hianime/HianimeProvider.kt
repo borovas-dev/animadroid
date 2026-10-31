@@ -51,7 +51,10 @@ class HianimeProvider(
             throw ProviderException("Unsupported HiAnime id '${anime.id}' (expected <slug>-<number>)")
         }
         val body = get("$base/api/theme/episode/list/$numeric")
-        return HianimeParsers.parseEpisodes(body, anime.id)
+        val all = HianimeParsers.parseEpisodes(body, anime.id)
+        // The site lists every (sub) episode; dub usually lags behind, so cap to the dub count when known.
+        val dubCount = anime.dubEpisodes
+        return if (mode == TranslationMode.DUB && dubCount != null && dubCount > 0) all.take(dubCount) else all
     }
 
     override suspend fun streams(anime: Anime, episode: Episode, mode: TranslationMode): StreamSet {

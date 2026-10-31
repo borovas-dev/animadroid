@@ -187,7 +187,7 @@ fun DetailsScreen(
                 )
             }
             state.anime.synopsis?.takeIf { it.isNotBlank() }?.let { s -> item { Synopsis(s) } }
-            item { SectionHeader("Episodes") }
+            item { SectionHeader(if (state.episodes.isEmpty()) "Episodes" else "Episodes (${state.episodes.size})") }
             when {
                 state.loading -> item { SkeletonLoading(Modifier.fillMaxWidth().height(160.dp)) }
                 state.error != null -> item {

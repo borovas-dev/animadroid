@@ -96,7 +96,10 @@ class SearchViewModel @Inject constructor(
                 return@launch
             }
             results.value = try {
-                SearchResults.Success(provider.search(q, modeOverride ?: s.mode))
+                val m = modeOverride ?: s.mode
+                val found = provider.search(q, m)
+                // Dub mode only lists shows that actually have dubbed episodes (when the count is known).
+                SearchResults.Success(if (m == TranslationMode.DUB) found.filter { (it.dubEpisodes ?: if (it.subEpisodes == null) 1 else 0) > 0 } else found)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: CloudflareChallengeException) {
