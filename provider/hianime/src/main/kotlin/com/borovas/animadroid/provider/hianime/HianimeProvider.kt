@@ -1,15 +1,15 @@
-package dev.borovas.animadroid.provider.hianime
+package com.borovas.animadroid.provider.hianime
 
-import dev.borovas.animadroid.core.model.Anime
-import dev.borovas.animadroid.core.model.Episode
-import dev.borovas.animadroid.core.model.StreamSet
-import dev.borovas.animadroid.core.model.TranslationMode
-import dev.borovas.animadroid.core.network.ANI_CLI_USER_AGENT
-import dev.borovas.animadroid.core.network.CloudflareBlockedException
-import dev.borovas.animadroid.core.network.CloudflareDetector
-import dev.borovas.animadroid.provider.api.AnimeProvider
-import dev.borovas.animadroid.provider.api.CloudflareChallengeException
-import dev.borovas.animadroid.provider.api.ProviderException
+import com.borovas.animadroid.core.model.Anime
+import com.borovas.animadroid.core.model.Episode
+import com.borovas.animadroid.core.model.StreamSet
+import com.borovas.animadroid.core.model.TranslationMode
+import com.borovas.animadroid.core.network.ANI_CLI_USER_AGENT
+import com.borovas.animadroid.core.network.CloudflareBlockedException
+import com.borovas.animadroid.core.network.CloudflareDetector
+import com.borovas.animadroid.provider.api.AnimeProvider
+import com.borovas.animadroid.provider.api.CloudflareChallengeException
+import com.borovas.animadroid.provider.api.ProviderException
 import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

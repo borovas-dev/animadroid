@@ -1,4 +1,4 @@
-package dev.borovas.animadroid.feature.aniskip
+package com.borovas.animadroid.feature.aniskip
 
 import kotlinx.coroutines.test.runTest
 import mockwebserver3.MockResponse

@@ -1,8 +1,8 @@
-package dev.borovas.animadroid.feature.aniskip
+package com.borovas.animadroid.feature.aniskip
 
-import dev.borovas.animadroid.core.model.SkipInterval
-import dev.borovas.animadroid.core.model.SkipTimes
-import dev.borovas.animadroid.core.model.SkipTimesRepository
+import com.borovas.animadroid.core.model.SkipInterval
+import com.borovas.animadroid.core.model.SkipTimes
+import com.borovas.animadroid.core.model.SkipTimesRepository
 import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton

@@ -1,12 +1,12 @@
-package dev.borovas.animadroid.feature.library
+package com.borovas.animadroid.feature.library
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation3.runtime.NavKey
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dev.borovas.animadroid.core.model.Anime
-import dev.borovas.animadroid.core.model.LibraryRepository
-import dev.borovas.animadroid.core.model.WatchEntry
+import com.borovas.animadroid.core.model.Anime
+import com.borovas.animadroid.core.model.LibraryRepository
+import com.borovas.animadroid.core.model.WatchEntry
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine

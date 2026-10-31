@@ -1,8 +1,8 @@
-package dev.borovas.animadroid.core.database
+package com.borovas.animadroid.core.database
 
 import androidx.room3.Room
 import androidx.sqlite.driver.AndroidSQLiteDriver
-import dev.borovas.animadroid.core.model.Anime
+import com.borovas.animadroid.core.model.Anime
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import kotlinx.coroutines.flow.first

@@ -1,4 +1,4 @@
-package dev.borovas.animadroid.feature.player
+package com.borovas.animadroid.feature.player
 
 import android.app.Activity
 import android.app.PictureInPictureParams

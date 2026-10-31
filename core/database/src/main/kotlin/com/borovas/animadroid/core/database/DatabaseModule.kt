@@ -1,4 +1,4 @@
-package dev.borovas.animadroid.core.database
+package com.borovas.animadroid.core.database
 
 import android.content.Context
 import androidx.room3.Room
@@ -9,7 +9,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import dev.borovas.animadroid.core.model.LibraryRepository
+import com.borovas.animadroid.core.model.LibraryRepository
 import javax.inject.Singleton
 
 @Module

@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 
-package dev.borovas.animadroid.feature.library
+package com.borovas.animadroid.feature.library
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -44,16 +44,16 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
-import dev.borovas.animadroid.core.designsystem.AnimadroidTheme
-import dev.borovas.animadroid.core.designsystem.AnimeCard
-import dev.borovas.animadroid.core.designsystem.Cover
-import dev.borovas.animadroid.core.designsystem.EmptyState
-import dev.borovas.animadroid.core.designsystem.PosterCarousel
-import dev.borovas.animadroid.core.designsystem.SectionHeader
-import dev.borovas.animadroid.core.designsystem.SkeletonLoading
-import dev.borovas.animadroid.core.model.Anime
-import dev.borovas.animadroid.core.model.EpisodeProgress
-import dev.borovas.animadroid.core.model.WatchEntry
+import com.borovas.animadroid.core.designsystem.AnimadroidTheme
+import com.borovas.animadroid.core.designsystem.AnimeCard
+import com.borovas.animadroid.core.designsystem.Cover
+import com.borovas.animadroid.core.designsystem.EmptyState
+import com.borovas.animadroid.core.designsystem.PosterCarousel
+import com.borovas.animadroid.core.designsystem.SectionHeader
+import com.borovas.animadroid.core.designsystem.SkeletonLoading
+import com.borovas.animadroid.core.model.Anime
+import com.borovas.animadroid.core.model.EpisodeProgress
+import com.borovas.animadroid.core.model.WatchEntry
 
 fun EntryProviderScope<NavKey>.libraryEntry(
     onAnimeClick: (Anime) -> Unit,

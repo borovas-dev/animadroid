@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3AdaptiveApi::class)
 
-package dev.borovas.animadroid.navigation
+package com.borovas.animadroid.navigation
 
 import android.content.Intent
 import android.net.Uri
@@ -9,9 +9,9 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.compose.runtime.LaunchedEffect
-import dev.borovas.animadroid.BackupViewModel
-import dev.borovas.animadroid.feature.player.PlayerRoute
-import dev.borovas.animadroid.feature.player.playerEntry
+import com.borovas.animadroid.BackupViewModel
+import com.borovas.animadroid.feature.player.PlayerRoute
+import com.borovas.animadroid.feature.player.playerEntry
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -47,19 +47,19 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.window.core.layout.WindowSizeClass
-import dev.borovas.animadroid.core.model.Anime
-import dev.borovas.animadroid.core.model.Episode
-import dev.borovas.animadroid.feature.details.DetailsRoute
-import dev.borovas.animadroid.feature.details.detailsEntry
-import dev.borovas.animadroid.feature.downloads.DownloadsRoute
-import dev.borovas.animadroid.feature.downloads.downloadsEntry
-import dev.borovas.animadroid.feature.library.LibraryRoute
-import dev.borovas.animadroid.feature.library.libraryEntry
-import dev.borovas.animadroid.feature.recommend.RecommendCard
-import dev.borovas.animadroid.feature.search.SearchRoute
-import dev.borovas.animadroid.feature.search.searchEntry
-import dev.borovas.animadroid.feature.settings.SettingsRoute
-import dev.borovas.animadroid.feature.settings.settingsEntry
+import com.borovas.animadroid.core.model.Anime
+import com.borovas.animadroid.core.model.Episode
+import com.borovas.animadroid.feature.details.DetailsRoute
+import com.borovas.animadroid.feature.details.detailsEntry
+import com.borovas.animadroid.feature.downloads.DownloadsRoute
+import com.borovas.animadroid.feature.downloads.downloadsEntry
+import com.borovas.animadroid.feature.library.LibraryRoute
+import com.borovas.animadroid.feature.library.libraryEntry
+import com.borovas.animadroid.feature.recommend.RecommendCard
+import com.borovas.animadroid.feature.search.SearchRoute
+import com.borovas.animadroid.feature.search.searchEntry
+import com.borovas.animadroid.feature.settings.SettingsRoute
+import com.borovas.animadroid.feature.settings.settingsEntry
 
 private data class TopLevel(val route: NavKey, val label: String, val icon: ImageVector)
 

@@ -1,9 +1,9 @@
-package dev.borovas.animadroid.provider.api
+package com.borovas.animadroid.provider.api
 
-import dev.borovas.animadroid.core.model.Anime
-import dev.borovas.animadroid.core.model.Episode
-import dev.borovas.animadroid.core.model.StreamSet
-import dev.borovas.animadroid.core.model.TranslationMode
+import com.borovas.animadroid.core.model.Anime
+import com.borovas.animadroid.core.model.Episode
+import com.borovas.animadroid.core.model.StreamSet
+import com.borovas.animadroid.core.model.TranslationMode
 
 /** A source of anime, mirroring ani-cli's search → episodes → links pipeline. */
 interface AnimeProvider {

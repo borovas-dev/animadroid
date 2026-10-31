@@ -1,8 +1,8 @@
-package dev.borovas.animadroid.feature.player
+package com.borovas.animadroid.feature.player
 
-import dev.borovas.animadroid.core.model.QualityPreference
-import dev.borovas.animadroid.core.model.StreamSet
-import dev.borovas.animadroid.core.model.StreamVariant
+import com.borovas.animadroid.core.model.QualityPreference
+import com.borovas.animadroid.core.model.StreamSet
+import com.borovas.animadroid.core.model.StreamVariant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull

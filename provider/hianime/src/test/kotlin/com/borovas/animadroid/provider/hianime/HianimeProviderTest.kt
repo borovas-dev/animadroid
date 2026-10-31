@@ -1,10 +1,10 @@
-package dev.borovas.animadroid.provider.hianime
+package com.borovas.animadroid.provider.hianime
 
-import dev.borovas.animadroid.core.model.Anime
-import dev.borovas.animadroid.core.model.Episode
-import dev.borovas.animadroid.core.model.TranslationMode
-import dev.borovas.animadroid.core.network.CloudflareInterceptor
-import dev.borovas.animadroid.provider.api.CloudflareChallengeException
+import com.borovas.animadroid.core.model.Anime
+import com.borovas.animadroid.core.model.Episode
+import com.borovas.animadroid.core.model.TranslationMode
+import com.borovas.animadroid.core.network.CloudflareInterceptor
+import com.borovas.animadroid.provider.api.CloudflareChallengeException
 import java.util.Base64
 import kotlinx.coroutines.test.runTest
 import mockwebserver3.Dispatcher
@@ -103,7 +103,7 @@ class HianimeProviderTest {
         try {
             provider().streams(anime, Episode("1", "1"), TranslationMode.DUB)
             fail()
-        } catch (e: dev.borovas.animadroid.provider.api.ProviderException) {
+        } catch (e: com.borovas.animadroid.provider.api.ProviderException) {
             assertTrue(e.message!!.contains("dub"))
         }
     }

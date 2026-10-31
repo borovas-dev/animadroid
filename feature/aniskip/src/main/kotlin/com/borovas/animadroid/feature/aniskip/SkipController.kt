@@ -1,8 +1,8 @@
-package dev.borovas.animadroid.feature.aniskip
+package com.borovas.animadroid.feature.aniskip
 
-import dev.borovas.animadroid.core.model.SkipBehavior
-import dev.borovas.animadroid.core.model.SkipInterval
-import dev.borovas.animadroid.core.model.SkipTimes
+import com.borovas.animadroid.core.model.SkipBehavior
+import com.borovas.animadroid.core.model.SkipInterval
+import com.borovas.animadroid.core.model.SkipTimes
 
 enum class SkipSegment { OPENING, ENDING }
 

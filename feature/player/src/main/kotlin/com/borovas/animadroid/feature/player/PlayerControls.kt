@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 
-package dev.borovas.animadroid.feature.player
+package com.borovas.animadroid.feature.player
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -55,7 +55,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.collectAsState
-import dev.borovas.animadroid.core.model.SkipTimes
+import com.borovas.animadroid.core.model.SkipTimes
 import kotlinx.coroutines.flow.StateFlow
 import java.util.Locale
 

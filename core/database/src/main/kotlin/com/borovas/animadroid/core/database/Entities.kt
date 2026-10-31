@@ -1,9 +1,9 @@
-package dev.borovas.animadroid.core.database
+package com.borovas.animadroid.core.database
 
 import androidx.room3.Entity
 import androidx.room3.PrimaryKey
-import dev.borovas.animadroid.core.model.Anime
-import dev.borovas.animadroid.core.model.EpisodeProgress
+import com.borovas.animadroid.core.model.Anime
+import com.borovas.animadroid.core.model.EpisodeProgress
 
 @Entity(tableName = "anime", primaryKeys = ["providerId", "animeId"])
 data class AnimeEntity(

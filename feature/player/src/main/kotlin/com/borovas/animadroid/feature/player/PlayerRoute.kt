@@ -1,8 +1,8 @@
-package dev.borovas.animadroid.feature.player
+package com.borovas.animadroid.feature.player
 
 import androidx.navigation3.runtime.NavKey
-import dev.borovas.animadroid.core.model.Anime
-import dev.borovas.animadroid.core.model.Episode
+import com.borovas.animadroid.core.model.Anime
+import com.borovas.animadroid.core.model.Episode
 import kotlinx.serialization.Serializable
 
 @Serializable

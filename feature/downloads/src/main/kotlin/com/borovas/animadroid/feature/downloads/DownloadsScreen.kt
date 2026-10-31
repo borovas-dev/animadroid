@@ -1,4 +1,4 @@
-package dev.borovas.animadroid.feature.downloads
+package com.borovas.animadroid.feature.downloads
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Download
@@ -11,8 +11,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dev.borovas.animadroid.core.designsystem.AnimadroidTheme
-import dev.borovas.animadroid.core.designsystem.EmptyState
+import com.borovas.animadroid.core.designsystem.AnimadroidTheme
+import com.borovas.animadroid.core.designsystem.EmptyState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable

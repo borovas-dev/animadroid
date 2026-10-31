@@ -1,4 +1,4 @@
-package dev.borovas.animadroid
+package com.borovas.animadroid
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp

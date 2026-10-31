@@ -1,4 +1,4 @@
-package dev.borovas.animadroid.core.datastore
+package com.borovas.animadroid.core.datastore
 
 import android.content.Context
 import androidx.datastore.core.CorruptionException
@@ -11,8 +11,8 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import dev.borovas.animadroid.core.model.AppSettings
-import dev.borovas.animadroid.core.model.SettingsRepository
+import com.borovas.animadroid.core.model.AppSettings
+import com.borovas.animadroid.core.model.SettingsRepository
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream

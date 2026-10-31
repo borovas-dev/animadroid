@@ -1,9 +1,9 @@
-package dev.borovas.animadroid.provider.hianime
+package com.borovas.animadroid.provider.hianime
 
-import dev.borovas.animadroid.core.model.Anime
-import dev.borovas.animadroid.core.model.Episode
-import dev.borovas.animadroid.core.model.StreamVariant
-import dev.borovas.animadroid.core.model.SubtitleTrack
+import com.borovas.animadroid.core.model.Anime
+import com.borovas.animadroid.core.model.Episode
+import com.borovas.animadroid.core.model.StreamVariant
+import com.borovas.animadroid.core.model.SubtitleTrack
 import java.net.URI
 import java.util.Base64
 import kotlinx.serialization.json.Json

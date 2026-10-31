@@ -1,8 +1,8 @@
-package dev.borovas.animadroid.core.datastore
+package com.borovas.animadroid.core.datastore
 
 import androidx.datastore.core.DataStoreFactory
-import dev.borovas.animadroid.core.model.AppSettings
-import dev.borovas.animadroid.core.model.ThemeMode
+import com.borovas.animadroid.core.model.AppSettings
+import com.borovas.animadroid.core.model.ThemeMode
 import java.io.File
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest

@@ -1,13 +1,13 @@
-package dev.borovas.animadroid.feature.player
+package com.borovas.animadroid.feature.player
 
 import android.os.Bundle
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.MimeTypes
-import dev.borovas.animadroid.core.model.QualityPreference
-import dev.borovas.animadroid.core.model.StreamSet
-import dev.borovas.animadroid.core.model.StreamVariant
-import dev.borovas.animadroid.core.model.SubtitleTrack
+import com.borovas.animadroid.core.model.QualityPreference
+import com.borovas.animadroid.core.model.StreamSet
+import com.borovas.animadroid.core.model.StreamVariant
+import com.borovas.animadroid.core.model.SubtitleTrack
 
 /** Pure quality-selection logic (ani-cli style: exact match, else nearest lower, else best). */
 object QualitySelector {

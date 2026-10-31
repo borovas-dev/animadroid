@@ -1,4 +1,4 @@
-package dev.borovas.animadroid.core.model
+package com.borovas.animadroid.core.model
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable

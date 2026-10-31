@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 
-package dev.borovas.animadroid.core.designsystem
+package com.borovas.animadroid.core.designsystem
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -56,7 +56,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import dev.borovas.animadroid.core.model.Anime
+import com.borovas.animadroid.core.model.Anime
 
 /** Cover image + title + optional episode badge / progress. Expressive large-rounded poster. */
 @Composable

@@ -1,4 +1,4 @@
-package dev.borovas.animadroid.core.network
+package com.borovas.animadroid.core.network
 
 import java.io.IOException
 import okhttp3.Headers

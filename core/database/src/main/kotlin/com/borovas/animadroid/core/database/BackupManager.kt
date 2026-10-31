@@ -1,4 +1,4 @@
-package dev.borovas.animadroid.core.database
+package com.borovas.animadroid.core.database
 
 import androidx.room3.immediateTransaction
 import androidx.room3.useWriterConnection

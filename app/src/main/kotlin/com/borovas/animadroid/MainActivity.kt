@@ -1,4 +1,4 @@
-package dev.borovas.animadroid
+package com.borovas.animadroid
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -14,10 +14,10 @@ import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
-import dev.borovas.animadroid.core.designsystem.AnimadroidTheme
-import dev.borovas.animadroid.core.model.ThemeMode
-import dev.borovas.animadroid.feature.player.PictureInPictureController
-import dev.borovas.animadroid.navigation.AnimadroidApp
+import com.borovas.animadroid.core.designsystem.AnimadroidTheme
+import com.borovas.animadroid.core.model.ThemeMode
+import com.borovas.animadroid.feature.player.PictureInPictureController
+import com.borovas.animadroid.navigation.AnimadroidApp
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {

@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class, ExperimentalLayoutApi::class)
 
-package dev.borovas.animadroid.feature.settings
+package com.borovas.animadroid.feature.settings
 
 import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
@@ -43,13 +43,13 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
-import dev.borovas.animadroid.core.designsystem.AnimadroidTheme
-import dev.borovas.animadroid.core.designsystem.ConnectedToggleGroup
-import dev.borovas.animadroid.core.model.AppSettings
-import dev.borovas.animadroid.core.model.QualityPreference
-import dev.borovas.animadroid.core.model.SkipBehavior
-import dev.borovas.animadroid.core.model.ThemeMode
-import dev.borovas.animadroid.core.model.TranslationMode
+import com.borovas.animadroid.core.designsystem.AnimadroidTheme
+import com.borovas.animadroid.core.designsystem.ConnectedToggleGroup
+import com.borovas.animadroid.core.model.AppSettings
+import com.borovas.animadroid.core.model.QualityPreference
+import com.borovas.animadroid.core.model.SkipBehavior
+import com.borovas.animadroid.core.model.ThemeMode
+import com.borovas.animadroid.core.model.TranslationMode
 import kotlin.math.roundToInt
 
 private const val SOURCE_URL = "https://github.com/borovas-dev/animadroid"

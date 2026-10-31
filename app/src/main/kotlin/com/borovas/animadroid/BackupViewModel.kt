@@ -1,4 +1,4 @@
-package dev.borovas.animadroid
+package com.borovas.animadroid
 
 import android.content.Context
 import android.net.Uri
@@ -6,8 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import dev.borovas.animadroid.core.database.BackupManager
-import dev.borovas.animadroid.core.datastore.DataStoreSettingsRepository
+import com.borovas.animadroid.core.database.BackupManager
+import com.borovas.animadroid.core.datastore.DataStoreSettingsRepository
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch

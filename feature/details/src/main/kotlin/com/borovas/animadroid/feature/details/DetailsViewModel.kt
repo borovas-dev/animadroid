@@ -1,4 +1,4 @@
-package dev.borovas.animadroid.feature.details
+package com.borovas.animadroid.feature.details
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -7,14 +7,14 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dev.borovas.animadroid.core.model.Anime
-import dev.borovas.animadroid.core.model.Episode
-import dev.borovas.animadroid.core.model.EpisodeProgress
-import dev.borovas.animadroid.core.model.LibraryRepository
-import dev.borovas.animadroid.core.model.SettingsRepository
-import dev.borovas.animadroid.core.model.TranslationMode
-import dev.borovas.animadroid.provider.api.AnimeProvider
-import dev.borovas.animadroid.provider.api.CloudflareChallengeException
+import com.borovas.animadroid.core.model.Anime
+import com.borovas.animadroid.core.model.Episode
+import com.borovas.animadroid.core.model.EpisodeProgress
+import com.borovas.animadroid.core.model.LibraryRepository
+import com.borovas.animadroid.core.model.SettingsRepository
+import com.borovas.animadroid.core.model.TranslationMode
+import com.borovas.animadroid.provider.api.AnimeProvider
+import com.borovas.animadroid.provider.api.CloudflareChallengeException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow

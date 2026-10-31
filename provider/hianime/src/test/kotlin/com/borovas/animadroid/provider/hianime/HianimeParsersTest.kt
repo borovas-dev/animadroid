@@ -1,4 +1,4 @@
-package dev.borovas.animadroid.provider.hianime
+package com.borovas.animadroid.provider.hianime
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

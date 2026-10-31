@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
 
-package dev.borovas.animadroid.feature.player
+package com.borovas.animadroid.feature.player
 
 import android.content.pm.ActivityInfo
 import android.media.AudioManager
@@ -72,7 +72,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.ui.compose.ContentFrame
-import dev.borovas.animadroid.feature.aniskip.SkipSegment
+import com.borovas.animadroid.feature.aniskip.SkipSegment
 import kotlinx.coroutines.delay
 
 private const val AUTO_HIDE_MS = 3_000L

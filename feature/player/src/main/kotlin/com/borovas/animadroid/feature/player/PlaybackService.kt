@@ -1,4 +1,4 @@
-package dev.borovas.animadroid.feature.player
+package com.borovas.animadroid.feature.player
 
 import android.app.PendingIntent
 import android.content.Intent

@@ -1,4 +1,4 @@
-package dev.borovas.animadroid.feature.player
+package com.borovas.animadroid.feature.player
 
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey

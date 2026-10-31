@@ -1,4 +1,4 @@
-package dev.borovas.animadroid.core.network
+package com.borovas.animadroid.core.network
 
 /** Same agent ani-cli uses; Cloudflare clearance cookies are bound to it, so WebView must match. */
 const val ANI_CLI_USER_AGENT =

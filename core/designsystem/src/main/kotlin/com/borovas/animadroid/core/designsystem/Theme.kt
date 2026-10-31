@@ -1,4 +1,4 @@
-package dev.borovas.animadroid.core.designsystem
+package com.borovas.animadroid.core.designsystem
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi

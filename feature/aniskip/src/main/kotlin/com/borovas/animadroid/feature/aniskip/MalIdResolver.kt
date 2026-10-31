@@ -1,4 +1,4 @@
-package dev.borovas.animadroid.feature.aniskip
+package com.borovas.animadroid.feature.aniskip
 
 import javax.inject.Inject
 import javax.inject.Singleton

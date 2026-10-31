@@ -9,7 +9,7 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
         pluginManager.apply("com.android.library")
         extensions.configure<LibraryExtension> {
             configureAndroid(this)
-            namespace = "dev.borovas.animadroid." + path.removePrefix(":").replace(':', '.').replace('-', '_')
+            namespace = "com.borovas.animadroid." + path.removePrefix(":").replace(':', '.').replace('-', '_')
         }
         dependencies {
             add("testImplementation", libs.lib("junit"))

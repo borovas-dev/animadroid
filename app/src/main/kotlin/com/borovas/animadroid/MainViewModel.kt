@@ -1,10 +1,10 @@
-package dev.borovas.animadroid
+package com.borovas.animadroid
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dev.borovas.animadroid.core.model.AppSettings
-import dev.borovas.animadroid.core.model.SettingsRepository
+import com.borovas.animadroid.core.model.AppSettings
+import com.borovas.animadroid.core.model.SettingsRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map

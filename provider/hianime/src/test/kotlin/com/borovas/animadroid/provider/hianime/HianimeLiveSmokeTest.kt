@@ -1,6 +1,6 @@
-package dev.borovas.animadroid.provider.hianime
+package com.borovas.animadroid.provider.hianime
 
-import dev.borovas.animadroid.core.model.TranslationMode
+import com.borovas.animadroid.core.model.TranslationMode
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import org.junit.Assert.assertTrue

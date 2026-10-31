@@ -1,11 +1,11 @@
-package dev.borovas.animadroid.core.database
+package com.borovas.animadroid.core.database
 
 import androidx.room3.immediateTransaction
 import androidx.room3.useWriterConnection
-import dev.borovas.animadroid.core.model.Anime
-import dev.borovas.animadroid.core.model.EpisodeProgress
-import dev.borovas.animadroid.core.model.LibraryRepository
-import dev.borovas.animadroid.core.model.WatchEntry
+import com.borovas.animadroid.core.model.Anime
+import com.borovas.animadroid.core.model.EpisodeProgress
+import com.borovas.animadroid.core.model.LibraryRepository
+import com.borovas.animadroid.core.model.WatchEntry
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
