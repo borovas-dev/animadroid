@@ -10,9 +10,11 @@ android {
         applicationId = "com.borovas.animadroid"
         versionCode = 1
         versionName = "0.1.0"
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "com.borovas.animadroid.HiltTestRunner"
     }
     buildTypes {
+        // ./gradlew -PqaSuffix=.qa lets parallel worktrees install side by side on a shared device.
+        debug { (project.findProperty("qaSuffix") as? String)?.let { applicationIdSuffix = it } }
         release { isMinifyEnabled = true; isShrinkResources = true; proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro") }
     }
 }
@@ -26,5 +28,7 @@ dependencies {
     implementation(libs.compose.adaptive); implementation(libs.compose.adaptive.layout); implementation(libs.compose.adaptive.navigation3)
     implementation(libs.hilt.lifecycle.viewmodel.compose); implementation(libs.kotlinx.serialization.json)
     implementation(libs.coil.network.okhttp)
+    androidTestImplementation(libs.androidx.test.runner); androidTestImplementation(libs.hilt.android.testing); kspAndroidTest(libs.hilt.compiler)
+    androidTestImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.test.ext); androidTestImplementation(libs.compose.ui.test.junit4); debugImplementation(libs.compose.ui.test.manifest)
 }
