@@ -34,7 +34,7 @@ class DownloadTest {
     @get:Rule
     val helper = MigrationTestHelper(
         InstrumentationRegistry.getInstrumentation(),
-        File(System.getProperty("java.io.tmpdir"), "animadroid-migration-test.db"),
+        File.createTempFile("animadroid-migration", ".db").apply { delete(); deleteOnExit() },
         AndroidSQLiteDriver(),
         AnimadroidDatabase::class,
         { AnimadroidDatabase_Impl() },
