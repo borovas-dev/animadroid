@@ -81,12 +81,15 @@ internal object HianimeParsers {
 
     fun parseEpisodes(payload: String, slug: String): List<Episode> {
         val doc = Jsoup.parse(htmlPayload(payload))
-        return doc.select(".ep-item").mapNotNull { el ->
+        fun collect(hrefOk: (String) -> Boolean) = doc.select(".ep-item").mapNotNull { el ->
             val number = el.attr("data-number")
             val id = el.attr("data-id")
-            if (number.isBlank() || id.isBlank() || !el.attr("href").contains("/watch/$slug?ep=")) return@mapNotNull null
+            if (number.isBlank() || id.isBlank() || !hrefOk(el.attr("href"))) return@mapNotNull null
             Episode(id = id, number = number, title = el.attr("title").takeIf { it.isNotBlank() })
         }.distinctBy { it.id }.sortedBy { it.number.toDoubleOrNull() ?: Double.MAX_VALUE }
+        // The endpoint is keyed by the numeric id, so every item belongs to the show. Prefer exact slug matches, but
+        // fall back to any watch link: imported ani-cli ids can carry a slug the site has since renamed.
+        return collect { it.contains("/watch/$slug?ep=") }.ifEmpty { collect { it.contains("/watch/") && it.contains("?ep=") } }
     }
 
     /** data-hash of the ZokoAnime server for [type] ("sub"/"dub"), decoded to the embed URL. */
