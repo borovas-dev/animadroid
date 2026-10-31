@@ -85,6 +85,7 @@ fun PlayerScreen(route: PlayerRoute, onBack: () -> Unit, modifier: Modifier = Mo
     val vm = hiltViewModel<PlayerViewModel, PlayerViewModel.Factory>(creationCallback = { it.create(route) })
     val state by vm.state.collectAsStateWithLifecycle()
     val player by vm.player.collectAsStateWithLifecycle()
+    val scrubPreview by vm.scrubPreview.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val activity = remember(context) { context.findActivity() }
     val view = LocalView.current
@@ -217,6 +218,7 @@ fun PlayerScreen(route: PlayerRoute, onBack: () -> Unit, modifier: Modifier = Mo
                     onNext = vm::next,
                     onSeek = { vm.seekTo(it); interaction++ },
                     onInteraction = { interaction++ },
+                    scrubPreview = scrubPreview,
                 )
             }
 

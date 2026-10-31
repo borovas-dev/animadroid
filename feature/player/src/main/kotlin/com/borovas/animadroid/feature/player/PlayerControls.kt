@@ -81,6 +81,7 @@ internal fun PlayerControls(
     onSeek: (Long) -> Unit,
     onInteraction: () -> Unit,
     modifier: Modifier = Modifier,
+    scrubPreview: ScrubPreviewSource? = null,
 ) {
     val iconColors = IconButtonDefaults.iconButtonColors(contentColor = Color.White)
     Box(
@@ -139,7 +140,7 @@ internal fun PlayerControls(
 
             // Bottom seek bar
             Column(Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(horizontal = 16.dp)) {
-                SeekBar(positionFlow, state.skipTimes, onSeek, onInteraction)
+                SeekBar(positionFlow, state.skipTimes, onSeek, onInteraction, scrubPreview)
             }
         }
     }
@@ -151,6 +152,7 @@ private fun SeekBar(
     skipTimes: SkipTimes?,
     onSeek: (Long) -> Unit,
     onInteraction: () -> Unit,
+    scrubPreview: ScrubPreviewSource? = null,
 ) {
     val pos by positionFlow.collectAsState()
     var dragging by remember { mutableStateOf<Float?>(null) }
@@ -161,6 +163,9 @@ private fun SeekBar(
 
     Column {
         Box(Modifier.fillMaxWidth().height(40.dp), contentAlignment = Alignment.Center) {
+            if (dragging != null) {
+                ScrubPreviewBubble(scrubPreview, shownMs, fraction, Modifier.align(Alignment.TopStart))
+            }
             // OP/ED markers drawn behind the (translucent) track.
             Canvas(Modifier.fillMaxWidth().padding(horizontal = 10.dp).height(8.dp)) {
                 if (duration <= 0) return@Canvas

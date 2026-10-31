@@ -93,6 +93,7 @@ class PlayerViewModel @AssistedInject constructor(
     private val skipTimesRepository: SkipTimesRepository,
     private val malIdResolver: MalIdResolver,
     private val downloads: DownloadRepository,
+    scrubPreviewFactory: ScrubPreviewManagerFactory,
 ) : ViewModel() {
 
     @AssistedFactory
@@ -108,6 +109,11 @@ class PlayerViewModel @AssistedInject constructor(
     /** Exposed so the UI can attach a video surface. Null until the controller connects. */
     private val _player = MutableStateFlow<Player?>(null)
     val player: StateFlow<Player?> = _player.asStateFlow()
+
+    private val scrubPreviews = scrubPreviewFactory.create { _state.value.buffering }
+
+    /** Thumbnail source for the seek-bar scrub preview; null while unavailable or disabled. */
+    val scrubPreview: StateFlow<ScrubPreviewSource?> = scrubPreviews.source
 
     private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var controller: MediaController? = null
@@ -194,6 +200,7 @@ class PlayerViewModel @AssistedInject constructor(
         currentIndex = index
         lastSavedMs = -1L
         skipController = null
+        scrubPreviews.clear()
         loadJob?.cancel()
         _position.value = PlaybackPosition()
         _state.update {
@@ -214,6 +221,7 @@ class PlayerViewModel @AssistedInject constructor(
                     provider.streams(route.anime, episode, settings.mode)
                 }
                 streams = set
+                scrubPreviews.configure(set, offline != null, settings)
                 android.util.Log.i("AnimadroidPlayer", "stream mode=${settings.mode} ep=${episode.number} master=${set.masterUrl} offline=${offline != null}")
                 val start = startOverrideMs ?: if (resumeFromProgress) resumePosition() else 0L
                 play(set, settings.quality, null, start)
@@ -407,6 +415,7 @@ class PlayerViewModel @AssistedInject constructor(
     }
 
     override fun onCleared() {
+        scrubPreviews.close()
         tickJob?.cancel()
         saveProgress()
         controller?.let {
