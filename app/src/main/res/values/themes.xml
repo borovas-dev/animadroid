@@ -1,1 +1,14 @@
-<resources><style name="Theme.Animadroid" parent="android:Theme.Material.NoActionBar" /></resources>
+<resources>
+    <style name="Theme.Animadroid" parent="android:Theme.DeviceDefault.DayNight">
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+
+    <style name="Theme.Animadroid.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#FF1C1B20</item>
+        <item name="windowSplashScreenAnimatedIcon">@android:drawable/ic_media_play</item>
+        <item name="postSplashScreenTheme">@style/Theme.Animadroid</item>
+    </style>
+</resources>
