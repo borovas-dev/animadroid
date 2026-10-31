@@ -1,4 +1,5 @@
 @file:OptIn(UnstableApi::class)
+@file:androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 
 package com.borovas.animadroid.feature.downloads
 
