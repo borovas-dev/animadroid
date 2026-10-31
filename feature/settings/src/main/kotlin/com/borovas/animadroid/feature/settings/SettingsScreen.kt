@@ -110,6 +110,10 @@ fun SettingsScreen(
                         }
                     }
                     SwitchRow("Autoplay next episode", "Start the next episode when one finishes", settings.autoPlayNext) { v -> onUpdate { it.copy(autoPlayNext = v) } }
+                    SwitchRow("Seek bar previews", "Show a thumbnail while dragging the seek bar", settings.scrubPreviewEnabled) { v -> onUpdate { it.copy(scrubPreviewEnabled = v) } }
+                    if (settings.scrubPreviewEnabled) {
+                        SwitchRow("Previews on mobile data", "Decode previews from the stream even on metered networks (uses data)", settings.scrubPreviewMobileData) { v -> onUpdate { it.copy(scrubPreviewMobileData = v) } }
+                    }
                 }
             }
             item {

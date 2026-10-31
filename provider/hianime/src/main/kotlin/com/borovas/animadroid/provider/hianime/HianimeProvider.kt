@@ -86,6 +86,7 @@ class HianimeProvider(
             malId = malId,
             intro = config.intro,
             outro = config.outro,
+            spriteVttUrl = config.spriteVttUrl,
         )
     }
 

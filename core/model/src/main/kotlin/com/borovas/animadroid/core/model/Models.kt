@@ -52,6 +52,12 @@ data class StreamSet(
     /** Provider-supplied intro/outro (hianime embed `skip.intro` / `skip.outro`); fallback when ani-skip has no data. */
     val intro: SkipInterval? = null,
     val outro: SkipInterval? = null,
+    /**
+     * Thumbnail-sprite WebVTT (hianime embed `sprite_vtt`; cues point at `sprite.jpg#xywh=x,y,w,h`), used for the
+     * seek-bar scrub preview. Null when the provider has none (survey: ~1 in 40 embeds) - the player then falls back to
+     * decoding frames from the stream itself.
+     */
+    val spriteVttUrl: String? = null,
 )
 
 @Serializable

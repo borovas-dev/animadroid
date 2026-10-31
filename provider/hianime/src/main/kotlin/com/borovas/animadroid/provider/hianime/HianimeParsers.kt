@@ -113,6 +113,7 @@ internal object HianimeParsers {
         val subtitles: List<SubtitleTrack>,
         val intro: SkipInterval? = null,
         val outro: SkipInterval? = null,
+        val spriteVttUrl: String? = null,
     )
 
     fun parseEmbedConfig(jsonText: String): EmbedConfig {
@@ -130,7 +131,10 @@ internal object HianimeParsers {
             )
         }.sortedByDescending { it.isDefault }
         val skip = obj["skip"] as? JsonObject
-        return EmbedConfig(src, subs, skipInterval(skip?.get("intro")), skipInterval(skip?.get("outro")))
+        // `sprite_vtt` is "" for almost every embed (survey: 1 of ~40); treat blank/non-string as absent.
+        val sprite = (obj["sprite_vtt"] as? kotlinx.serialization.json.JsonPrimitive)?.takeIf { it.isString }?.contentOrNull
+            ?.trim()?.takeIf { it.startsWith("http://") || it.startsWith("https://") }
+        return EmbedConfig(src, subs, skipInterval(skip?.get("intro")), skipInterval(skip?.get("outro")), sprite)
     }
 
     private fun skipInterval(el: kotlinx.serialization.json.JsonElement?): SkipInterval? {

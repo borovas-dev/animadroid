@@ -63,6 +63,16 @@ class HianimeParsersTest {
         assertEquals(null, bad.outro)
     }
 
+    @Test fun spriteVttParsedAndEmptyIsNull() {
+        val url = "https://hls.example.com/v/a/b/sprite.vtt"
+        assertEquals(url, HianimeParsers.parseEmbedConfig("""{"src":"https://a/b.m3u8","sprite_vtt":"$url"}""").spriteVttUrl)
+        assertEquals(null, HianimeParsers.parseEmbedConfig("""{"src":"https://a/b.m3u8","sprite_vtt":""}""").spriteVttUrl)
+        assertEquals(null, HianimeParsers.parseEmbedConfig("""{"src":"https://a/b.m3u8","sprite_vtt":null}""").spriteVttUrl)
+        assertEquals(null, HianimeParsers.parseEmbedConfig("""{"src":"https://a/b.m3u8","sprite_vtt":"  "}""").spriteVttUrl)
+        assertEquals(null, HianimeParsers.parseEmbedConfig("""{"src":"https://a/b.m3u8"}""").spriteVttUrl)
+        assertEquals(null, HianimeParsers.parseEmbedConfig("""{"src":"https://a/b.m3u8","sprite_vtt":5}""").spriteVttUrl)
+    }
+
     @Test fun xorRoundTrip() {
         val plain = """{"src":"https://a/b.m3u8"}""".toByteArray()
         assertEquals(String(plain), String(HianimeParsers.xor(HianimeParsers.xor(plain))))

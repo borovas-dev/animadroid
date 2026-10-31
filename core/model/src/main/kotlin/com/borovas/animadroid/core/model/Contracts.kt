@@ -57,6 +57,10 @@ data class AppSettings(
     val dynamicColor: Boolean = true,
     val aiRecommendationsEnabled: Boolean = false,
     val downloadWifiOnly: Boolean = true,
+    /** Seek-bar thumbnail preview while scrubbing. */
+    val scrubPreviewEnabled: Boolean = true,
+    /** Also allow the network-hungry frame-decoding preview fallback on metered (mobile) data. Sprite previews are always allowed. */
+    val scrubPreviewMobileData: Boolean = false,
 )
 
 /** Implemented in :core:datastore. */
