@@ -50,9 +50,13 @@ class AppFlowTest {
     }
 
     private fun waitForText(text: String) =
-        compose.waitUntil(10_000) { compose.onAllNodes(hasText(text, substring = true)).fetchSemanticsNodes().isNotEmpty() }
+        compose.waitUntil(15_000) {
+            // No compose hierarchy exists until the splash screen is gone; treat that as "not yet".
+            runCatching { compose.onAllNodes(hasText(text, substring = true)).fetchSemanticsNodes().isNotEmpty() }.getOrDefault(false)
+        }
 
     @Test fun searchOpensDetailsWithEpisodes() {
+        waitForText("Home")
         compose.onNodeWithText("Search").performClick()
         typeQuery("fake")
         waitForText("Fake Adventure")
@@ -62,6 +66,7 @@ class AppFlowTest {
     }
 
     @Test fun cloudflareErrorOffersVerification() {
+        waitForText("Home")
         FakeProviderModule.instance.blockOnce = true
         compose.onNodeWithText("Search").performClick()
         typeQuery("fake")
@@ -72,6 +77,7 @@ class AppFlowTest {
     }
 
     @Test fun settingsTogglePersists() {
+        waitForText("Home")
         compose.onNodeWithText("Settings").performClick()
         waitForText("Show button")
         compose.onNodeWithText("Show button").performClick()
@@ -85,6 +91,7 @@ class AppFlowTest {
     @Test fun homeRendersContinueWatching() {
         val a: Anime = FakeProviderModule.instance.anime
         runBlocking { library.saveProgress(a, "2", 300_000, 1_400_000) }
+        waitForText("Home")
         compose.onNodeWithText("Home").performClick()
         waitForText("Continue watching")
         compose.onNodeWithText("Fake Adventure").assertExists()
