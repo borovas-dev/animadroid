@@ -9,5 +9,5 @@ jobs:
         with: { distribution: temurin, java-version: 21 }
       - uses: android-actions/setup-android@v3
       - run: sdkmanager "platforms;android-37.2" "build-tools;37.0.0"
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - run: ./gradlew assembleDebug testDebugUnitTest --stacktrace
