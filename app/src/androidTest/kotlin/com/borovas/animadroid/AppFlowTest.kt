@@ -4,7 +4,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performImeAction
@@ -24,14 +24,19 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-/** End-to-end UI tests against the real app graph with an offline [FakeProvider]. */
+/**
+ * Run with `./run-ui-tests.sh [.qa]` (one process per test: DataStore refuses a second instance per file).
+ *
+ * End-to-end UI tests against the real app graph with an offline [FakeProvider]. */
 @OptIn(ExperimentalTestApi::class)
 @HiltAndroidTest
 class AppFlowTest {
     @get:Rule(order = 0) val notifications: androidx.test.rule.GrantPermissionRule =
         androidx.test.rule.GrantPermissionRule.grant(android.Manifest.permission.POST_NOTIFICATIONS)
     @get:Rule(order = 1) val hilt = HiltAndroidRule(this)
-    @get:Rule(order = 2) val compose = createAndroidComposeRule<MainActivity>()
+    // Empty rule + manual launch: the activity must not be started (and waited on) while the clock auto-advances.
+    @get:Rule(order = 2) val compose = createEmptyComposeRule()
+    private lateinit var scenario: androidx.test.core.app.ActivityScenario<MainActivity>
 
     @Inject lateinit var library: LibraryRepository
     @Inject lateinit var settings: SettingsRepository
@@ -41,12 +46,17 @@ class AppFlowTest {
         // (LoadingIndicator) and the Cloudflare solver polls in an infinite delay() loop. With the test clock on
         // auto-advance Compose never becomes idle, so performClick()/onNode*() block in waitForIdle() forever.
         // Drive the clock by hand instead (see [waitForText]).
-        compose.mainClock.autoAdvance = false
         hilt.inject()
         runBlocking {
             settings.update { it.copy(skipBehavior = SkipBehavior.AUTO, mode = TranslationMode.SUB) }
             library.removeFromHistory(FakeProviderModule.instance.id, FakeProviderModule.instance.anime.id)
         }
+        scenario = androidx.test.core.app.ActivityScenario.launch(MainActivity::class.java)
+        compose.mainClock.autoAdvance = false
+    }
+
+    @org.junit.After fun tearDown() {
+        runCatching { scenario.close() }
     }
 
     /** Bottom bar / rail destination (the screen title with the same text is not clickable). */
@@ -122,7 +132,7 @@ class AppFlowTest {
             check(System.currentTimeMillis() < end) { "setting was not persisted" }
             compose.mainClock.advanceTimeBy(100); Thread.sleep(50)
         }
-        compose.activityRule.scenario.recreate()
+        scenario.recreate()
         assertEquals(SkipBehavior.BUTTON, runBlocking { settings.settings.first().skipBehavior })
         tab("Settings")
         waitForText("Show button")

@@ -309,14 +309,27 @@ class PlayerViewModel @AssistedInject constructor(
 
     private fun refreshTracks() {
         val c = controller ?: return
-        val options = buildList {
+        val raw = buildList {
             c.currentTracks.groups.filter { it.type == C.TRACK_TYPE_TEXT && it.isSupported }.forEach { g ->
-                for (i in 0 until g.length) {
-                    val f = g.getTrackFormat(i)
-                    add(TextTrackOption(f.label ?: f.language ?: "Track ${size + 1}", g, i, g.isTrackSelected(i)))
-                }
+                for (i in 0 until g.length) add(Triple(g, i, g.getTrackFormat(i)))
             }
         }
+        // ExoPlayer adds an unlabeled CEA-608 placeholder ("Track 1") to every HLS stream that does not declare
+        // CLOSED-CAPTIONS. It never carries text, so hide it when real (sidecar/WebVTT) tracks exist.
+        fun isCea(f: androidx.media3.common.Format) =
+            f.sampleMimeType == androidx.media3.common.MimeTypes.APPLICATION_CEA608 ||
+                f.sampleMimeType == androidx.media3.common.MimeTypes.APPLICATION_CEA708
+        val hasRealTrack = raw.any { !isCea(it.third) }
+        val options = raw
+            .filter { (_, _, f) -> !(hasRealTrack && isCea(f) && f.label == null && f.language == null) }
+            .map { (g, i, f) ->
+                val lang = f.language?.takeIf { it != C.LANGUAGE_UNDETERMINED }
+                    ?.let { java.util.Locale.forLanguageTag(it).getDisplayLanguage(java.util.Locale.ENGLISH).takeIf { n -> n.isNotBlank() } }
+                val label = f.label ?: lang ?: if (isCea(f)) "Closed captions" else "Subtitles"
+                TextTrackOption(label, g, i, g.isTrackSelected(i))
+            }
+            // Same label twice (e.g. the same sidecar exposed by two sources): keep one, preferring the selected one.
+            .groupBy { it.label }.values.map { dup -> dup.firstOrNull { it.selected } ?: dup.first() }
         val off = c.trackSelectionParameters.disabledTrackTypes.contains(C.TRACK_TYPE_TEXT) || options.none { it.selected }
         _state.update { it.copy(textTracks = options, textOff = off) }
     }
