@@ -26,8 +26,10 @@ import org.junit.Test
 @OptIn(ExperimentalTestApi::class)
 @HiltAndroidTest
 class AppFlowTest {
-    @get:Rule(order = 0) val hilt = HiltAndroidRule(this)
-    @get:Rule(order = 1) val compose = createAndroidComposeRule<MainActivity>()
+    @get:Rule(order = 0) val notifications: androidx.test.rule.GrantPermissionRule =
+        androidx.test.rule.GrantPermissionRule.grant(android.Manifest.permission.POST_NOTIFICATIONS)
+    @get:Rule(order = 1) val hilt = HiltAndroidRule(this)
+    @get:Rule(order = 2) val compose = createAndroidComposeRule<MainActivity>()
 
     @Inject lateinit var library: LibraryRepository
     @Inject lateinit var settings: SettingsRepository
