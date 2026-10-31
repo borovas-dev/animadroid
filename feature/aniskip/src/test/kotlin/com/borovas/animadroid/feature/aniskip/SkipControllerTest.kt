@@ -16,6 +16,15 @@ class SkipControllerTest {
         assertEquals(SkipAction.None, c.onPosition(20.0))
     }
 
+    @Test fun mergePrefersAniSkipPerSegmentAndFallsBack() {
+        val intro = SkipInterval(31.0, 111.0)
+        val outro = SkipInterval(1376.0, 1447.0)
+        assertEquals(SkipTimes(intro, outro), mergeSkipTimes(null, intro, outro))
+        assertEquals(SkipTimes(times.opening, outro), mergeSkipTimes(SkipTimes(times.opening, null), intro, outro))
+        assertEquals(times, mergeSkipTimes(times, intro, outro))
+        assertEquals(null, mergeSkipTimes(null, null, null))
+    }
+
     @Test fun buttonKeepsShowingUntilMarked() {
         val c = SkipController(times, 0, SkipBehavior.BUTTON)
         assertEquals(SkipAction.ShowButton(SkipSegment.OPENING, 90_000), c.onPosition(11.0))
