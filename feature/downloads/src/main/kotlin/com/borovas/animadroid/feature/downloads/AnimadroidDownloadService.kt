@@ -61,7 +61,10 @@ class AnimadroidDownloadService : DownloadService(
             ACTION_CANCEL_ALL -> coordinator.cancelAll()
             ACTION_RESUME_SYSTEM -> coordinator.resumeSystemPaused()
         }
-        return super.onStartCommand(intent, flags, startId)
+        // Media3 returns START_STICKY. A sticky restart happens in the background, where startForeground() throws
+        // on Android 12+ (crash loop). Recovery after a kill is done by [DownloadWatchdog] / PlatformScheduler jobs.
+        val result = super.onStartCommand(intent, flags, startId)
+        return if (result == START_STICKY) START_NOT_STICKY else result
     }
 
     override fun getForegroundNotification(downloads: List<Download>, notMetRequirements: Int): Notification {

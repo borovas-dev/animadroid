@@ -206,7 +206,7 @@ class DownloadCoordinator @Inject constructor(
                 if (item.state != DownloadState.COMPLETED && item.state != DownloadState.FAILED) {
                     repository.updateProgress(
                         item.providerId, item.animeId, item.episodeNumber, DownloadState.FAILED, item.bytes, item.percent,
-                        "Interrupted before the download started; retry",
+                        "Interrupted before the download could start",
                     )
                 }
             } else {
@@ -216,7 +216,38 @@ class DownloadCoordinator @Inject constructor(
                 if (parts.any { it.state == Download.STATE_QUEUED || it.state == Download.STATE_DOWNLOADING || it.state == Download.STATE_RESTARTING }) pending = true
             }
         }
-        if (pending) withContext(Dispatchers.Main) { startService() }
+        if (pending) {
+            ensureTicker()
+            withContext(Dispatchers.Main) { startService() }
+        }
+    }
+
+    /** True while a [DownloadWatchdogService] job hosts the transfers; the ticker must not re-arm (it would stop that job). */
+    @Volatile var hostedByJob = false
+        private set
+
+    /**
+     * Used by the watchdog job: waits until the manager exists and nothing is queued/downloading (or everything is
+     * waiting for requirements). Keeping the job alive keeps this process alive without a foreground service, which
+     * Android 12+ forbids starting from the background.
+     */
+    suspend fun awaitIdle() {
+        hostedByJob = true
+        try {
+            withContext(Dispatchers.Main) { manager }
+            reconcileJob?.join()
+            while (true) {
+                val busy = withContext(Dispatchers.Main) {
+                    !manager.isWaitingForRequirements && manager.currentDownloads.any {
+                        it.state == Download.STATE_QUEUED || it.state == Download.STATE_DOWNLOADING || it.state == Download.STATE_RESTARTING
+                    }
+                }
+                if (!busy) return
+                delay(2000)
+            }
+        } finally {
+            hostedByJob = false
+        }
     }
 
     private fun startService() {
@@ -249,11 +280,20 @@ class DownloadCoordinator @Inject constructor(
     private fun ensureTicker() {
         if (ticker?.isActive == true) return
         ticker = scope.launch {
+            var lastArm = 0L
             while (true) {
                 val current = withContext(Dispatchers.Main) { manager.currentDownloads }
                 current.forEach { known[it.request.id] = it }
                 current.map { DownloadIds.keyOf(it.request.id) }.distinct().forEach(::syncKey)
-                if (current.none { it.state == Download.STATE_DOWNLOADING || it.state == Download.STATE_QUEUED || it.state == Download.STATE_RESTARTING }) break
+                if (current.none { it.state == Download.STATE_DOWNLOADING || it.state == Download.STATE_QUEUED || it.state == Download.STATE_RESTARTING }) {
+                    if (!hostedByJob) DownloadWatchdog.cancel(context)
+                    break
+                }
+                val now = System.currentTimeMillis()
+                if (!hostedByJob && now - lastArm >= DownloadWatchdog.REARM_INTERVAL_MS) {
+                    DownloadWatchdog.arm(context, wifiOnly)
+                    lastArm = now
+                }
                 delay(1000)
             }
         }
