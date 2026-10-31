@@ -161,6 +161,14 @@ private fun SeekBar(
     val shownMs = if (dragging != null) (fraction * duration).toLong() else pos.positionMs
     val segmentColor = MaterialTheme.colorScheme.tertiary
 
+    // A held (but still) thumb must not let the controls auto-hide mid-scrub.
+    val scrubbing = dragging != null
+    if (scrubbing) {
+        androidx.compose.runtime.LaunchedEffect(Unit) {
+            while (true) { kotlinx.coroutines.delay(1_000); onInteraction() }
+        }
+    }
+
     Column {
         Box(Modifier.fillMaxWidth().height(40.dp), contentAlignment = Alignment.Center) {
             if (dragging != null) {

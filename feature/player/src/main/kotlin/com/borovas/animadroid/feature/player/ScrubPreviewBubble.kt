@@ -127,6 +127,6 @@ internal fun ScrubPreviewBubble(source: ScrubPreviewSource?, targetMs: Long, fra
 @Composable
 private fun ShimmerBox(modifier: Modifier) {
     val t = rememberInfiniteTransition(label = "scrubShimmer")
-    val a by t.animateFloat(0.10f, 0.30f, infiniteRepeatable(tween(700), RepeatMode.Reverse), label = "alpha")
-    Box(modifier.background(Color.White.copy(alpha = a)))
+    val a by t.animateFloat(0.05f, 0.25f, infiniteRepeatable(tween(700), RepeatMode.Reverse), label = "alpha")
+    Box(modifier.background(Color(0xFF3A3A3A)).background(Color.White.copy(alpha = a)))
 }
