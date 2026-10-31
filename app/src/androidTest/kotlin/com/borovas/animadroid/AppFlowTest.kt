@@ -40,11 +40,13 @@ class AppFlowTest {
         }
     }
 
+    private fun lastInput() = compose.onAllNodes(hasSetTextAction())[compose.onAllNodes(hasSetTextAction()).fetchSemanticsNodes().size - 1]
+
     private fun typeQuery(q: String) {
         compose.onNodeWithText("Search anime").performClick()
         compose.waitUntil(5_000) { compose.onAllNodes(hasSetTextAction()).fetchSemanticsNodes().isNotEmpty() }
-        compose.onAllNodes(hasSetTextAction()).onLast().performTextInput(q)
-        compose.onAllNodes(hasSetTextAction()).onLast().performImeAction()
+        lastInput().performTextInput(q)
+        lastInput().performImeAction()
     }
 
     private fun waitForText(text: String) =
