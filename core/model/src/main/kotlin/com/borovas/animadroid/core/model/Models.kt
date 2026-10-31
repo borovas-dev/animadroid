@@ -49,6 +49,9 @@ data class StreamSet(
     val externalAudioUrl: String? = null,
     val subtitles: List<SubtitleTrack> = emptyList(),
     val malId: Int? = null,
+    /** Provider-supplied intro/outro (hianime embed `skip.intro` / `skip.outro`); fallback when ani-skip has no data. */
+    val intro: SkipInterval? = null,
+    val outro: SkipInterval? = null,
 )
 
 @Serializable

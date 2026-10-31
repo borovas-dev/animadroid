@@ -65,3 +65,13 @@ class SkipController(
         }
     }
 }
+
+/**
+ * Combines ani-skip [primary] data with provider-supplied intro/outro: ani-skip wins per segment,
+ * the provider values fill the gaps. Returns null when nothing is known.
+ */
+fun mergeSkipTimes(primary: SkipTimes?, providerIntro: SkipInterval?, providerOutro: SkipInterval?): SkipTimes? {
+    val op = primary?.opening ?: providerIntro
+    val ed = primary?.ending ?: providerOutro
+    return if (op == null && ed == null) null else SkipTimes(op, ed)
+}

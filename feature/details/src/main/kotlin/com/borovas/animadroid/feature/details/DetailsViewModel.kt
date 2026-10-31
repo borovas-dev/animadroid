@@ -18,6 +18,7 @@ import com.borovas.animadroid.core.model.SettingsRepository
 import com.borovas.animadroid.core.model.TranslationMode
 import com.borovas.animadroid.provider.api.AnimeProvider
 import com.borovas.animadroid.provider.api.CloudflareChallengeException
+import com.borovas.animadroid.provider.api.CloudflareSolved
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -105,7 +106,12 @@ class DetailsViewModel @AssistedInject constructor(
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), DetailsUiState(initial))
 
-    init { reload() }
+    init {
+        reload()
+        viewModelScope.launch {
+            CloudflareSolved.events.collect { if (load.value.cloudflareUrl != null) reload() }
+        }
+    }
 
     private fun availableModes(a: Anime): List<TranslationMode> {
         if (a.subEpisodes == null && a.dubEpisodes == null) return TranslationMode.entries
@@ -164,6 +170,8 @@ class DetailsViewModel @AssistedInject constructor(
 
     fun setMode(mode: TranslationMode) {
         modeOverride.value = mode
+        // The player reads the translation mode from settings, so persist the choice.
+        viewModelScope.launch { settings.update { it.copy(mode = mode) } }
         episodesJob?.cancel()
         episodesJob = viewModelScope.launch {
             load.value = load.value.copy(loading = true, episodes = emptyList(), error = null)

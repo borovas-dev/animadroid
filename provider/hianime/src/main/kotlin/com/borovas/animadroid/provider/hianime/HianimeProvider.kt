@@ -81,6 +81,8 @@ class HianimeProvider(
             externalAudioUrl = parsed.externalAudioUrl,
             subtitles = config.subtitles,
             malId = malId,
+            intro = config.intro,
+            outro = config.outro,
         )
     }
 

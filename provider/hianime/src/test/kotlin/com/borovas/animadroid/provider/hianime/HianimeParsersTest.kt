@@ -49,6 +49,18 @@ class HianimeParsersTest {
         assertEquals(1, cfg.subtitles.size)
         assertTrue(cfg.subtitles[0].isDefault)
         assertEquals("en", cfg.subtitles[0].language)
+        assertEquals(31.0, cfg.intro!!.startSec, 0.0)
+        assertEquals(111.0, cfg.intro!!.endSec, 0.0)
+        assertEquals(1376.0, cfg.outro!!.startSec, 0.0)
+        assertEquals(1447.0, cfg.outro!!.endSec, 0.0)
+    }
+
+    @Test fun embedSkipMissingOrInvalidIsNull() {
+        val none = HianimeParsers.parseEmbedConfig("""{"src":"https://a/b.m3u8"}""")
+        assertEquals(null, none.intro)
+        val bad = HianimeParsers.parseEmbedConfig("""{"src":"https://a/b.m3u8","skip":{"intro":{"start":10,"end":5},"outro":{"start":0,"end":0}}}""")
+        assertEquals(null, bad.intro)
+        assertEquals(null, bad.outro)
     }
 
     @Test fun xorRoundTrip() {

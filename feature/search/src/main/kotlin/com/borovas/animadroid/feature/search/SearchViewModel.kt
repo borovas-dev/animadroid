@@ -10,6 +10,7 @@ import com.borovas.animadroid.core.model.SettingsRepository
 import com.borovas.animadroid.core.model.TranslationMode
 import com.borovas.animadroid.provider.api.AnimeProvider
 import com.borovas.animadroid.provider.api.CloudflareChallengeException
+import com.borovas.animadroid.provider.api.CloudflareSolved
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -54,6 +55,15 @@ class SearchViewModel @Inject constructor(
         query, settings.settings, library.recentSearches(), results,
     ) { q, s, recents, r -> SearchUiState(q, s.mode, recents, r) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SearchUiState())
+
+    init {
+        viewModelScope.launch {
+            CloudflareSolved.events.collect {
+                val r = results.value
+                if (r is SearchResults.Error && r.cloudflareUrl != null) retry()
+            }
+        }
+    }
 
     fun search(raw: String) {
         val q = raw.trim()

@@ -99,7 +99,7 @@ fun LibraryScreen(
                 if (state.continueWatching.isNotEmpty()) {
                     item(span = { GridItemSpan(maxLineSpan) }) {
                         Column {
-                            SectionHeader("Continue watching", Modifier.padding(horizontal = 0.dp))
+                            SectionHeader("Continue watching", horizontalPadding = 0.dp)
                             PosterCarousel(
                                 state.continueWatching, Modifier.height(260.dp),
                                 contentPadding = PaddingValues(0.dp),
@@ -110,7 +110,7 @@ fun LibraryScreen(
                     }
                 }
                 if (state.favorites.isNotEmpty()) {
-                    item(span = { GridItemSpan(maxLineSpan) }) { SectionHeader("Favorites") }
+                    item(span = { GridItemSpan(maxLineSpan) }) { SectionHeader("Favorites", horizontalPadding = 0.dp) }
                     items(state.favorites, key = { "f" + it.providerId + it.id }) { a ->
                         AnimeCard(a, onClick = { onAnimeClick(a) })
                     }

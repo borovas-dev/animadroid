@@ -304,8 +304,16 @@ private fun EpisodeRow(
     ) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("Episode ${ep.number}", style = MaterialTheme.typography.titleMedium)
-                ep.title?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                val realTitle = ep.title?.trim()?.takeIf { it.isNotEmpty() && !it.isGenericEpisodeLabel(ep.number) }
+                Text(
+                    if (realTitle != null) "${ep.number}. $realTitle" else "Episode ${ep.number}",
+                    style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                )
+                if (finished) Text("Watched", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                else if (progress != null && progress.fraction > 0f) Text(
+                    "${(progress.fraction * 100).toInt()}% watched",
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
                 if (progress != null && !finished && progress.fraction > 0f) {
                     LinearWavyProgressIndicator(progress = { progress.fraction }, modifier = Modifier.fillMaxWidth())
                 }
@@ -347,6 +355,12 @@ private fun DownloadButton(item: DownloadItem?, onDownload: () -> Unit, onPause:
             Icon(Icons.Rounded.Refresh, "Download failed, retry", tint = MaterialTheme.colorScheme.error)
         }
     }
+}
+
+/** True for placeholder titles like "Episode 1", "Ep. 1" or just the number. */
+internal fun String.isGenericEpisodeLabel(number: String): Boolean {
+    val t = trim().lowercase().removeSuffix(".")
+    return t == number.lowercase() || Regex("""(episode|ep\.?)\s*#?\s*${Regex.escape(number.lowercase())}""").matches(t)
 }
 
 private val sampleAnime = Anime(

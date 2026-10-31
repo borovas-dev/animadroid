@@ -3,6 +3,7 @@ package com.borovas.animadroid.provider.hianime
 import com.borovas.animadroid.core.model.Anime
 import com.borovas.animadroid.core.model.Episode
 import com.borovas.animadroid.core.model.StreamVariant
+import com.borovas.animadroid.core.model.SkipInterval
 import com.borovas.animadroid.core.model.SubtitleTrack
 import java.net.URI
 import java.util.Base64
@@ -11,6 +12,7 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -103,7 +105,12 @@ internal object HianimeParsers {
 
     fun extractBlob(embedHtml: String): String? = Regex("window\\.__P=\"([^\"]*)\"").find(embedHtml)?.groupValues?.get(1)
 
-    class EmbedConfig(val masterUrl: String?, val subtitles: List<SubtitleTrack>)
+    class EmbedConfig(
+        val masterUrl: String?,
+        val subtitles: List<SubtitleTrack>,
+        val intro: SkipInterval? = null,
+        val outro: SkipInterval? = null,
+    )
 
     fun parseEmbedConfig(jsonText: String): EmbedConfig {
         val obj = runCatching { json.parseToJsonElement(jsonText).jsonObject }.getOrNull()
@@ -119,7 +126,15 @@ internal object HianimeParsers {
                 isDefault = o["default"]?.jsonPrimitive?.booleanOrNull ?: false,
             )
         }.sortedByDescending { it.isDefault }
-        return EmbedConfig(src, subs)
+        val skip = obj["skip"] as? JsonObject
+        return EmbedConfig(src, subs, skipInterval(skip?.get("intro")), skipInterval(skip?.get("outro")))
+    }
+
+    private fun skipInterval(el: kotlinx.serialization.json.JsonElement?): SkipInterval? {
+        val o = el as? JsonObject ?: return null
+        val start = o["start"]?.jsonPrimitive?.doubleOrNull ?: return null
+        val end = o["end"]?.jsonPrimitive?.doubleOrNull ?: return null
+        return if (end > start && start >= 0) SkipInterval(start, end) else null
     }
 
     class MasterPlaylist(val variants: List<StreamVariant>, val externalAudioUrl: String?)
