@@ -108,7 +108,10 @@ object DownloadPlanner {
 }
 
 /** Snapshot of one Media3 download part, decoupled from media3 types. */
-data class PartState(val id: String, val state: Int, val bytes: Long, val percent: Float) {
+data class PartState(
+    val id: String, val state: Int, val bytes: Long, val percent: Float,
+    val stopReason: Int = 0, val failure: String? = null,
+) {
     companion object {
         // Mirror androidx.media3.exoplayer.offline.Download.STATE_* (asserted in tests).
         const val QUEUED = 0
@@ -121,7 +124,8 @@ data class PartState(val id: String, val state: Int, val bytes: Long, val percen
     }
 }
 
-data class Aggregate(val state: DownloadState, val bytes: Long, val percent: Float)
+/** [reason]: failure text for FAILED, or the system-pause note for PAUSED; null otherwise. */
+data class Aggregate(val state: DownloadState, val bytes: Long, val percent: Float, val reason: String? = null)
 
 object DownloadAggregator {
     /** Combines the parts of one episode. Returns null when there are no parts (nothing known). */
@@ -143,6 +147,14 @@ object DownloadAggregator {
             main.state == PartState.COMPLETED -> 0.99f
             else -> (main.percent / 100f).coerceIn(0f, 0.99f)
         }
-        return Aggregate(state, bytes, percent)
+        val reason = when (state) {
+            DownloadState.FAILED -> live.firstOrNull { it.state == PartState.FAILED }?.failure
+            DownloadState.PAUSED ->
+                if (live.none { it.state == PartState.STOPPED && it.stopReason == DownloadPolicy.STOP_REASON_USER } &&
+                    live.any { it.state == PartState.STOPPED && it.stopReason == DownloadPolicy.STOP_REASON_SYSTEM }
+                ) DownloadPolicy.SYSTEM_PAUSE_TEXT else null
+            else -> null
+        }
+        return Aggregate(state, bytes, percent, reason)
     }
 }

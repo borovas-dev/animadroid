@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="download_channel_name">Downloads</string>
+    <string name="download_events_channel_name">Download updates</string>
+    <string name="download_events_channel_description">Completed and failed downloads, and downloads waiting for a network</string>
     <string name="download_channel_description">Progress of episodes being downloaded for offline viewing</string>
 </resources>

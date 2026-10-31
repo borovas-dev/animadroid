@@ -33,6 +33,7 @@ class DownloadsViewModel @Inject constructor(
 
     init {
         coordinator.manager // create the manager early so persisted downloads resume and Room is reconciled
+        coordinator.resumeSystemPaused()
     }
 
     val messages: SharedFlow<String> = coordinator.messages

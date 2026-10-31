@@ -11,6 +11,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.offline.Download
 import androidx.media3.exoplayer.offline.DownloadManager
 import androidx.media3.exoplayer.offline.DownloadService
+import androidx.media3.exoplayer.scheduler.PlatformScheduler
 import androidx.media3.exoplayer.scheduler.Scheduler
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -39,14 +40,26 @@ class AnimadroidDownloadService : DownloadService(
 
     override fun getDownloadManager(): DownloadManager = coordinator.manager
 
-    // No JobScheduler: downloads that wait for Wi-Fi resume when the user next opens the app.
-    override fun getScheduler(): Scheduler? = null
+    // JobScheduler-backed: restarts this service when the manager's requirements (Wi-Fi / network) are met again
+    // after the process was killed, the device rebooted or the service stopped while waiting. See [DownloadPolicy].
+    override fun getScheduler(): Scheduler = PlatformScheduler(this, JOB_ID)
+
+    /**
+     * Android 15+ stops `dataSync` foreground services after ~6h and calls this; failing to stop within seconds
+     * crashes the app. Pause what is running with a system stop reason, tell the user how to resume, then stop.
+     * (Media3's default would only stopSelf() and leave the downloads silently dead-in-the-water.)
+     */
+    override fun onTimeout(startId: Int, fgsType: Int) {
+        coordinator.pauseForSystemTimeout()
+        super.onTimeout(startId, fgsType)
+    }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_PAUSE_ALL -> coordinator.pauseAll()
             ACTION_RESUME_ALL -> coordinator.resumeAll()
             ACTION_CANCEL_ALL -> coordinator.cancelAll()
+            ACTION_RESUME_SYSTEM -> coordinator.resumeSystemPaused()
         }
         return super.onStartCommand(intent, flags, startId)
     }
@@ -95,7 +108,9 @@ class AnimadroidDownloadService : DownloadService(
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
 
-    private companion object {
+    internal companion object {
+        const val JOB_ID = 4710
+        const val ACTION_RESUME_SYSTEM = "com.borovas.animadroid.downloads.RESUME_SYSTEM"
         const val NOTIFICATION_ID = 4711
         const val CHANNEL_ID = "downloads"
         const val ACTION_PAUSE_ALL = "com.borovas.animadroid.downloads.PAUSE_ALL"

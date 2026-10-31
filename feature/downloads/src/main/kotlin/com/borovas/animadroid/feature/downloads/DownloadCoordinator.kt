@@ -87,11 +87,19 @@ class DownloadCoordinator @Inject constructor(
     private val repository: DownloadRepository,
     private val settings: SettingsRepository,
     private val providers: Map<String, @JvmSuppressWildcards AnimeProvider>,
+    private val notifier: DownloadNotifier,
 ) : DownloadController {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     /** Latest known state of every Media3 download part (including finished ones), by part id. */
     private val known = ConcurrentHashMap<String, Download>()
+    /** Human-readable failure text per failed part (Media3 only hands the exception to the listener). */
+    private val failures = ConcurrentHashMap<String, String>()
+
+    /** Terminal state we already posted a notification for, per episode key (dedupes multi-part episodes). */
+    private val notified = ConcurrentHashMap<String, DownloadState>()
+
+    @Volatile private var wifiOnly = true
     private var ticker: Job? = null
     private var reconcileJob: Job? = null
 
@@ -109,13 +117,19 @@ class DownloadCoordinator @Inject constructor(
 
     private val listener = object : DownloadManager.Listener {
         override fun onDownloadChanged(downloadManager: DownloadManager, download: Download, finalException: Exception?) {
-            known[download.request.id] = download
-            syncKey(DownloadIds.keyOf(download.request.id))
+            val prev = known.put(download.request.id, download)
+            if (download.state == Download.STATE_FAILED) {
+                failures[download.request.id] = DownloadPolicy.describeFailure(finalException)
+            } else {
+                failures.remove(download.request.id)
+            }
+            syncKey(DownloadIds.keyOf(download.request.id), notify = prev?.state != download.state)
             ensureTicker()
         }
 
         override fun onDownloadRemoved(downloadManager: DownloadManager, download: Download) {
             known.remove(download.request.id)
+            failures.remove(download.request.id)
             val key = DownloadIds.keyOf(download.request.id)
             // Removed from outside the UI (e.g. "cancel all" in the notification): drop the row once no part is left.
             if (known.keys.none { DownloadIds.keyOf(it) == key }) {
@@ -131,6 +145,7 @@ class DownloadCoordinator @Inject constructor(
 
         override fun onWaitingForRequirementsChanged(downloadManager: DownloadManager, waitingForRequirements: Boolean) {
             _waitingForNetwork.value = waitingForRequirements
+            if (waitingForRequirements) notifier.waitingForWifi(wifiOnly) else notifier.clearWaiting()
         }
     }
 
@@ -138,18 +153,45 @@ class DownloadCoordinator @Inject constructor(
         val m = DownloadManager(context, DefaultDownloadIndex(databaseProvider), HeaderAwareDownloaderFactory(sources))
         m.maxParallelDownloads = 2
         m.minRetryCount = 3
-        m.requirements = Requirements(Requirements.NETWORK_UNMETERED) // refined below once settings are read
+        m.requirements = DownloadPolicy.requirementsFor(wifiOnly = true) // safe default until the setting is read
         m.addListener(listener)
         m.downloadIndex.getDownloads().use { c -> while (c.moveToNext()) c.download.let { known[it.request.id] = it } }
         scope.launch {
             settings.settings.map { it.downloadWifiOnly }.distinctUntilChanged().collect { wifiOnly ->
-                withContext(Dispatchers.Main) {
-                    m.requirements = Requirements(if (wifiOnly) Requirements.NETWORK_UNMETERED else Requirements.NETWORK)
-                }
+                this@DownloadCoordinator.wifiOnly = wifiOnly
+                // Applied live; DownloadManager also re-registers the service's restart job for the new requirements.
+                withContext(Dispatchers.Main) { m.requirements = DownloadPolicy.requirementsFor(wifiOnly) }
             }
         }
         reconcileJob = scope.launch { reconcile() }
         return m
+    }
+
+    /**
+     * Cheap entry point for Application.onCreate: creates the manager off the critical path so persisted
+     * downloads are picked up (and the service restarted if work is pending) without opening the Downloads screen.
+     */
+    fun start() {
+        scope.launch(Dispatchers.Main) { manager }
+    }
+
+    /** Called from [AnimadroidDownloadService.onTimeout]: pause everything active, tell the user, let the service stop. */
+    fun pauseForSystemTimeout() {
+        manager.currentDownloads
+            .filter { it.state == Download.STATE_QUEUED || it.state == Download.STATE_DOWNLOADING || it.state == Download.STATE_RESTARTING }
+            .forEach { manager.setStopReason(it.request.id, DownloadPolicy.STOP_REASON_SYSTEM) }
+        notifier.pausedBySystem()
+    }
+
+    /** Clears the system stop reason (app came to foreground, or the user tapped the notification). */
+    fun resumeSystemPaused() {
+        scope.launch(Dispatchers.Main) {
+            val paused = manager.currentDownloads.filter { it.state == Download.STATE_STOPPED && it.stopReason == DownloadPolicy.STOP_REASON_SYSTEM }
+            notifier.clearPausedBySystem()
+            if (paused.isEmpty()) return@launch
+            paused.forEach { manager.setStopReason(it.request.id, Download.STOP_REASON_NONE) }
+            startService()
+        }
     }
 
     /** Brings Room in line with Media3 after a process restart and restarts the service if work is pending. */
@@ -162,9 +204,14 @@ class DownloadCoordinator @Inject constructor(
             if (parts.isEmpty()) {
                 // QUEUED rows whose stream lookup was interrupted by process death can never finish.
                 if (item.state != DownloadState.COMPLETED && item.state != DownloadState.FAILED) {
-                    repository.updateProgress(item.providerId, item.animeId, item.episodeNumber, DownloadState.FAILED, item.bytes, item.percent)
+                    repository.updateProgress(
+                        item.providerId, item.animeId, item.episodeNumber, DownloadState.FAILED, item.bytes, item.percent,
+                        "Interrupted before the download started; retry",
+                    )
                 }
             } else {
+                parts.forEach { if (it.state == Download.STATE_FAILED) failures.putIfAbsent(it.request.id, item.failureReason ?: "Download failed") }
+                DownloadAggregator.aggregate(parts.map(::partState))?.let { notified[key] = it.state }
                 syncKey(key)
                 if (parts.any { it.state == Download.STATE_QUEUED || it.state == Download.STATE_DOWNLOADING || it.state == Download.STATE_RESTARTING }) pending = true
             }
@@ -178,10 +225,24 @@ class DownloadCoordinator @Inject constructor(
 
     private fun partsOf(key: String): List<Download> = known.values.filter { DownloadIds.keyOf(it.request.id) == key }
 
-    private fun syncKey(key: String) {
-        val agg = DownloadAggregator.aggregate(partsOf(key).map { PartState(it.request.id, it.state, it.bytesDownloaded, it.percentDownloaded) }) ?: return
+    private fun partState(d: Download) = PartState(
+        d.request.id, d.state, d.bytesDownloaded, d.percentDownloaded, d.stopReason, failures[d.request.id],
+    )
+
+    private fun syncKey(key: String, notify: Boolean = false) {
+        val agg = DownloadAggregator.aggregate(partsOf(key).map(::partState)) ?: return
         val p = DownloadIds.parse(key) ?: return
-        scope.launch { repository.updateProgress(p.providerId, p.animeId, p.episodeNumber, agg.state, agg.bytes, agg.percent) }
+        val terminal = agg.state == DownloadState.COMPLETED || agg.state == DownloadState.FAILED
+        val announce = notify && terminal && notified.put(key, agg.state) != agg.state
+        if (!terminal) notified.remove(key)
+        scope.launch {
+            repository.updateProgress(p.providerId, p.animeId, p.episodeNumber, agg.state, agg.bytes, agg.percent, agg.reason)
+            if (announce) {
+                val row = repository.get(p.providerId, p.animeId, p.episodeNumber) ?: return@launch
+                if (agg.state == DownloadState.COMPLETED) notifier.completed(key, row.title, row.episodeNumber)
+                else notifier.failed(key, row.title, row.episodeNumber, agg.reason ?: "Download failed")
+            }
+        }
     }
 
     /** Media3 does not notify listeners on byte progress; poll the live downloads once a second while any is active. */
@@ -250,7 +311,9 @@ class DownloadCoordinator @Inject constructor(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            repository.updateProgress(anime.providerId, anime.id, episode.number, DownloadState.FAILED, 0, 0f)
+            val reason = "Could not start: ${e.message ?: "unknown error"}"
+            repository.updateProgress(anime.providerId, anime.id, episode.number, DownloadState.FAILED, 0, 0f, reason)
+            notifier.failed(key, anime.title, episode.number, reason)
             _messages.tryEmit("Could not start download: ${e.message ?: "unknown error"}")
         }
     }
@@ -298,7 +361,7 @@ class DownloadCoordinator @Inject constructor(
     }
 
     companion object {
-        const val STOP_REASON_PAUSED = 1
+        const val STOP_REASON_PAUSED = DownloadPolicy.STOP_REASON_USER
     }
 }
 

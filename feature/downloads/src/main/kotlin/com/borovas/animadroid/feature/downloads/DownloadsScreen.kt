@@ -256,9 +256,9 @@ private fun EpisodeRow(
     val status = when (item.state) {
         DownloadState.QUEUED -> "Queued"
         DownloadState.DOWNLOADING -> "$pct% · $size"
-        DownloadState.PAUSED -> "Paused · $pct%"
+        DownloadState.PAUSED -> item.failureReason ?: "Paused · $pct%"
         DownloadState.COMPLETED -> "Downloaded · $size"
-        DownloadState.FAILED -> "Failed · tap retry"
+        DownloadState.FAILED -> "Failed: ${item.failureReason ?: "unknown reason"} · tap retry"
     }
     Row(
         Modifier.fillMaxWidth().then(if (item.isPlayable) Modifier.clickable(onClick = onPlay) else Modifier)
@@ -316,7 +316,7 @@ private fun DownloadsPreview() = AnimadroidTheme(dynamicColor = false) {
     val items = listOf(
         sample("1", DownloadState.COMPLETED, 1f, 310_000_000), sample("2", DownloadState.DOWNLOADING, 0.42f, 130_000_000),
         sample("3", DownloadState.PAUSED, 0.2f, 60_000_000), sample("4", DownloadState.QUEUED, 0f, 0),
-        sample("5", DownloadState.FAILED, 0f, 0),
+        sample("5", DownloadState.FAILED, 0f, 0).copy(failureReason = "Server refused access (HTTP 403); the link may have expired"),
     )
     DownloadsScreen(
         DownloadsUiState(

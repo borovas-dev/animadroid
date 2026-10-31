@@ -79,7 +79,7 @@ private val topLevels = listOf(
 )
 
 @Composable
-fun AnimadroidApp(aiRecommendationsEnabled: Boolean) {
+fun AnimadroidApp(aiRecommendationsEnabled: Boolean, openDownloads: Boolean = false, onOpenDownloadsHandled: () -> Unit = {}) {
     val context = LocalContext.current
     val backStack = rememberNavBackStack(LibraryRoute)
     val top = backStack.lastOrNull()
@@ -92,6 +92,15 @@ fun AnimadroidApp(aiRecommendationsEnabled: Boolean) {
         if (route == selected) return
         while (backStack.size > 1) backStack.removeAt(backStack.lastIndex)
         if (route != LibraryRoute) backStack.add(route)
+    }
+
+    // Download notifications deep-link to the Downloads tab.
+    LaunchedEffect(openDownloads) {
+        if (openDownloads) {
+            while (backStack.size > 1) backStack.removeAt(backStack.lastIndex)
+            backStack.add(DownloadsRoute)
+            onOpenDownloadsHandled()
+        }
     }
 
     var solverUrl by rememberSaveable { mutableStateOf<String?>(null) }

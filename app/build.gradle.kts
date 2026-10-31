@@ -27,7 +27,7 @@ dependencies {
     implementation(libs.navigation3.runtime); implementation(libs.navigation3.ui); implementation(libs.androidx.lifecycle.viewmodel.navigation3)
     implementation(libs.compose.adaptive); implementation(libs.compose.adaptive.layout); implementation(libs.compose.adaptive.navigation3)
     implementation(libs.hilt.lifecycle.viewmodel.compose); implementation(libs.kotlinx.serialization.json)
-    implementation(libs.coil.network.okhttp)
+    implementation(libs.coil.network.okhttp); implementation(libs.androidx.lifecycle.process)
     androidTestImplementation(libs.androidx.test.runner); androidTestImplementation(libs.androidx.test.rules); androidTestImplementation(libs.hilt.android.testing); kspAndroidTest(libs.hilt.compiler)
     androidTestImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.test.ext); androidTestImplementation(libs.compose.ui.test.junit4); debugImplementation(libs.compose.ui.test.manifest)

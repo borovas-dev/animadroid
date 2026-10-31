@@ -10,7 +10,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
+import android.content.Intent
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import com.borovas.animadroid.feature.downloads.EXTRA_OPEN_DOWNLOADS
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
@@ -28,6 +32,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         splash.setKeepOnScreenCondition { viewModel.state.value.settings == null }
         enableEdgeToEdge()
+        if (savedInstanceState == null && intent.getBooleanExtra(EXTRA_OPEN_DOWNLOADS, false)) openDownloads = true
         if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             registerForActivityResult(ActivityResultContracts.RequestPermission()) {}.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
@@ -40,9 +45,22 @@ class MainActivity : ComponentActivity() {
                 ThemeMode.DARK -> true
             }
             AnimadroidTheme(darkTheme = dark, dynamicColor = settings?.dynamicColor ?: true) {
-                if (settings != null) AnimadroidApp(aiRecommendationsEnabled = settings.aiRecommendationsEnabled)
+                if (settings != null) {
+                    AnimadroidApp(
+                        aiRecommendationsEnabled = settings.aiRecommendationsEnabled,
+                        openDownloads = openDownloads,
+                        onOpenDownloadsHandled = { openDownloads = false },
+                    )
+                }
             }
         }
+    }
+
+    private var openDownloads by mutableStateOf(false)
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        if (intent.getBooleanExtra(EXTRA_OPEN_DOWNLOADS, false)) openDownloads = true
     }
 
     override fun onUserLeaveHint() {
