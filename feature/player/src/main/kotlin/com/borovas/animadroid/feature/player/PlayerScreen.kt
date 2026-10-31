@@ -79,6 +79,7 @@ private const val AUTO_HIDE_MS = 3_000L
 private const val DOUBLE_TAP_SEEK_MS = 10_000L
 
 /** Full-screen immersive player. Hosts the controls overlay, gestures, PiP and system-bar handling. */
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 @Composable
 fun PlayerScreen(route: PlayerRoute, onBack: () -> Unit, modifier: Modifier = Modifier, onCloudflare: (String) -> Unit = {}) {
     val vm = hiltViewModel<PlayerViewModel, PlayerViewModel.Factory>(creationCallback = { it.create(route) })

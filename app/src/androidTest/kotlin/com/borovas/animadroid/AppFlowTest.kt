@@ -1,6 +1,7 @@
 package com.borovas.animadroid
 
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
@@ -39,14 +40,19 @@ class AppFlowTest {
         }
     }
 
+    private fun typeQuery(q: String) {
+        compose.onNodeWithText("Search anime").performClick()
+        compose.waitUntil(5_000) { compose.onAllNodes(hasSetTextAction()).fetchSemanticsNodes().isNotEmpty() }
+        compose.onAllNodes(hasSetTextAction()).onLast().performTextInput(q)
+        compose.onAllNodes(hasSetTextAction()).onLast().performImeAction()
+    }
+
     private fun waitForText(text: String) =
         compose.waitUntil(10_000) { compose.onAllNodes(hasText(text, substring = true)).fetchSemanticsNodes().isNotEmpty() }
 
     @Test fun searchOpensDetailsWithEpisodes() {
         compose.onNodeWithText("Search").performClick()
-        compose.onNodeWithText("Search anime").performClick()
-        compose.onNodeWithText("Search anime").performTextInput("fake")
-        compose.onNodeWithText("Search anime").performImeAction()
+        typeQuery("fake")
         waitForText("Fake Adventure")
         compose.onNodeWithText("Fake Adventure").performClick()
         waitForText("1. Pilot 1")
@@ -56,9 +62,7 @@ class AppFlowTest {
     @Test fun cloudflareErrorOffersVerification() {
         FakeProviderModule.instance.blockOnce = true
         compose.onNodeWithText("Search").performClick()
-        compose.onNodeWithText("Search anime").performClick()
-        compose.onNodeWithText("Search anime").performTextInput("fake")
-        compose.onNodeWithText("Search anime").performImeAction()
+        typeQuery("fake")
         waitForText("Verification needed")
         compose.onNodeWithText("Verify in browser").performClick()
         // The full-screen solver dialog is shown.
