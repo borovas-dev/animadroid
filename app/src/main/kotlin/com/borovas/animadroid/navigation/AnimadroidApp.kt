@@ -56,6 +56,10 @@ import dev.borovas.animadroid.feature.downloads.downloadsEntry
 import dev.borovas.animadroid.feature.library.LibraryRoute
 import dev.borovas.animadroid.feature.library.libraryEntry
 import dev.borovas.animadroid.feature.recommend.RecommendCard
+import dev.borovas.animadroid.feature.recommend.RecommendLifecycle
+import dev.borovas.animadroid.feature.recommend.RecommendRoute
+import dev.borovas.animadroid.feature.recommend.RecommendSettingsSection
+import dev.borovas.animadroid.feature.recommend.recommendEntry
 import dev.borovas.animadroid.feature.search.SearchRoute
 import dev.borovas.animadroid.feature.search.searchEntry
 import dev.borovas.animadroid.feature.settings.SettingsRoute
@@ -105,7 +109,13 @@ fun AnimadroidApp(aiRecommendationsEnabled: Boolean) {
         entryProvider<NavKey> {
             libraryEntry(
                 onAnimeClick = { backStack.add(DetailsRoute(it)) },
-                recommendations = if (aiRecommendationsEnabled) ({ RecommendCard() }) else null,
+                recommendations = if (aiRecommendationsEnabled) ({
+                    RecommendCard(
+                        onAnimeClick = { backStack.add(DetailsRoute(it)) },
+                        onOpenSettings = { selectTab(SettingsRoute) },
+                        onSeeAll = { backStack.add(RecommendRoute) },
+                    )
+                }) else null,
             )
             searchEntry(
                 onAnimeClick = { backStack.add(DetailsRoute(it)) },
@@ -117,6 +127,13 @@ fun AnimadroidApp(aiRecommendationsEnabled: Boolean) {
                 onExport = { exportLauncher.launch("animadroid-backup.json") },
                 onImport = { importLauncher.launch(arrayOf("application/json", "*/*")) },
                 onImportAniCli = { aniCliLauncher.launch(arrayOf("*/*")) },
+                onAiToggled = { on -> if (!on) RecommendLifecycle.onDisabled(context) },
+                recommendationsSection = { RecommendSettingsSection() },
+            )
+            recommendEntry(
+                onAnimeClick = { backStack.add(DetailsRoute(it)) },
+                onOpenSettings = { selectTab(SettingsRoute) },
+                onBack = { backStack.removeLastOrNull() },
             )
             playerEntry(onBack = { backStack.removeLastOrNull() })
             detailsEntry(
