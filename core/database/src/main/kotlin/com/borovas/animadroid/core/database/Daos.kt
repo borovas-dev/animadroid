@@ -82,6 +82,36 @@ interface ProgressDao {
 }
 
 @Dao
+interface DownloadDao {
+    @Upsert
+    suspend fun upsert(entity: DownloadEntity)
+
+    @Query("SELECT * FROM download ORDER BY createdAt DESC")
+    fun all(): Flow<List<DownloadEntity>>
+
+    @Query("SELECT * FROM download")
+    suspend fun getAll(): List<DownloadEntity>
+
+    @Query("SELECT * FROM download WHERE providerId = :providerId AND animeId = :animeId")
+    fun forAnime(providerId: String, animeId: String): Flow<List<DownloadEntity>>
+
+    @Query("SELECT * FROM download WHERE providerId = :providerId AND animeId = :animeId AND episodeNumber = :episode")
+    fun observe(providerId: String, animeId: String, episode: String): Flow<DownloadEntity?>
+
+    @Query("SELECT * FROM download WHERE providerId = :providerId AND animeId = :animeId AND episodeNumber = :episode")
+    suspend fun get(providerId: String, animeId: String, episode: String): DownloadEntity?
+
+    @Query(
+        "UPDATE download SET state = :state, bytes = :bytes, percent = :percent " +
+            "WHERE providerId = :providerId AND animeId = :animeId AND episodeNumber = :episode",
+    )
+    suspend fun updateProgress(providerId: String, animeId: String, episode: String, state: String, bytes: Long, percent: Float)
+
+    @Query("DELETE FROM download WHERE providerId = :providerId AND animeId = :animeId AND episodeNumber = :episode")
+    suspend fun delete(providerId: String, animeId: String, episode: String)
+}
+
+@Dao
 interface SearchDao {
     @Upsert
     suspend fun upsert(entry: SearchHistoryEntity)

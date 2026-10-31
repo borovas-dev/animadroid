@@ -56,6 +56,7 @@ data class AppSettings(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val dynamicColor: Boolean = true,
     val aiRecommendationsEnabled: Boolean = false,
+    val downloadWifiOnly: Boolean = true,
 )
 
 /** Implemented in :core:datastore. */

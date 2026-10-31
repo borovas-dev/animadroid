@@ -9,6 +9,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import com.borovas.animadroid.core.model.DownloadRepository
 import com.borovas.animadroid.core.model.LibraryRepository
 import javax.inject.Singleton
 
@@ -18,6 +19,10 @@ abstract class DatabaseBindsModule {
     @Binds
     @Singleton
     abstract fun bindLibrary(impl: RoomLibraryRepository): LibraryRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindDownloads(impl: RoomDownloadRepository): DownloadRepository
 }
 
 @Module
@@ -28,5 +33,6 @@ object DatabaseProvidesModule {
     fun database(@ApplicationContext context: Context): AnimadroidDatabase =
         Room.databaseBuilder<AnimadroidDatabase>(context, context.getDatabasePath("animadroid.db").absolutePath)
             .setDriver(BundledSQLiteDriver())
+            .addMigrations(*ALL_MIGRATIONS)
             .build()
 }

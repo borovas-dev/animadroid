@@ -7,7 +7,6 @@ import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
-import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
@@ -16,6 +15,17 @@ import androidx.media3.exoplayer.source.MergingMediaSource
 import androidx.media3.exoplayer.upstream.LoadErrorHandlingPolicy
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.components.SingletonComponent
+import com.borovas.animadroid.feature.downloads.CacheDataSources
+
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+internal interface PlaybackEntryPoint {
+    fun cacheDataSources(): CacheDataSources
+}
 
 /**
  * Hosts the ExoPlayer + MediaSession. The default media notification (foreground, mediaPlayback) is
@@ -27,7 +37,11 @@ class PlaybackService : MediaSessionService() {
     override fun onCreate() {
         super.onCreate()
         val player = ExoPlayer.Builder(this)
-            .setMediaSourceFactory(HeaderAwareMediaSourceFactory())
+            .setMediaSourceFactory(
+                HeaderAwareMediaSourceFactory(
+                    EntryPointAccessors.fromApplication(applicationContext, PlaybackEntryPoint::class.java).cacheDataSources(),
+                ),
+            )
             .setAudioAttributes(
                 AudioAttributes.Builder()
                     .setContentType(C.AUDIO_CONTENT_TYPE_MOVIE)
@@ -67,7 +81,7 @@ class PlaybackService : MediaSessionService() {
  * [MediaItem.mediaMetadata] extras by [MediaItemFactory].
  */
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
-internal class HeaderAwareMediaSourceFactory : MediaSource.Factory {
+internal class HeaderAwareMediaSourceFactory(private val cacheSources: CacheDataSources) : MediaSource.Factory {
     private var policy: LoadErrorHandlingPolicy? = null
 
     override fun setLoadErrorHandlingPolicy(p: LoadErrorHandlingPolicy): MediaSource.Factory = apply { policy = p }
@@ -85,12 +99,9 @@ internal class HeaderAwareMediaSourceFactory : MediaSource.Factory {
                 b.keySet().forEach { k -> b.getString(k)?.let { put(k, it) } }
             }
         }
-        val http = DefaultHttpDataSource.Factory()
-            .setAllowCrossProtocolRedirects(true)
-            .setConnectTimeoutMs(15_000)
-            .setReadTimeoutMs(15_000)
-            .setDefaultRequestProperties(headers)
-        val factory = DefaultMediaSourceFactory(http).also { f -> policy?.let { f.setLoadErrorHandlingPolicy(it) } }
+        // Read-through the shared download cache: downloaded episodes play with no network at all, everything else
+        // streams from the network (read-only cache, so streaming never fills the offline store).
+        val factory = DefaultMediaSourceFactory(cacheSources.forPlayback(headers)).also { f -> policy?.let { f.setLoadErrorHandlingPolicy(it) } }
         val main = factory.createMediaSource(mediaItem)
         val audioUrl = extras?.getString(MediaItemFactory.EXTRA_AUDIO_URL) ?: return main
         val audio = factory.createMediaSource(MediaItem.fromUri(audioUrl))

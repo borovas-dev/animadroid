@@ -8,6 +8,9 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import com.borovas.animadroid.core.model.Anime
+import com.borovas.animadroid.core.model.DownloadController
+import com.borovas.animadroid.core.model.DownloadItem
+import com.borovas.animadroid.core.model.DownloadRepository
 import com.borovas.animadroid.core.model.Episode
 import com.borovas.animadroid.core.model.EpisodeProgress
 import com.borovas.animadroid.core.model.LibraryRepository
@@ -37,6 +40,8 @@ data class DetailsUiState(
     val availableModes: List<TranslationMode> = TranslationMode.entries,
     val episodes: List<Episode> = emptyList(),
     val progress: Map<String, EpisodeProgress> = emptyMap(),
+    /** Episode number -> offline download, when one exists. */
+    val downloads: Map<String, DownloadItem> = emptyMap(),
     val isFavorite: Boolean = false,
     val loading: Boolean = true,
     val error: String? = null,
@@ -63,6 +68,8 @@ class DetailsViewModel @AssistedInject constructor(
     private val providers: Map<String, @JvmSuppressWildcards AnimeProvider>,
     private val library: LibraryRepository,
     private val settings: SettingsRepository,
+    private val downloadRepository: DownloadRepository,
+    private val downloadController: DownloadController,
 ) : ViewModel() {
 
     @AssistedFactory
@@ -86,14 +93,14 @@ class DetailsViewModel @AssistedInject constructor(
         load,
         modeOverride,
         settings.settings,
-        library.progressForAnime(initial.providerId, initial.id),
+        combine(library.progressForAnime(initial.providerId, initial.id), downloadRepository.forAnime(initial.providerId, initial.id)) { p, d -> p to d },
         library.isFavorite(initial.providerId, initial.id),
-    ) { l, override, s, progress, fav ->
+    ) { l, override, s, (progress, downloads), fav ->
         val modes = availableModes(l.anime)
         val mode = (override ?: s.mode).takeIf { it in modes } ?: modes.first()
         DetailsUiState(
             anime = l.anime, mode = mode, availableModes = modes, episodes = l.episodes,
-            progress = progress.associateBy { it.episodeNumber }, isFavorite = fav,
+            progress = progress.associateBy { it.episodeNumber }, downloads = downloads, isFavorite = fav,
             loading = l.loading, error = l.error, cloudflareUrl = l.cloudflareUrl,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), DetailsUiState(initial))
@@ -168,4 +175,27 @@ class DetailsViewModel @AssistedInject constructor(
     fun toggleFavorite() {
         viewModelScope.launch { library.setFavorite(load.value.anime, !state.value.isFavorite) }
     }
+
+    fun download(episode: Episode) {
+        val anime = load.value.anime
+        val mode = state.value.mode
+        viewModelScope.launch { downloadController.enqueue(anime, episode, mode) }
+    }
+
+    /** Queues episodes [fromIndex]..[toIndex] (inclusive, 0-based) that are not downloaded yet. */
+    fun downloadRange(fromIndex: Int, toIndex: Int) {
+        val eps = state.value.episodes
+        val existing = state.value.downloads
+        val lo = fromIndex.coerceIn(0, eps.lastIndex.coerceAtLeast(0))
+        val hi = toIndex.coerceIn(lo, eps.lastIndex.coerceAtLeast(0))
+        val todo = eps.subList(lo, (hi + 1).coerceAtMost(eps.size))
+            .filter { it.number !in existing || existing[it.number]?.state == com.borovas.animadroid.core.model.DownloadState.FAILED }
+        val anime = load.value.anime
+        val mode = state.value.mode
+        if (todo.isNotEmpty()) viewModelScope.launch { downloadController.enqueueAll(anime, todo, mode) }
+    }
+
+    fun pauseDownload(episode: Episode) = downloadController.pause(initial.providerId, initial.id, episode.number)
+    fun resumeDownload(episode: Episode) = downloadController.resume(initial.providerId, initial.id, episode.number)
+    fun cancelDownload(episode: Episode) = downloadController.remove(initial.providerId, initial.id, episode.number)
 }

@@ -11,4 +11,6 @@ data class PlayerRoute(
     val anime: Anime,
     val episodes: List<Episode>,
     val startIndex: Int,
+    /** Play only downloaded media: never calls the provider; episodes must be downloaded. */
+    val offline: Boolean = false,
 ) : NavKey

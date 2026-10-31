@@ -154,6 +154,11 @@ fun SettingsScreen(
                 }
             }
             item {
+                Group("Downloads") {
+                    SwitchRow("Download on Wi-Fi only", "Pause downloads on mobile data", settings.downloadWifiOnly) { v -> onUpdate { it.copy(downloadWifiOnly = v) } }
+                }
+            }
+            item {
                 Group("Recommendations") {
                     SwitchRow(
                         "On-device AI recommendations",

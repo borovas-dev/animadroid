@@ -17,6 +17,7 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import com.borovas.animadroid.core.model.AppSettings
+import com.borovas.animadroid.core.model.DownloadRepository
 import com.borovas.animadroid.core.model.LibraryRepository
 import com.borovas.animadroid.core.model.QualityPreference
 import com.borovas.animadroid.core.model.SettingsRepository
@@ -89,6 +90,7 @@ class PlayerViewModel @AssistedInject constructor(
     private val library: LibraryRepository,
     private val skipTimesRepository: SkipTimesRepository,
     private val malIdResolver: MalIdResolver,
+    private val downloads: DownloadRepository,
 ) : ViewModel() {
 
     @AssistedFactory
@@ -197,8 +199,13 @@ class PlayerViewModel @AssistedInject constructor(
         loadJob = viewModelScope.launch {
             try {
                 settings = settingsRepository.settings.first()
-                val provider = providers[route.providerId] ?: error("Unknown provider ${route.providerId}")
-                val set = provider.streams(route.anime, episode, settings.mode)
+                // A finished download wins: play it from the offline cache and never touch the provider.
+                val offline = downloads.get(route.providerId, route.anime.id, episode.number)?.takeIf { it.isPlayable }
+                if (offline == null && route.offline) error("Episode ${episode.number} is not downloaded")
+                val set = offline?.streamSet ?: run {
+                    val provider = providers[route.providerId] ?: error("Unknown provider ${route.providerId}")
+                    provider.streams(route.anime, episode, settings.mode)
+                }
                 streams = set
                 val start = startOverrideMs ?: if (resumeFromProgress) resumePosition() else 0L
                 play(set, settings.quality, null, start)

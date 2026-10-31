@@ -20,4 +20,6 @@ dependencies {
 tasks.withType<Test>().configureEach {
     jvmArgs("--add-opens=java.base/jdk.internal.access=ALL-UNNAMED", "--add-exports=java.base/jdk.internal.access=ALL-UNNAMED")
 }
+// Exported Room schemas are served as test assets so MigrationTestHelper can find them under Robolectric.
+android { sourceSets.getByName("test").assets.directories.add("$projectDir/schemas") }
 // No annotation processors in unit tests; KSP errors out with an empty processor classpath.

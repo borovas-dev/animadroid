@@ -122,7 +122,11 @@ fun AnimadroidApp(aiRecommendationsEnabled: Boolean) {
                 onCloudflare = onCloudflare,
                 metadata = ListDetailSceneStrategy.listPane(),
             )
-            downloadsEntry()
+            downloadsEntry(
+                onPlayOffline = { anime, episodes, index ->
+                    backStack.add(PlayerRoute(anime.providerId, anime, episodes, index, offline = true))
+                },
+            )
             settingsEntry(
                 onExport = { exportLauncher.launch("animadroid-backup.json") },
                 onImport = { importLauncher.launch(arrayOf("application/json", "*/*")) },

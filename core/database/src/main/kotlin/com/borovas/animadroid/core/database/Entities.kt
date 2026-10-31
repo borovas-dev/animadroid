@@ -36,6 +36,24 @@ data class SearchHistoryEntity(
     val searchedAt: Long,
 )
 
+/** One offline download (episode granularity). [streamSetJson] is the serialized StreamSet snapshot. */
+@Entity(tableName = "download", primaryKeys = ["providerId", "animeId", "episodeNumber"])
+data class DownloadEntity(
+    val providerId: String,
+    val animeId: String,
+    val episodeNumber: String,
+    val episodeId: String,
+    val title: String,
+    val coverUrl: String? = null,
+    val mode: String = "SUB",
+    val quality: Int? = null,
+    val state: String,
+    val bytes: Long = 0,
+    val percent: Float = 0f,
+    val createdAt: Long,
+    val streamSetJson: String? = null,
+)
+
 fun AnimeEntity.toModel() = Anime(
     id = animeId, providerId = providerId, title = title, coverUrl = coverUrl, synopsis = synopsis,
     subEpisodes = subEpisodes, dubEpisodes = dubEpisodes, malId = malId,

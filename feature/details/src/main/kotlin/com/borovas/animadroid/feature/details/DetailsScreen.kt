@@ -22,11 +22,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Download
+import androidx.compose.material.icons.rounded.DownloadDone
+import androidx.compose.material.icons.rounded.Pause
+import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularWavyProgressIndicator
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -55,6 +62,18 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.core.content.ContextCompat
+import com.borovas.animadroid.core.model.DownloadItem
+import com.borovas.animadroid.core.model.DownloadState
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
@@ -91,6 +110,11 @@ fun EntryProviderScope<NavKey>.detailsEntry(
             onRetry = vm::reload,
             onPlay = { index -> onPlay(state.anime, state.episodes, index) },
             onCloudflare = onCloudflare,
+            onDownload = vm::download,
+            onPauseDownload = vm::pauseDownload,
+            onResumeDownload = vm::resumeDownload,
+            onCancelDownload = vm::cancelDownload,
+            onDownloadRange = vm::downloadRange,
         )
     }
 }
@@ -105,9 +129,23 @@ fun DetailsScreen(
     onPlay: (index: Int) -> Unit,
     onCloudflare: (String) -> Unit,
     modifier: Modifier = Modifier,
+    onDownload: (Episode) -> Unit = {},
+    onPauseDownload: (Episode) -> Unit = {},
+    onResumeDownload: (Episode) -> Unit = {},
+    onCancelDownload: (Episode) -> Unit = {},
+    onDownloadRange: (fromIndex: Int, toIndex: Int) -> Unit = { _, _ -> },
 ) {
     val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val target = state.playTarget
+    var showRange by rememberSaveable { mutableStateOf(false) }
+    val context = LocalContext.current
+    val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
+    // Shows the download notification; downloads still run if the user declines.
+    fun ensureNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= 33 &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+    }
     Scaffold(
         modifier.nestedScroll(scroll.nestedScrollConnection),
         topBar = {
@@ -116,6 +154,9 @@ fun DetailsScreen(
                 subtitle = state.anime.year?.let { { Text(it.toString()) } },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back") } },
                 actions = {
+                    if (state.episodes.isNotEmpty()) {
+                        IconButton(onClick = { showRange = true }) { Icon(Icons.Rounded.Download, "Download episodes") }
+                    }
                     IconButton(onClick = onToggleFavorite) {
                         if (state.isFavorite) Icon(Icons.Rounded.Favorite, "Remove from favorites", tint = MaterialTheme.colorScheme.primary)
                         else Icon(Icons.Rounded.FavoriteBorder, "Add to favorites")
@@ -163,11 +204,52 @@ fun DetailsScreen(
                 }
                 else -> items(state.episodes, key = { it.id }) { ep ->
                     val index = state.episodes.indexOf(ep)
-                    EpisodeRow(ep, state.progress[ep.number], onClick = { onPlay(index) })
+                    EpisodeRow(
+                        ep, state.progress[ep.number], state.downloads[ep.number], onClick = { onPlay(index) },
+                        onDownload = { ensureNotificationPermission(); onDownload(ep) },
+                        onPause = { onPauseDownload(ep) }, onResume = { onResumeDownload(ep) }, onCancel = { onCancelDownload(ep) },
+                    )
                 }
             }
         }
     }
+    if (showRange) {
+        RangeDialog(
+            count = state.episodes.size,
+            onConfirm = { from, to -> showRange = false; ensureNotificationPermission(); onDownloadRange(from, to) },
+            onDismiss = { showRange = false },
+        )
+    }
+}
+
+@Composable
+private fun RangeDialog(count: Int, onConfirm: (Int, Int) -> Unit, onDismiss: () -> Unit) {
+    var from by rememberSaveable { mutableStateOf("1") }
+    var to by rememberSaveable { mutableStateOf(count.toString()) }
+    val f = from.toIntOrNull()
+    val t = to.toIntOrNull()
+    val valid = f != null && t != null && f in 1..count && t in f..count
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Download episodes") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("Choose a range of the $count episodes (by position in the list). Already downloaded episodes are skipped.", style = MaterialTheme.typography.bodyMedium)
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    OutlinedTextField(
+                        from, { from = it.filter(Char::isDigit).take(5) }, Modifier.weight(1f), label = { Text("From") }, singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    )
+                    OutlinedTextField(
+                        to, { to = it.filter(Char::isDigit).take(5) }, Modifier.weight(1f), label = { Text("To") }, singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    )
+                }
+            }
+        },
+        confirmButton = { TextButton(enabled = valid, onClick = { onConfirm(f!! - 1, t!! - 1) }) { Text("Download") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+    )
 }
 
 @Composable
@@ -202,7 +284,16 @@ private fun Synopsis(text: String) {
 }
 
 @Composable
-private fun EpisodeRow(ep: Episode, progress: EpisodeProgress?, onClick: () -> Unit) {
+private fun EpisodeRow(
+    ep: Episode,
+    progress: EpisodeProgress?,
+    download: DownloadItem?,
+    onClick: () -> Unit,
+    onDownload: () -> Unit,
+    onPause: () -> Unit,
+    onResume: () -> Unit,
+    onCancel: () -> Unit,
+) {
     val finished = progress?.isFinished == true
     Card(
         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp).clickable(onClick = onClick),
@@ -219,8 +310,41 @@ private fun EpisodeRow(ep: Episode, progress: EpisodeProgress?, onClick: () -> U
                     LinearWavyProgressIndicator(progress = { progress.fraction }, modifier = Modifier.fillMaxWidth())
                 }
             }
+            DownloadButton(download, onDownload, onPause, onResume, onCancel)
             if (finished) Icon(Icons.Rounded.CheckCircle, "Watched", tint = MaterialTheme.colorScheme.primary)
             else Icon(Icons.Rounded.PlayArrow, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+/** Per-episode download state: idle / queued / progress (tap to pause) / paused (tap to resume) / done / failed (tap to retry). */
+@Composable
+private fun DownloadButton(item: DownloadItem?, onDownload: () -> Unit, onPause: () -> Unit, onResume: () -> Unit, onCancel: () -> Unit) {
+    when (item?.state) {
+        null -> IconButton(onClick = onDownload) { Icon(Icons.Rounded.Download, "Download episode") }
+        DownloadState.QUEUED -> IconButton(onClick = onCancel) {
+            Box(contentAlignment = Alignment.Center) {
+                CircularWavyProgressIndicator(Modifier.width(28.dp).height(28.dp))
+                Icon(Icons.Rounded.Close, "Cancel queued download", Modifier.width(12.dp).height(12.dp))
+            }
+        }
+        DownloadState.DOWNLOADING -> IconButton(onClick = onPause) {
+            Box(contentAlignment = Alignment.Center) {
+                CircularWavyProgressIndicator(progress = { item.percent }, modifier = Modifier.width(28.dp).height(28.dp))
+                Icon(Icons.Rounded.Pause, "Pause download", Modifier.width(12.dp).height(12.dp))
+            }
+        }
+        DownloadState.PAUSED -> IconButton(onClick = onResume) {
+            Box(contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(progress = { item.percent }, modifier = Modifier.width(28.dp).height(28.dp), strokeWidth = 3.dp)
+                Icon(Icons.Rounded.PlayArrow, "Resume download", Modifier.width(14.dp).height(14.dp))
+            }
+        }
+        DownloadState.COMPLETED -> Icon(
+            Icons.Rounded.DownloadDone, "Downloaded", Modifier.padding(12.dp), tint = MaterialTheme.colorScheme.primary,
+        )
+        DownloadState.FAILED -> IconButton(onClick = onDownload) {
+            Icon(Icons.Rounded.Refresh, "Download failed, retry", tint = MaterialTheme.colorScheme.error)
         }
     }
 }
