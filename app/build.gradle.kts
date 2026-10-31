@@ -5,9 +5,9 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 android {
-    namespace = "dev.borovas.animadroid"
+    namespace = "com.borovas.animadroid"
     defaultConfig {
-        applicationId = "dev.borovas.animadroid"
+        applicationId = "com.borovas.animadroid"
         versionCode = 1
         versionName = "0.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

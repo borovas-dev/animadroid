@@ -1,5 +1,5 @@
 plugins { `kotlin-dsl` }
-group = "dev.borovas.animadroid.buildlogic"
+group = "com.borovas.animadroid.buildlogic"
 dependencies {
     compileOnly(libs.android.gradlePlugin)
     compileOnly(libs.kotlin.gradlePlugin)
