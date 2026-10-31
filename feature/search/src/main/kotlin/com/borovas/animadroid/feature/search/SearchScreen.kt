@@ -77,7 +77,11 @@ fun EntryProviderScope<NavKey>.searchEntry(
     metadata: Map<String, Any> = emptyMap(),
 ) {
     entry<SearchRoute>(metadata = metadata) {
-        val vm: SearchViewModel = hiltViewModel()
+        // Activity-scoped so query/results survive bottom-tab switches (which pop this entry).
+        var ctx = androidx.compose.ui.platform.LocalContext.current
+        while (ctx is android.content.ContextWrapper && ctx !is androidx.lifecycle.ViewModelStoreOwner) ctx = ctx.baseContext
+        val owner = ctx as androidx.lifecycle.ViewModelStoreOwner
+        val vm: SearchViewModel = hiltViewModel(viewModelStoreOwner = owner)
         val state by vm.state.collectAsStateWithLifecycle()
         SearchScreen(
             state = state,
