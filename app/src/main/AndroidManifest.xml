@@ -9,6 +9,7 @@
         android:theme="@style/Theme.Animadroid">
         <activity
             android:name=".MainActivity"
+            android:theme="@style/Theme.Animadroid.Splash"
             android:exported="true"
             android:supportsPictureInPicture="true"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|keyboardHidden"

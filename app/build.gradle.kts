@@ -18,6 +18,7 @@ android {
 }
 dependencies {
     listOf("model","network","database","datastore","designsystem").forEach { implementation(project(":core:$it")) }
+    implementation(project(":provider:api"))
     implementation(project(":provider:hianime"))
     listOf("aniskip","search","details","player","library","downloads","settings","recommend").forEach { implementation(project(":feature:$it")) }
     implementation(libs.androidx.core.ktx); implementation(libs.androidx.core.splashscreen); implementation(libs.androidx.activity.compose)
