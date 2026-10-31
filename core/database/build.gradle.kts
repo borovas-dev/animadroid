@@ -21,4 +21,3 @@ tasks.withType<Test>().configureEach {
     jvmArgs("--add-opens=java.base/jdk.internal.access=ALL-UNNAMED", "--add-exports=java.base/jdk.internal.access=ALL-UNNAMED")
 }
 // No annotation processors in unit tests; KSP errors out with an empty processor classpath.
-tasks.configureEach { if (name.startsWith("ksp") && name.endsWith("UnitTestKotlin")) enabled = false }

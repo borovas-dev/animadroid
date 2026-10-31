@@ -10,4 +10,3 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
 }
 // No annotation processors in unit tests; KSP errors out with an empty processor classpath.
-tasks.configureEach { if (name.startsWith("ksp") && name.endsWith("UnitTestKotlin")) enabled = false }

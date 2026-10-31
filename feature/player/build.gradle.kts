@@ -8,4 +8,3 @@ dependencies {
     implementation(libs.media3.session); implementation(libs.media3.ui.compose); implementation(libs.media3.ui.compose.material3)
 }
 // KSP has no processors on the unit-test classpath ("No providers found"); skip those tasks.
-tasks.matching { it.name.startsWith("ksp") && it.name.contains("UnitTest") }.configureEach { enabled = false }

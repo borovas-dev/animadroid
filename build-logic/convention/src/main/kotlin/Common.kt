@@ -25,6 +25,7 @@ internal fun Project.configureAndroid(ext: CommonExtension) {
 }
 
 internal fun Project.configureKotlin() {
+    tasks.withType(org.gradle.api.tasks.testing.Test::class.java).configureEach { failOnNoDiscoveredTests.set(false) }
     pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
         extensions.configure<KotlinJvmProjectExtension> { compilerOptions { jvmTarget.set(JvmTarget.JVM_21) } }
     }

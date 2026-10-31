@@ -5,6 +5,13 @@ package dev.borovas.animadroid.navigation
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.compose.runtime.LaunchedEffect
+import dev.borovas.animadroid.BackupViewModel
+import dev.borovas.animadroid.feature.player.PlayerRoute
+import dev.borovas.animadroid.feature.player.playerEntry
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -84,9 +91,14 @@ fun AnimadroidApp(aiRecommendationsEnabled: Boolean) {
         runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
     }
     val onPlay: (Anime, List<Episode>, Int) -> Unit = { anime, episodes, index ->
-        // TODO(player): navigate to PlayerRoute (from :feature:player) with anime/episodes/index.
-        Toast.makeText(context, "Play ${anime.title} - Ep ${episodes.getOrNull(index)?.number} (player not wired yet)", Toast.LENGTH_SHORT).show()
+        backStack.add(PlayerRoute(anime.providerId, anime, episodes, index))
     }
+
+    val backup: BackupViewModel = hiltViewModel()
+    LaunchedEffect(backup) { backup.messages.collect { Toast.makeText(context, it, Toast.LENGTH_LONG).show() } }
+    val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { it?.let(backup::export) }
+    val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { it?.let(backup::import) }
+    val aniCliLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { it?.let(backup::importAniCli) }
 
     val listDetail = rememberListDetailSceneStrategy<NavKey>()
     val provider = remember(aiRecommendationsEnabled) {
@@ -101,7 +113,12 @@ fun AnimadroidApp(aiRecommendationsEnabled: Boolean) {
                 metadata = ListDetailSceneStrategy.listPane(),
             )
             downloadsEntry()
-            settingsEntry() // onExport/onImport/onImportAniCli get wired when backup support lands.
+            settingsEntry(
+                onExport = { exportLauncher.launch("animadroid-backup.json") },
+                onImport = { importLauncher.launch(arrayOf("application/json", "*/*")) },
+                onImportAniCli = { aniCliLauncher.launch(arrayOf("*/*")) },
+            )
+            playerEntry(onBack = { backStack.removeLastOrNull() })
             detailsEntry(
                 onBack = { backStack.removeLastOrNull() },
                 onPlay = onPlay,
