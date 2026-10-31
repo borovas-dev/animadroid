@@ -149,6 +149,7 @@ fun PlayerScreen(route: PlayerRoute, onBack: () -> Unit, modifier: Modifier = Mo
     Box(modifier.fillMaxSize().background(Color.Black)) {
         player?.let { p ->
             ContentFrame(p, Modifier.fillMaxSize().pipSourceRect(), contentScale = ContentScale.Fit)
+            SubtitleOverlay(p, bottomPadding = if (controlsVisible && !inPip) 72.dp else 16.dp)
         }
 
         if (!inPip) {
