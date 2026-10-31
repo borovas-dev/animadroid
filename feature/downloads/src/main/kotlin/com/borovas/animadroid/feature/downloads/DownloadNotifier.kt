@@ -1,3 +1,5 @@
+@file:OptIn(androidx.media3.common.util.UnstableApi::class)
+
 package com.borovas.animadroid.feature.downloads
 
 import android.annotation.SuppressLint
