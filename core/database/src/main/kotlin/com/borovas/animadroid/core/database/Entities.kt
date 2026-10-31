@@ -52,6 +52,7 @@ data class DownloadEntity(
     val percent: Float = 0f,
     val createdAt: Long,
     val streamSetJson: String? = null,
+    val failureReason: String? = null,
 )
 
 fun AnimeEntity.toModel() = Anime(

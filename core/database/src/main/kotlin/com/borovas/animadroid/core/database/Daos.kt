@@ -102,10 +102,10 @@ interface DownloadDao {
     suspend fun get(providerId: String, animeId: String, episode: String): DownloadEntity?
 
     @Query(
-        "UPDATE download SET state = :state, bytes = :bytes, percent = :percent " +
+        "UPDATE download SET state = :state, bytes = :bytes, percent = :percent, failureReason = :failureReason " +
             "WHERE providerId = :providerId AND animeId = :animeId AND episodeNumber = :episode",
     )
-    suspend fun updateProgress(providerId: String, animeId: String, episode: String, state: String, bytes: Long, percent: Float)
+    suspend fun updateProgress(providerId: String, animeId: String, episode: String, state: String, bytes: Long, percent: Float, failureReason: String?)
 
     @Query("DELETE FROM download WHERE providerId = :providerId AND animeId = :animeId AND episodeNumber = :episode")
     suspend fun delete(providerId: String, animeId: String, episode: String)

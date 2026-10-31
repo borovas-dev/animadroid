@@ -125,4 +125,31 @@ class DownloadTest {
         }
         conn.close()
     }
+
+    @Test fun migration2To3AddsFailureReasonKeepingRows() = runBlocking {
+        helper.createDatabase(2).apply {
+            execSQL(
+                "INSERT INTO download (providerId, animeId, episodeNumber, episodeId, title, mode, state, bytes, percent, createdAt) " +
+                    "VALUES ('p','a','1','e','T','SUB','FAILED',5,0.5,1)",
+            )
+            close()
+        }
+        val conn = helper.runMigrationsAndValidate(3, listOf(MIGRATION_2_3))
+        conn.prepare("SELECT state, bytes, failureReason FROM download").use { st ->
+            assertTrue(st.step())
+            assertEquals("FAILED", st.getText(0))
+            assertEquals(5L, st.getLong(1))
+            assertTrue(st.isNull(2))
+        }
+        conn.execSQL("UPDATE download SET failureReason = 'HTTP 403'")
+        conn.close()
+    }
+
+    @Test fun failureReasonRoundTripsAndIsClearedByProgressUpdate() = runBlocking {
+        repo.upsert(item("a", "1", 1))
+        repo.updateProgress("hianime", "a", "1", DownloadState.FAILED, 0, 0f, "Server returned HTTP 403")
+        assertEquals("Server returned HTTP 403", repo.get("hianime", "a", "1")!!.failureReason)
+        repo.updateProgress("hianime", "a", "1", DownloadState.DOWNLOADING, 10, 0.1f)
+        assertNull(repo.get("hianime", "a", "1")!!.failureReason)
+    }
 }

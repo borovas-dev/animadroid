@@ -18,14 +18,14 @@ fun DownloadEntity.toModel() = DownloadItem(
     providerId = providerId, animeId = animeId, episodeId = episodeId, episodeNumber = episodeNumber, title = title,
     coverUrl = coverUrl, mode = runCatching { TranslationMode.valueOf(mode) }.getOrDefault(TranslationMode.SUB),
     quality = quality, state = runCatching { DownloadState.valueOf(state) }.getOrDefault(DownloadState.FAILED),
-    bytes = bytes, percent = percent, createdAt = createdAt,
+    bytes = bytes, percent = percent, createdAt = createdAt, failureReason = failureReason,
     streamSet = streamSetJson?.let { runCatching { SnapshotJson.decodeFromString(StreamSet.serializer(), it) }.getOrNull() },
 )
 
 fun DownloadItem.toEntity() = DownloadEntity(
     providerId = providerId, animeId = animeId, episodeNumber = episodeNumber, episodeId = episodeId, title = title,
     coverUrl = coverUrl, mode = mode.name, quality = quality, state = state.name, bytes = bytes, percent = percent,
-    createdAt = createdAt, streamSetJson = streamSet?.let { SnapshotJson.encodeToString(StreamSet.serializer(), it) },
+    createdAt = createdAt, failureReason = failureReason, streamSetJson = streamSet?.let { SnapshotJson.encodeToString(StreamSet.serializer(), it) },
 )
 
 /** Pure grouping used by [RoomDownloadRepository.groupedByAnime] (also unit tested). */
@@ -61,7 +61,8 @@ class RoomDownloadRepository @Inject constructor(
 
     override suspend fun updateProgress(
         providerId: String, animeId: String, episodeNumber: String, state: DownloadState, bytes: Long, percent: Float,
-    ) = dao.updateProgress(providerId, animeId, episodeNumber, state.name, bytes, percent)
+        failureReason: String?,
+    ) = dao.updateProgress(providerId, animeId, episodeNumber, state.name, bytes, percent, failureReason)
 
     override suspend fun delete(providerId: String, animeId: String, episodeNumber: String) =
         dao.delete(providerId, animeId, episodeNumber)

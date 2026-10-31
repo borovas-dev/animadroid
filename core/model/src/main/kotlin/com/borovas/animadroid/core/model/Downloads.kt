@@ -35,6 +35,8 @@ data class DownloadItem(
     val percent: Float = 0f,
     val createdAt: Long = 0,
     val streamSet: StreamSet? = null,
+    /** Human-readable reason for [DownloadState.FAILED], or a note such as "Paused by system" for [DownloadState.PAUSED]. */
+    val failureReason: String? = null,
 ) {
     val key: String get() = "$providerId/$animeId/$episodeNumber"
     val isPlayable: Boolean get() = state == DownloadState.COMPLETED && streamSet != null
@@ -65,10 +67,11 @@ interface DownloadRepository {
     suspend fun getAll(): List<DownloadItem>
     suspend fun upsert(item: DownloadItem)
 
-    /** Updates state/bytes/percent only; no-op when the row does not exist. */
+    /** Updates state/bytes/percent/failureReason only; no-op when the row does not exist. */
     suspend fun updateProgress(
         providerId: String, animeId: String, episodeNumber: String,
         state: DownloadState, bytes: Long, percent: Float,
+        failureReason: String? = null,
     )
 
     suspend fun delete(providerId: String, animeId: String, episodeNumber: String)
