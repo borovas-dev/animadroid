@@ -10,6 +10,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
@@ -32,10 +35,13 @@ fun CloudflareSolver(
 ) {
     val solved by rememberUpdatedState(onSolved)
     val timedOut by rememberUpdatedState(onTimeout)
+    var pageLoaded by remember(url) { mutableStateOf(false) }
     LaunchedEffect(url) {
         var waited = 0L
         while (waited < timeoutMillis) {
-            if (hasClearance(url)) {
+            // Debug-forced challenges never produce a cf_clearance cookie; a finished page load counts as solved.
+            if (hasClearance(url) || (DebugCloudflare.forced && pageLoaded)) {
+                DebugCloudflare.disarm()
                 solved()
                 return@LaunchedEffect
             }
@@ -57,7 +63,9 @@ fun CloudflareSolver(
                     settings.domStorageEnabled = true
                     settings.userAgentString = ANI_CLI_USER_AGENT
                     CookieManager.getInstance().setAcceptCookie(true)
-                    webViewClient = WebViewClient()
+                    webViewClient = object : WebViewClient() {
+                        override fun onPageFinished(view: WebView?, url: String?) { pageLoaded = true }
+                    }
                     loadUrl(url)
                 }
             },

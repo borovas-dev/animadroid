@@ -20,6 +20,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import com.borovas.animadroid.core.designsystem.AnimadroidTheme
 import com.borovas.animadroid.core.model.ThemeMode
+import com.borovas.animadroid.core.network.DebugCloudflare
 import com.borovas.animadroid.feature.player.PictureInPictureController
 import com.borovas.animadroid.navigation.AnimadroidApp
 
@@ -30,6 +31,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         val splash = installSplashScreen()
         super.onCreate(savedInstanceState)
+        armDebugFlags(intent)
         splash.setKeepOnScreenCondition { viewModel.state.value.settings == null }
         enableEdgeToEdge()
         if (savedInstanceState == null && intent.getBooleanExtra(EXTRA_OPEN_DOWNLOADS, false)) openDownloads = true
@@ -60,7 +62,15 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        armDebugFlags(intent)
         if (intent.getBooleanExtra(EXTRA_OPEN_DOWNLOADS, false)) openDownloads = true
+    }
+
+    /** Debug builds only: `am start ... --ez debug_force_cf true` simulates a Cloudflare challenge. */
+    private fun armDebugFlags(intent: Intent?) {
+        if (intent?.getBooleanExtra("debug_force_cf", false) == true) {
+            DebugCloudflare.arm(applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0)
+        }
     }
 
     override fun onUserLeaveHint() {

@@ -17,8 +17,26 @@ object CloudflareDetector {
     }
 }
 
+/**
+ * QA hook: when armed (debug builds only, via the `debug_force_cf` intent extra) every non-image request
+ * fails as if Cloudflare served a challenge, until the in-app solver dialog finishes loading and disarms it.
+ */
+object DebugCloudflare {
+    @Volatile var forced: Boolean = false
+        private set
+
+    fun arm(debuggable: Boolean) { if (debuggable) forced = true }
+    fun disarm() { forced = false }
+}
+
 class CloudflareInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
+        if (DebugCloudflare.forced) {
+            val path = chain.request().url.encodedPath
+            if (IMAGE_EXT.none { path.endsWith(it, ignoreCase = true) }) {
+                throw CloudflareBlockedException(chain.request().url.toString())
+            }
+        }
         val response = chain.proceed(chain.request())
         val blocked = CloudflareDetector.isChallenge(response.code, response.headers) {
             runCatching { response.peekBody(PEEK_BYTES).string() }.getOrDefault("")
@@ -33,5 +51,6 @@ class CloudflareInterceptor : Interceptor {
 
     private companion object {
         const val PEEK_BYTES = 64L * 1024
+        val IMAGE_EXT = listOf(".jpg", ".jpeg", ".png", ".webp", ".gif", ".ts", ".m3u8", ".vtt")
     }
 }
