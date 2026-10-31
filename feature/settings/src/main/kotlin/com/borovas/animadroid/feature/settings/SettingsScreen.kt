@@ -58,11 +58,13 @@ fun EntryProviderScope<NavKey>.settingsEntry(
     onExport: () -> Unit = {},
     onImport: () -> Unit = {},
     onImportAniCli: () -> Unit = {},
+    onAiToggled: (Boolean) -> Unit = {},
+    recommendationsSection: (@Composable () -> Unit)? = null,
 ) {
     entry<SettingsRoute> {
         val vm: SettingsViewModel = hiltViewModel()
         val state by vm.state.collectAsStateWithLifecycle()
-        SettingsScreen(state.settings, vm::update, onExport, onImport, onImportAniCli)
+        SettingsScreen(state.settings, vm::update, onExport, onImport, onImportAniCli, onAiToggled = onAiToggled, recommendationsSection = recommendationsSection)
     }
 }
 
@@ -74,6 +76,8 @@ fun SettingsScreen(
     onImport: () -> Unit,
     onImportAniCli: () -> Unit,
     modifier: Modifier = Modifier,
+    onAiToggled: (Boolean) -> Unit = {},
+    recommendationsSection: (@Composable () -> Unit)? = null,
 ) {
     val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val context = LocalContext.current
@@ -155,7 +159,8 @@ fun SettingsScreen(
                         "On-device AI recommendations",
                         "Uses the Gemma model, running entirely on your device. Requires a one-time download of about 2 GB. Nothing leaves your phone.",
                         settings.aiRecommendationsEnabled,
-                    ) { v -> onUpdate { it.copy(aiRecommendationsEnabled = v) } }
+                    ) { v -> onUpdate { it.copy(aiRecommendationsEnabled = v) }; onAiToggled(v) }
+                    if (settings.aiRecommendationsEnabled) recommendationsSection?.invoke()
                 }
             }
             item {

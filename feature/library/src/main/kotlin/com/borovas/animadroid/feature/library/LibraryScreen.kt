@@ -82,7 +82,7 @@ fun LibraryScreen(
         when {
             state.loading -> SkeletonLoading(Modifier.padding(pad))
             state.continueWatching.isEmpty() && state.favorites.isEmpty() -> Column(Modifier.padding(pad)) {
-                recommendations?.invoke()
+                if (recommendations != null) Box(Modifier.padding(horizontal = 16.dp)) { recommendations() }
                 EmptyState(
                     Icons.Rounded.VideoLibrary, "Your library is empty",
                     "Search for a show and start watching. Progress and favorites will show up here.",
