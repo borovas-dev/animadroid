@@ -15,7 +15,8 @@ class HiltConventionPlugin : Plugin<Project> {
         configurations.configureEach {
             if (name.startsWith("ksp") || name.contains("AnnotationProcessor", true) || name.startsWith("hilt")) {
                 resolutionStrategy.force("org.jetbrains.kotlin:kotlin-metadata-jvm:$kv")
-                dependencies.add(project.dependencies.create("org.jetbrains.kotlin:kotlin-metadata-jvm:$kv"))
+                // adding it to empty test ksp configs makes KSP fail with "No providers found"
+                if (!name.contains("Test", true)) dependencies.add(project.dependencies.create("org.jetbrains.kotlin:kotlin-metadata-jvm:$kv"))
             }
         }
     }
