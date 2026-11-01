@@ -470,7 +470,8 @@ class PlayerViewModel @AssistedInject constructor(
                         else context.getString(R.string.subtitles_failed_generic)
                     else -> context.getString(R.string.subtitles_failed_generic)
                 }
-                fallBackToOriginal(msg)
+                val reason = e.message ?: e::class.java.simpleName
+                fallBackToOriginal(if (e is UnsupportedLanguageException || reason in msg) msg else "$msg ($reason)")
             }
         }
     }

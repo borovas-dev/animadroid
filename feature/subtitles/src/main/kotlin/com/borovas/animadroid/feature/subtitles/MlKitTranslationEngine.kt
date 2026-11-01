@@ -1,5 +1,6 @@
 package com.borovas.animadroid.feature.subtitles
 
+import android.util.Log
 import com.google.android.gms.tasks.Task
 import com.google.mlkit.common.model.DownloadConditions
 import com.google.mlkit.common.model.RemoteModelManager
@@ -25,6 +26,8 @@ internal suspend fun <T> Task<T>.await(): T = suspendCancellableCoroutine { cont
 
 /** ML Kit on-device translation. Translators are created lazily per language pair and closed with [close]. */
 class MlKitTranslationEngine : TranslationEngine {
+    private companion object { const val TAG = "MlKitTranslation" }
+
     private val translators = HashMap<String, Translator>()
     private val modelManager by lazy { RemoteModelManager.getInstance() }
 
@@ -34,8 +37,17 @@ class MlKitTranslationEngine : TranslationEngine {
         TranslateLanguage.fromLanguageTag(language) ?: throw UnsupportedLanguageException(language)
 
     override suspend fun missingModels(source: String, target: String): List<String> =
-        listOf(source, target).distinct().filter { lang ->
-            !modelManager.isModelDownloaded(TranslateRemoteModel.Builder(tag(lang)).build()).await()
+        try {
+            listOf(source, target).distinct().filter { lang ->
+                !modelManager.isModelDownloaded(TranslateRemoteModel.Builder(tag(lang)).build()).await()
+            }
+        } catch (e: UnsupportedLanguageException) {
+            throw e
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Throwable) {
+            Log.e(TAG, "model check failed for $source>$target", e)
+            throw TranslationFailedException("Model check failed: ${e.message ?: e::class.java.simpleName}", e)
         }
 
     override suspend fun prepare(source: String, target: String) {
@@ -45,8 +57,9 @@ class MlKitTranslationEngine : TranslationEngine {
             throw e
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e
-        } catch (e: Exception) {
-            throw TranslationFailedException("Language pack download failed", e)
+        } catch (e: Throwable) {
+            Log.e(TAG, "pack download failed for $source>$target", e)
+            throw TranslationFailedException("Language pack download failed: ${e.message ?: e::class.java.simpleName}", e)
         }
     }
 
@@ -56,8 +69,9 @@ class MlKitTranslationEngine : TranslationEngine {
             texts.map { t.translate(it).await() }
         } catch (e: kotlinx.coroutines.CancellationException) {
             throw e
-        } catch (e: Exception) {
-            throw TranslationFailedException("Translation failed", e)
+        } catch (e: Throwable) {
+            Log.e(TAG, "translate failed for $source>$target", e)
+            throw TranslationFailedException("Translation failed: ${e.message ?: e::class.java.simpleName}", e)
         }
     }
 
