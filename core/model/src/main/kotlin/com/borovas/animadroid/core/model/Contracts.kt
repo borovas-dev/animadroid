@@ -61,6 +61,10 @@ data class AppSettings(
     val scrubPreviewEnabled: Boolean = true,
     /** Also allow the network-hungry frame-decoding preview fallback on metered (mobile) data. Sprite previews are always allowed. */
     val scrubPreviewMobileData: Boolean = false,
+    /** ML Kit language code ("zh", "pl", ...) subtitles should be shown in; empty = off. */
+    val subtitleLanguage: String = "",
+    /** Opt in to on-device machine translation when the provider has no track in [subtitleLanguage]. */
+    val translateSubtitles: Boolean = false,
 )
 
 /** Implemented in :core:datastore. */

@@ -4,4 +4,10 @@
     <string name="provider_hianime">HiAnime (angielski)</string>
     <string name="provider_shinden">Shinden (polski)</string>
     <string name="settings_source_shinden_hint">Polski dźwięk (lektor/dubbing) jest używany dla opcji Dub, a Sub korzysta z napisów polskich, potem angielskich. Działają tylko osadzane odtwarzacze, linki do serwisów takich jak Crunchyroll czy Netflix są pomijane.</string>
+
+    <string name="settings_subtitles_group">Napisy</string>
+    <string name="settings_subtitle_language">Język napisów</string>
+    <string name="settings_subtitle_language_off">Wyłączone</string>
+    <string name="settings_translate_subtitles">Tłumacz napisy</string>
+    <string name="settings_translate_subtitles_desc">Jeśli źródło nie oferuje Twojego języka, napisy są tłumaczone maszynowo na urządzeniu. Pakiety językowe (ok. 30 MB każdy) są pobierane jednorazowo od Google; potem tłumaczenie działa w całości na urządzeniu i tekst napisów nie opuszcza telefonu. Przetłumaczone napisy mają etykietę „tłumaczenie maszynowe”.</string>
 </resources>

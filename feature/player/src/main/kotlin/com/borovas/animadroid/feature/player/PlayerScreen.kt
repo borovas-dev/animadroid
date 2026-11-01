@@ -150,7 +150,11 @@ fun PlayerScreen(route: PlayerRoute, onBack: () -> Unit, modifier: Modifier = Mo
     Box(modifier.fillMaxSize().background(Color.Black)) {
         player?.let { p ->
             ContentFrame(p, Modifier.fillMaxSize().pipSourceRect(), contentScale = ContentScale.Fit)
-            SubtitleOverlay(p, bottomPadding = if (controlsVisible && !inPip) 72.dp else 16.dp)
+            val translatedCues by vm.translatedCues.collectAsStateWithLifecycle()
+            SubtitleOverlay(
+                p, bottomPadding = if (controlsVisible && !inPip) 72.dp else 16.dp,
+                translatedCues = translatedCues, translatedActive = state.translatedSelected,
+            )
         }
 
         if (!inPip) {
@@ -172,6 +176,14 @@ fun PlayerScreen(route: PlayerRoute, onBack: () -> Unit, modifier: Modifier = Mo
                 )
             }
             hud?.let { HudPill(it, Modifier.align(Alignment.TopCenter).safeDrawingPadding().padding(top = 16.dp)) }
+
+            TranslationMessages(
+                state = state,
+                onConfirmDownload = vm::confirmPackDownload,
+                onDeclineDownload = vm::declinePackDownload,
+                onDismissNotice = vm::dismissNotice,
+                modifier = Modifier.align(Alignment.TopCenter).safeDrawingPadding().padding(top = 56.dp),
+            )
 
             if (state.loading || state.buffering) {
                 LoadingIndicator(Modifier.align(Alignment.Center).size(64.dp))
@@ -228,6 +240,7 @@ fun PlayerScreen(route: PlayerRoute, onBack: () -> Unit, modifier: Modifier = Mo
                     onDismiss = { sheetOpen = false; interaction++ },
                     onQuality = vm::selectQuality,
                     onSubtitle = vm::selectTextTrack,
+                    onTranslated = vm::selectTranslated,
                     onSpeed = vm::setSpeed,
                 )
             }

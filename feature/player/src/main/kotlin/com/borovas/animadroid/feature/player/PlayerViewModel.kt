@@ -30,6 +30,17 @@ import com.borovas.animadroid.feature.aniskip.SkipAction
 import com.borovas.animadroid.feature.aniskip.SkipController
 import com.borovas.animadroid.feature.aniskip.SkipSegment
 import com.borovas.animadroid.feature.aniskip.mergeSkipTimes
+import com.borovas.animadroid.feature.subtitles.MeteredDownloadRequired
+import com.borovas.animadroid.feature.subtitles.R
+import com.borovas.animadroid.feature.subtitles.SubtitleCue
+import com.borovas.animadroid.feature.subtitles.SubtitleDecision
+import com.borovas.animadroid.feature.subtitles.SubtitleLanguages
+import com.borovas.animadroid.feature.subtitles.SubtitleTranslationService
+import com.borovas.animadroid.feature.subtitles.TrackPicker
+import com.borovas.animadroid.feature.subtitles.TranslationProgress
+import com.borovas.animadroid.feature.subtitles.TranslationRequest
+import com.borovas.animadroid.feature.subtitles.UnsupportedLanguageException
+import kotlinx.coroutines.flow.flowOn
 import com.borovas.animadroid.provider.api.AnimeProvider
 import com.borovas.animadroid.provider.api.CloudflareChallengeException
 import com.borovas.animadroid.provider.api.CloudflareSolved
@@ -58,7 +69,17 @@ sealed interface PlayerError {
 }
 
 data class QualityOption(val label: String, val height: Int?)
-data class TextTrackOption(val label: String, val group: Tracks.Group?, val trackIndex: Int, val selected: Boolean)
+data class TextTrackOption(
+    val label: String,
+    val group: Tracks.Group?,
+    val trackIndex: Int,
+    val selected: Boolean,
+    /** Normalised two-letter language of the track, when it declares one. */
+    val language: String? = null,
+)
+
+/** The extra "machine translated" subtitle entry offered next to the provider's own tracks. */
+data class TranslatedOption(val label: String, val languageName: String)
 
 data class PlayerUiState(
     val title: String = "",
@@ -76,6 +97,14 @@ data class PlayerUiState(
     val selectedHeight: Int? = null,
     val textTracks: List<TextTrackOption> = emptyList(),
     val textOff: Boolean = true,
+    val translated: TranslatedOption? = null,
+    val translatedSelected: Boolean = false,
+    /** Progress text while the first translated batch / language pack is prepared; null once cues flow. */
+    val translationStatus: String? = null,
+    /** Language name awaiting the user's OK to download a pack over a metered connection. */
+    val confirmPackDownload: String? = null,
+    /** Short non-blocking message (e.g. translation failed, original subtitles shown). */
+    val notice: String? = null,
     val ended: Boolean = false,
     val videoAspect: Float = 16f / 9f,
 )
@@ -93,6 +122,7 @@ class PlayerViewModel @AssistedInject constructor(
     private val skipTimesRepository: SkipTimesRepository,
     private val malIdResolver: MalIdResolver,
     private val downloads: DownloadRepository,
+    private val subtitleTranslation: SubtitleTranslationService,
     scrubPreviewFactory: ScrubPreviewManagerFactory,
 ) : ViewModel() {
 
@@ -114,6 +144,13 @@ class PlayerViewModel @AssistedInject constructor(
 
     /** Thumbnail source for the seek-bar scrub preview; null while unavailable or disabled. */
     val scrubPreview: StateFlow<ScrubPreviewSource?> = scrubPreviews.source
+
+    private val _translatedCues = MutableStateFlow<List<SubtitleCue>>(emptyList())
+    /** Machine-translated cues so far for the current episode; drawn by [SubtitleOverlay] while selected. */
+    val translatedCues: StateFlow<List<SubtitleCue>> = _translatedCues.asStateFlow()
+    private var translationJob: Job? = null
+    private var decision: SubtitleDecision = SubtitleDecision.None
+    private var providedLangPending: String? = null
 
     private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var controller: MediaController? = null
@@ -202,12 +239,13 @@ class PlayerViewModel @AssistedInject constructor(
         skipController = null
         scrubPreviews.clear()
         loadJob?.cancel()
+        resetTranslation()
         _position.value = PlaybackPosition()
         _state.update {
             it.copy(
                 title = titleText, loading = true, error = null, ended = false, skipButton = null, skipTimes = null,
                 episodeIndex = index, hasPrevious = index > 0, hasNext = index < route.episodes.lastIndex,
-                qualityOptions = emptyList(), selectedHeight = null,
+                qualityOptions = emptyList(), selectedHeight = null, textTracks = emptyList(),
             )
         }
         loadJob = viewModelScope.launch {
@@ -223,6 +261,7 @@ class PlayerViewModel @AssistedInject constructor(
                 streams = set
                 scrubPreviews.configure(set, offline != null, settings)
                 android.util.Log.i("AnimadroidPlayer", "stream mode=${settings.mode} ep=${episode.number} master=${set.masterUrl} offline=${offline != null}")
+                planSubtitles(set)
                 val start = startOverrideMs ?: if (resumeFromProgress) resumePosition() else 0L
                 play(set, settings.quality, null, start)
                 _state.update { s ->
@@ -255,6 +294,8 @@ class PlayerViewModel @AssistedInject constructor(
         val item = MediaItemFactory.create(set, pref, titleText, height, mediaId = route.anime.id + "/" + episode.id)
             ?: error("No playable stream found")
         c.setMediaItem(item, startMs)
+        // The translated overlay replaces the source track, so keep ExoPlayer from drawing it as well.
+        if (_state.value.translatedSelected) setTextDisabled(true)
         c.prepare()
         c.play()
         _state.update { it.copy(loading = false, selectedHeight = height) }
@@ -334,16 +375,132 @@ class PlayerViewModel @AssistedInject constructor(
                 val lang = f.language?.takeIf { it != C.LANGUAGE_UNDETERMINED }
                     ?.let { java.util.Locale.forLanguageTag(it).getDisplayLanguage(java.util.Locale.ENGLISH).takeIf { n -> n.isNotBlank() } }
                 val label = f.label ?: lang ?: if (isCea(f)) "Closed captions" else "Subtitles"
-                TextTrackOption(label, g, i, g.isTrackSelected(i))
+                TextTrackOption(label, g, i, g.isTrackSelected(i), TrackPicker.languageOf(
+                    com.borovas.animadroid.core.model.SubtitleTrack("", f.language, f.label, false),
+                ))
             }
             // Same label twice (e.g. the same sidecar exposed by two sources): keep one, preferring the selected one.
             .groupBy { it.label }.values.map { dup -> dup.firstOrNull { it.selected } ?: dup.first() }
         val off = c.trackSelectionParameters.disabledTrackTypes.contains(C.TRACK_TYPE_TEXT) || options.none { it.selected }
         _state.update { it.copy(textTracks = options, textOff = off) }
+        applyProvidedTrackPreference(options)
     }
+
+    private fun setTextDisabled(disabled: Boolean) {
+        val c = controller ?: return
+        c.trackSelectionParameters = c.trackSelectionParameters.buildUpon().setTrackTypeDisabled(C.TRACK_TYPE_TEXT, disabled).build()
+    }
+
+    /** Selects the provider's own track in the preferred language, once per episode, as soon as it is exposed. */
+    private fun applyProvidedTrackPreference(options: List<TextTrackOption>) {
+        val lang = providedLangPending ?: return
+        val match = options.firstOrNull { it.language == lang } ?: return
+        providedLangPending = null
+        if (!match.selected || _state.value.textOff) selectTextTrack(match)
+    }
+
+    private fun resetTranslation() {
+        translationJob?.cancel()
+        translationJob = null
+        decision = SubtitleDecision.None
+        providedLangPending = null
+        _translatedCues.value = emptyList()
+        _state.update { it.copy(translated = null, translatedSelected = false, translationStatus = null, confirmPackDownload = null) }
+    }
+
+    /** Applies the "subtitle language" setting: pick the provider's track, or offer/start a translation. */
+    private fun planSubtitles(set: StreamSet) {
+        val preferred = SubtitleLanguages.normalize(settings.subtitleLanguage) ?: return
+        val d = TrackPicker.decide(set.subtitles, preferred, settings.translateSubtitles, subtitleTranslation::isSupported)
+        decision = d
+        when (d) {
+            is SubtitleDecision.UseProvided -> providedLangPending = preferred
+            is SubtitleDecision.Translate -> {
+                val name = SubtitleLanguages.displayName(preferred)
+                _state.update {
+                    it.copy(translated = TranslatedOption(context.getString(R.string.subtitles_translated_label, name), name), translatedSelected = true)
+                }
+                startTranslation(allowMetered = false)
+            }
+            SubtitleDecision.None -> Unit
+        }
+    }
+
+    private fun startTranslation(allowMetered: Boolean) {
+        val d = decision as? SubtitleDecision.Translate ?: return
+        val target = SubtitleLanguages.normalize(settings.subtitleLanguage) ?: return
+        val set = streams ?: return
+        val forEpisode = currentIndex
+        translationJob?.cancel()
+        _state.update { it.copy(translationStatus = context.getString(R.string.subtitles_preparing), confirmPackDownload = null) }
+        val request = TranslationRequest(
+            episodeKey = "${route.providerId}/${route.anime.id}/${episode.id}",
+            trackUrl = d.track.url, headers = set.headers, sourceLang = d.sourceLang, targetLang = target, allowMetered = allowMetered,
+        )
+        translationJob = viewModelScope.launch {
+            try {
+                subtitleTranslation.translate(request) { _position.value.positionMs }.flowOn(Dispatchers.Default).collect { p ->
+                    if (forEpisode != currentIndex) return@collect
+                    when (p) {
+                        TranslationProgress.Preparing -> Unit
+                        TranslationProgress.DownloadingModel ->
+                            _state.update { it.copy(translationStatus = context.getString(R.string.subtitles_downloading_pack)) }
+                        is TranslationProgress.Translating -> {
+                            _translatedCues.value = p.cues
+                            _state.update {
+                                it.copy(translationStatus = if (p.cues.isEmpty()) context.getString(R.string.subtitles_translating, 0) else null)
+                            }
+                        }
+                        is TranslationProgress.Done -> {
+                            _translatedCues.value = p.cues
+                            _state.update { it.copy(translationStatus = null) }
+                        }
+                    }
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: MeteredDownloadRequired) {
+                _state.update { it.copy(translationStatus = null, confirmPackDownload = SubtitleLanguages.displayName(target)) }
+            } catch (e: Exception) {
+                android.util.Log.w("AnimadroidPlayer", "subtitle translation failed", e)
+                val msg = when (e) {
+                    is UnsupportedLanguageException -> context.getString(R.string.subtitles_failed_unsupported, SubtitleLanguages.displayName(target))
+                    is com.borovas.animadroid.feature.subtitles.TranslationFailedException ->
+                        if (e.message?.contains("pack", ignoreCase = true) == true) context.getString(R.string.subtitles_failed_download)
+                        else context.getString(R.string.subtitles_failed_generic)
+                    else -> context.getString(R.string.subtitles_failed_generic)
+                }
+                fallBackToOriginal(msg)
+            }
+        }
+    }
+
+    /** Drops the translated entry's selection and shows the source track again; playback is never interrupted. */
+    private fun fallBackToOriginal(notice: String?) {
+        translationJob?.cancel()
+        _translatedCues.value = emptyList()
+        _state.update { it.copy(translatedSelected = false, translationStatus = null, confirmPackDownload = null, notice = notice ?: it.notice) }
+        val sourceLang = (decision as? SubtitleDecision.Translate)?.sourceLang
+        val original = _state.value.textTracks.let { tracks -> tracks.firstOrNull { it.language == sourceLang } ?: tracks.firstOrNull() }
+        if (original != null) selectTextTrack(original) else setTextDisabled(false)
+    }
+
+    fun selectTranslated() {
+        if (decision !is SubtitleDecision.Translate) return
+        setTextDisabled(true)
+        _state.update { it.copy(translatedSelected = true, textOff = true) }
+        if (translationJob?.isActive != true && _translatedCues.value.isEmpty()) startTranslation(allowMetered = false)
+    }
+
+    fun confirmPackDownload() = startTranslation(allowMetered = true)
+
+    fun declinePackDownload() = fallBackToOriginal(null)
+
+    fun dismissNotice() = _state.update { it.copy(notice = null) }
 
     fun selectTextTrack(option: TextTrackOption?) {
         val c = controller ?: return
+        _state.update { it.copy(translatedSelected = false, translationStatus = null) }
         val b = c.trackSelectionParameters.buildUpon()
         if (option?.group == null) {
             b.setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true)

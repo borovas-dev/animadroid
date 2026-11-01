@@ -3,6 +3,7 @@
 package com.borovas.animadroid.feature.settings
 
 import android.content.Context
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -32,6 +33,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -51,6 +53,8 @@ import com.borovas.animadroid.core.model.QualityPreference
 import com.borovas.animadroid.core.model.SkipBehavior
 import com.borovas.animadroid.core.model.ThemeMode
 import com.borovas.animadroid.core.model.TranslationMode
+import com.borovas.animadroid.feature.subtitles.MlKitLanguages
+import com.borovas.animadroid.feature.subtitles.SubtitleLanguages
 import kotlin.math.roundToInt
 
 /** Provider ids as registered by the provider modules. Default stays "hianime" (see [AppSettings]). */
@@ -133,6 +137,18 @@ fun SettingsScreen(
                     SwitchRow("Seek bar previews", "Show a thumbnail while dragging the seek bar", settings.scrubPreviewEnabled) { v -> onUpdate { it.copy(scrubPreviewEnabled = v) } }
                     if (settings.scrubPreviewEnabled) {
                         SwitchRow("Previews on mobile data", "Decode previews from the stream even on metered networks (uses data)", settings.scrubPreviewMobileData) { v -> onUpdate { it.copy(scrubPreviewMobileData = v) } }
+                    }
+                }
+            }
+            item {
+                Group(stringResource(R.string.settings_subtitles_group)) {
+                    SubtitleLanguageRow(settings.subtitleLanguage) { code -> onUpdate { it.copy(subtitleLanguage = code) } }
+                    if (settings.subtitleLanguage.isNotEmpty()) {
+                        SwitchRow(
+                            stringResource(R.string.settings_translate_subtitles),
+                            stringResource(R.string.settings_translate_subtitles_desc),
+                            settings.translateSubtitles,
+                        ) { v -> onUpdate { it.copy(translateSubtitles = v) } }
                     }
                 }
             }
@@ -242,6 +258,34 @@ private fun Labeled(label: String, content: @Composable () -> Unit) {
     Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(label, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
         content()
+    }
+}
+
+@Composable
+private fun SubtitleLanguageRow(selected: String, onSelect: (String) -> Unit) {
+    var open by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    // Own-language names, sorted by name; computed once (ML Kit's language list is static).
+    val languages = remember {
+        MlKitLanguages.all().map { it to SubtitleLanguages.displayName(it) }.sortedBy { it.second.lowercase() }
+    }
+    Column {
+        ListItem(
+            headlineContent = { Text(stringResource(R.string.settings_subtitle_language)) },
+            supportingContent = {
+                Text(if (selected.isEmpty()) stringResource(R.string.settings_subtitle_language_off) else SubtitleLanguages.displayName(selected))
+            },
+            modifier = Modifier.clickable { open = true },
+            colors = transparent(),
+        )
+        androidx.compose.material3.DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            androidx.compose.material3.DropdownMenuItem(
+                text = { Text(stringResource(R.string.settings_subtitle_language_off)) },
+                onClick = { onSelect(""); open = false },
+            )
+            languages.forEach { (code, name) ->
+                androidx.compose.material3.DropdownMenuItem(text = { Text(name) }, onClick = { onSelect(code); open = false })
+            }
+        }
     }
 }
 

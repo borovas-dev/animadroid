@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="subtitles_translated_label">%1$s (tłumaczenie maszynowe)</string>
+    <string name="subtitles_preparing">Przygotowywanie przetłumaczonych napisów…</string>
+    <string name="subtitles_downloading_pack">Pobieranie pakietu językowego…</string>
+    <string name="subtitles_translating">Tłumaczenie napisów… %1$d%%</string>
+    <string name="subtitles_metered_title">Pobrać pakiet językowy?</string>
+    <string name="subtitles_metered_body">Tłumaczenie na język %1$s wymaga jednorazowego pakietu językowego (ok. 30 MB) od Google. Korzystasz z połączenia z limitem danych.</string>
+    <string name="subtitles_download">Pobierz</string>
+    <string name="subtitles_cancel">Anuluj</string>
+    <string name="subtitles_failed_unsupported">Tłumaczenie na język %1$s nie jest obsługiwane. Wyświetlam oryginalne napisy.</string>
+    <string name="subtitles_failed_download">Nie udało się pobrać pakietu językowego. Wyświetlam oryginalne napisy.</string>
+    <string name="subtitles_failed_generic">Tłumaczenie napisów nie powiodło się. Wyświetlam oryginalne napisy.</string>
+</resources>

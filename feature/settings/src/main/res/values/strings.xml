@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
     <string name="settings_source">Source</string>
     <string name="provider_hianime">HiAnime (English)</string>
     <string name="provider_shinden">Shinden (Polish)</string>
     <string name="settings_source_shinden_hint">Polish audio (lektor/dubbing) is used for the Dub option; Sub uses Polish, then English, subtitles. Only embeddable hosts work, links to services such as Crunchyroll or Netflix are skipped.</string>
+
+    <string name="settings_subtitles_group">Subtitles</string>
+    <string name="settings_subtitle_language">Subtitle language</string>
+    <string name="settings_subtitle_language_off">Off</string>
+    <string name="settings_translate_subtitles">Translate subtitles</string>
+    <string name="settings_translate_subtitles_desc">If your language is not offered by the source, subtitles are machine translated on your device. Language packs (about 30 MB each) are downloaded once from Google; after that translation runs fully on-device and no subtitle text leaves your phone. Translated subtitles are labelled \"machine translated\".</string>
 </resources>

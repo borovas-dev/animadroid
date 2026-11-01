@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="subtitles_translated_label">%1$s (machine translated)</string>
+    <string name="subtitles_preparing">Preparing translated subtitles…</string>
+    <string name="subtitles_downloading_pack">Downloading language pack…</string>
+    <string name="subtitles_translating">Translating subtitles… %1$d%%</string>
+    <string name="subtitles_metered_title">Download language pack?</string>
+    <string name="subtitles_metered_body">Translating to %1$s needs a one-time language pack (about 30 MB) from Google. You are on a metered connection.</string>
+    <string name="subtitles_download">Download</string>
+    <string name="subtitles_cancel">Cancel</string>
+    <string name="subtitles_failed_unsupported">Translation to %1$s is not supported. Showing the original subtitles.</string>
+    <string name="subtitles_failed_download">Could not download the language pack. Showing the original subtitles.</string>
+    <string name="subtitles_failed_generic">Subtitle translation failed. Showing the original subtitles.</string>
+</resources>

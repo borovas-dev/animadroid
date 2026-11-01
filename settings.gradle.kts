@@ -12,5 +12,5 @@ include(
     ":core:model", ":core:network", ":core:database", ":core:datastore", ":core:designsystem",
     ":provider:api", ":provider:hianime", ":provider:shinden",
     ":feature:aniskip", ":feature:search", ":feature:details", ":feature:player",
-    ":feature:library", ":feature:downloads", ":feature:settings", ":feature:recommend",
+    ":feature:library", ":feature:downloads", ":feature:settings", ":feature:recommend", ":feature:subtitles",
 )

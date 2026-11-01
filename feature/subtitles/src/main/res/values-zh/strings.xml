@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="subtitles_translated_label">%1$s（机器翻译）</string>
+    <string name="subtitles_preparing">正在准备翻译字幕…</string>
+    <string name="subtitles_downloading_pack">正在下载语言包…</string>
+    <string name="subtitles_translating">正在翻译字幕… %1$d%%</string>
+    <string name="subtitles_metered_title">下载语言包？</string>
+    <string name="subtitles_metered_body">翻译为%1$s需要从 Google 一次性下载语言包（约 30 MB）。当前为计费网络。</string>
+    <string name="subtitles_download">下载</string>
+    <string name="subtitles_cancel">取消</string>
+    <string name="subtitles_failed_unsupported">不支持翻译为%1$s，已显示原字幕。</string>
+    <string name="subtitles_failed_download">无法下载语言包，已显示原字幕。</string>
+    <string name="subtitles_failed_generic">字幕翻译失败，已显示原字幕。</string>
+</resources>

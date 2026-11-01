@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_subtitles_group">字幕</string>
+    <string name="settings_subtitle_language">字幕语言</string>
+    <string name="settings_subtitle_language_off">关闭</string>
+    <string name="settings_translate_subtitles">翻译字幕</string>
+    <string name="settings_translate_subtitles_desc">如果片源没有您的语言，字幕将在设备上进行机器翻译。语言包（每个约 30 MB）只需从 Google 下载一次，之后翻译完全在设备上运行，字幕文本不会离开您的手机。翻译后的字幕会标注“机器翻译”。</string>
+</resources>

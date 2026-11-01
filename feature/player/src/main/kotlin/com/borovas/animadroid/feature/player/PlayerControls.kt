@@ -214,6 +214,7 @@ internal fun PlayerSettingsSheet(
     onDismiss: () -> Unit,
     onQuality: (Int?) -> Unit,
     onSubtitle: (TextTrackOption?) -> Unit,
+    onTranslated: () -> Unit,
     onSpeed: (Float) -> Unit,
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
@@ -231,9 +232,15 @@ internal fun PlayerSettingsSheet(
             }
             Text("Subtitles", style = MaterialTheme.typography.titleMedium)
             ChipRow {
-                FilterChip(selected = state.textOff, onClick = { onSubtitle(null) }, label = { Text("Off") })
+                FilterChip(selected = state.textOff && !state.translatedSelected, onClick = { onSubtitle(null) }, label = { Text("Off") })
                 state.textTracks.forEach { t ->
-                    FilterChip(selected = !state.textOff && t.selected, onClick = { onSubtitle(t) }, label = { Text(t.label) })
+                    FilterChip(
+                        selected = !state.textOff && t.selected && !state.translatedSelected,
+                        onClick = { onSubtitle(t) }, label = { Text(t.label) },
+                    )
+                }
+                state.translated?.let { tr ->
+                    FilterChip(selected = state.translatedSelected, onClick = onTranslated, label = { Text(tr.label) })
                 }
             }
             Text("Speed", style = MaterialTheme.typography.titleMedium)
