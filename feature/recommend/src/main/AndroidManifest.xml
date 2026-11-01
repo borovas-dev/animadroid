@@ -12,6 +12,11 @@
             android:name="androidx.work.impl.foreground.SystemForegroundService"
             android:foregroundServiceType="dataSync"
             tools:node="merge" />
+        <!-- Native model runtime lives in its own process so a native crash cannot kill the app. -->
+        <service
+            android:name="com.borovas.animadroid.feature.recommend.LlmWorkerService"
+            android:process=":llm"
+            android:exported="false" />
         <!-- LiteRT-LM GPU backend (optional; CPU fallback is automatic). -->
         <uses-native-library android:name="libvndksupport.so" android:required="false" />
         <uses-native-library android:name="libOpenCL.so" android:required="false" />
