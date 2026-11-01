@@ -15,7 +15,12 @@ android {
     buildTypes {
         // ./gradlew -PqaSuffix=.qa lets parallel worktrees install side by side on a shared device.
         debug { (project.findProperty("qaSuffix") as? String)?.let { applicationIdSuffix = it } }
-        release { isMinifyEnabled = true; isShrinkResources = true; proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro") }
+        // Release ships only the ABIs real phones use; ML Kit and LiteRT-LM native libs are large per ABI.
+        // Debug keeps every ABI so emulators (x86_64) work.
+        release {
+            ndk { abiFilters += listOf("armeabi-v7a", "arm64-v8a") }
+            isMinifyEnabled = true; isShrinkResources = true; proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
     }
 }
 dependencies {

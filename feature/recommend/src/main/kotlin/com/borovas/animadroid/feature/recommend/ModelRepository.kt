@@ -63,7 +63,10 @@ class ModelRepository @Inject constructor(
         val am = context.getSystemService(ActivityManager::class.java)
         val total = ActivityManager.MemoryInfo().also { am.getMemoryInfo(it) }.totalMem
         val free = StatFs(dir.path).availableBytes
-        return evaluateRequirements(total, free, partialFile().takeIf { it.exists() }?.length() ?: 0)
+        return evaluateRequirements(
+            total, free, partialFile().takeIf { it.exists() }?.length() ?: 0,
+            supports64Bit = android.os.Build.SUPPORTED_64_BIT_ABIS.isNotEmpty(),
+        )
     }
 
     /** Returns requirement problems (nothing is enqueued then). */

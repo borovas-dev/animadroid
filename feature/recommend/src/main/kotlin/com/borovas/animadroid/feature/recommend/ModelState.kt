@@ -80,6 +80,8 @@ fun reduceModelState(
 sealed interface RequirementProblem {
     data class NotEnoughRam(val totalBytes: Long) : RequirementProblem
     data class NotEnoughSpace(val neededBytes: Long, val freeBytes: Long) : RequirementProblem
+    /** The LiteRT-LM runtime ships only 64-bit libraries (arm64-v8a, x86_64). */
+    data object Unsupported32BitDevice : RequirementProblem
 }
 
 /** [alreadyDownloadedBytes] is the size of a resumable partial file, which does not need to be downloaded again. */
@@ -88,7 +90,9 @@ fun evaluateRequirements(
     freeSpaceBytes: Long,
     alreadyDownloadedBytes: Long = 0,
     modelBytes: Long = ModelSpec.SIZE_BYTES,
+    supports64Bit: Boolean = true,
 ): List<RequirementProblem> = buildList {
+    if (!supports64Bit) add(RequirementProblem.Unsupported32BitDevice)
     if (totalRamBytes < ModelSpec.MIN_RAM_BYTES) add(RequirementProblem.NotEnoughRam(totalRamBytes))
     val needed = (modelBytes - alreadyDownloadedBytes).coerceAtLeast(0) + ModelSpec.FREE_SPACE_MARGIN_BYTES
     if (freeSpaceBytes < needed) add(RequirementProblem.NotEnoughSpace(needed, freeSpaceBytes))
@@ -97,6 +101,8 @@ fun evaluateRequirements(
 fun RequirementProblem.describe(): String = when (this) {
     is RequirementProblem.NotEnoughRam ->
         "This device has ${"%.1f".format(totalBytes / 1_073_741_824.0)} GB of RAM. The model needs a device with at least 6 GB."
+    RequirementProblem.Unsupported32BitDevice ->
+        "The on-device model needs a 64-bit device; this one is 32-bit only."
     is RequirementProblem.NotEnoughSpace ->
         "Not enough free storage: ${formatBytes(neededBytes)} needed, ${formatBytes(freeBytes)} available."
 }
