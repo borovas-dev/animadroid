@@ -1,9 +1,10 @@
 @file:OptIn(UnstableApi::class)
+@file:androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 
 package com.borovas.animadroid.feature.downloads
 
 import android.content.Context
-import android.net.Uri
+import androidx.core.net.toUri
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
@@ -155,6 +156,13 @@ class DownloadCoordinator @Inject constructor(
         m.minRetryCount = 3
         m.requirements = DownloadPolicy.requirementsFor(wifiOnly = true) // safe default until the setting is read
         m.addListener(listener)
+        // DownloadManager is created PAUSED; DownloadService.onCreate() resumes it. When the process is restarted
+        // headless by [DownloadWatchdogService] (no foreground service is allowed to start from the background) no
+        // service exists, so without this the restored downloads would sit "Queued" forever.
+        m.resumeDownloads()
+        // A "Waiting for Wi-Fi" notification from the previous process would never be cleared otherwise (the new
+        // manager starts with waitingForRequirements=false and only reports changes); it is re-posted if still true.
+        notifier.clearWaiting()
         m.downloadIndex.getDownloads().use { c -> while (c.moveToNext()) c.download.let { known[it.request.id] = it } }
         scope.launch {
             settings.settings.map { it.downloadWifiOnly }.distinctUntilChanged().collect { wifiOnly ->
@@ -336,7 +344,7 @@ class DownloadCoordinator @Inject constructor(
             // Drop leftovers of a previous failed attempt so it restarts from a clean state.
             partsOf(key).forEach { sendRemove(it.request.id) }
             val requests = DownloadPlanner.parts(key, plan.snapshot).map { part ->
-                DownloadRequest.Builder(part.id, Uri.parse(part.url))
+                DownloadRequest.Builder(part.id, part.url.toUri())
                     .setMimeType(if (part.isHls) MimeTypes.APPLICATION_M3U8 else null)
                     .setData(payload)
                     .build()

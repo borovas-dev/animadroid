@@ -1,4 +1,5 @@
 @file:OptIn(androidx.media3.common.util.UnstableApi::class)
+@file:androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 
 package com.borovas.animadroid.feature.downloads
 
@@ -34,10 +35,10 @@ class DownloadNotifier @Inject constructor(@ApplicationContext private val conte
     }
 
     fun completed(key: String, title: String, episode: String) =
-        post(key.hashCode(), "Downloaded", "$title · ep $episode", openDownloads())
+        post(key.hashCode(), "Downloaded", "$title · ep $episode", openDownloads(), grouped = true)
 
     fun failed(key: String, title: String, episode: String, reason: String) =
-        post(key.hashCode(), "Download failed: $title · ep $episode", reason, openDownloads())
+        post(key.hashCode(), "Download failed: $title · ep $episode", reason, openDownloads(), grouped = true)
 
     fun waitingForWifi(wifiOnly: Boolean) {
         post(
@@ -70,7 +71,7 @@ class DownloadNotifier @Inject constructor(@ApplicationContext private val conte
         }
 
     @SuppressLint("MissingPermission") // checked inside notify() via areNotificationsEnabled
-    private fun post(id: Int, title: String, text: String, tap: PendingIntent?, ongoing: Boolean = false) {
+    private fun post(id: Int, title: String, text: String, tap: PendingIntent?, ongoing: Boolean = false, grouped: Boolean = false) {
         if (!nm.areNotificationsEnabled()) return
         val n = NotificationCompat.Builder(context, EVENTS_CHANNEL)
             .setSmallIcon(android.R.drawable.stat_sys_download_done)
@@ -81,11 +82,29 @@ class DownloadNotifier @Inject constructor(@ApplicationContext private val conte
             .setAutoCancel(!ongoing)
             .setOngoing(ongoing)
             .setOnlyAlertOnce(true)
+            .apply { if (grouped) setGroup(GROUP_RESULTS) }
             .build()
-        runCatching { nm.notify(id, n) }
+        runCatching {
+            nm.notify(id, n)
+            // Batch downloads finish one episode at a time: collapse the per-episode results under one summary.
+            if (grouped) nm.notify(ID_SUMMARY, summary(tap))
+        }
     }
 
+    private fun summary(tap: PendingIntent?) = NotificationCompat.Builder(context, EVENTS_CHANNEL)
+        .setSmallIcon(android.R.drawable.stat_sys_download_done)
+        .setContentTitle("Downloads")
+        .setContentText("Download results")
+        .setContentIntent(tap)
+        .setAutoCancel(true)
+        .setGroup(GROUP_RESULTS)
+        .setGroupSummary(true)
+        .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
+        .build()
+
     private companion object {
+        const val GROUP_RESULTS = "download_results"
+        const val ID_SUMMARY = 4714
         const val EVENTS_CHANNEL = "download_events"
         const val ID_WAITING = 4712
         const val ID_SYSTEM_PAUSE = 4713

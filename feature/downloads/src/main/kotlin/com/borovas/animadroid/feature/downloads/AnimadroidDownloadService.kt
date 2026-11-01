@@ -1,4 +1,5 @@
 @file:OptIn(UnstableApi::class)
+@file:androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 
 package com.borovas.animadroid.feature.downloads
 
@@ -37,6 +38,16 @@ class AnimadroidDownloadService : DownloadService(
 ) {
     private val coordinator: DownloadCoordinator
         get() = EntryPointAccessors.fromApplication(applicationContext, DownloadServiceEntryPoint::class.java).coordinator()
+
+    override fun onCreate() {
+        super.onCreate()
+        instance = this
+    }
+
+    override fun onDestroy() {
+        if (instance === this) instance = null
+        super.onDestroy()
+    }
 
     override fun getDownloadManager(): DownloadManager = coordinator.manager
 
@@ -112,6 +123,10 @@ class AnimadroidDownloadService : DownloadService(
         )
 
     internal companion object {
+        /** Running instance, used by the debug-only timeout trigger. */
+        @Volatile var instance: AnimadroidDownloadService? = null
+            private set
+
         const val JOB_ID = 4710
         const val ACTION_RESUME_SYSTEM = "com.borovas.animadroid.downloads.RESUME_SYSTEM"
         const val NOTIFICATION_ID = 4711

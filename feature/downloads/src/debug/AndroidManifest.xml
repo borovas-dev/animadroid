@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <!-- Debug only: adb shell am broadcast -n <pkg>/com.borovas.animadroid.feature.downloads.DebugTimeoutReceiver -a DEBUG_TIMEOUT -->
+        <receiver
+            android:name="com.borovas.animadroid.feature.downloads.DebugTimeoutReceiver"
+            android:exported="true" />
+    </application>
+</manifest>
