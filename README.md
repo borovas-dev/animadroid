@@ -38,6 +38,7 @@ fast Jetpack Compose UI built on **Material 3 Expressive**.
 ## 🆕 What's new in 0.1.0
 - **Shinden provider** for Polish audio and subtitles, selectable under *Settings → Playback → Source*
 - **On-device recommendations** now run in an isolated process, work in release builds, and use the CPU backend by default for compatibility
+- **Translated subtitles** with on-device ML Kit translation (*Settings → Subtitles*), Chinese first
 - Seek-bar scrub previews, native subtitle rendering, background downloads with notification actions, backup and import, launcher icons
 
 ## ✨ Features
@@ -52,6 +53,7 @@ fast Jetpack Compose UI built on **Material 3 Expressive**.
 - **Media3 / ExoPlayer** with HLS, a Material 3 Expressive control surface and a quality / subtitle / speed sheet
 - **Seek-bar scrub previews** — a thumbnail follows your finger on the slider, from the stream's sprite sheet when available, otherwise decoded from the stream itself
 - **Subtitles** rendered natively, with external tracks from the provider
+- **Translated subtitles** — optional on-device machine translation (Google ML Kit) of the English track into any of ~59 languages, starting with Chinese; language packs (~30 MB) download once, translation then runs offline and never sends subtitle text anywhere
 - **Picture-in-Picture**, background audio with a media notification and playback controls
 - **Gestures**: double-tap to seek, brightness and volume swipes, gesture lock, adjustable playback speed
 - **Exact resume** — every episode remembers the second you stopped at; "Continue watching" picks up where you were
@@ -87,7 +89,7 @@ fast Jetpack Compose UI built on **Material 3 Expressive**.
 Providers implement a small `AnimeProvider` interface (search, episodes, streams), so adding one does not touch the UI.
 
 ## 🗺️ Roadmap
-- Translated subtitles through on-device ML Kit translation, starting with Chinese
+- Translated subtitles for downloaded episodes without a network, and better handling of styled (ASS) subtitles
 - More providers and more video hosts
 - Signed release builds in CI
 
