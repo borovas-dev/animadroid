@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_source">Source</string>
+    <string name="provider_hianime">HiAnime (English)</string>
+    <string name="provider_shinden">Shinden (Polish)</string>
+    <string name="settings_source_shinden_hint">Polish audio (lektor/dubbing) is used for the Dub option; Sub uses Polish, then English, subtitles. Only embeddable hosts work, links to services such as Crunchyroll or Netflix are skipped.</string>
+</resources>

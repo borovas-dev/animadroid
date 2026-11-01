@@ -36,6 +36,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -51,6 +52,9 @@ import com.borovas.animadroid.core.model.SkipBehavior
 import com.borovas.animadroid.core.model.ThemeMode
 import com.borovas.animadroid.core.model.TranslationMode
 import kotlin.math.roundToInt
+
+/** Provider ids as registered by the provider modules. Default stays "hianime" (see [AppSettings]). */
+private val PROVIDER_CHOICES = listOf("hianime" to R.string.provider_hianime, "shinden" to R.string.provider_shinden)
 
 private const val SOURCE_URL = "https://github.com/borovas-dev/animadroid"
 
@@ -96,6 +100,22 @@ fun SettingsScreen(
         ) {
             item {
                 Group("Playback") {
+                    Labeled(stringResource(R.string.settings_source)) {
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            PROVIDER_CHOICES.forEach { (id, label) ->
+                                FilterChip(
+                                    selected = settings.providerId == id, onClick = { onUpdate { it.copy(providerId = id) } },
+                                    label = { Text(stringResource(label)) },
+                                )
+                            }
+                        }
+                        if (settings.providerId == "shinden") {
+                            Text(
+                                stringResource(R.string.settings_source_shinden_hint),
+                                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
                     Labeled("Audio") {
                         ConnectedToggleGroup(TranslationMode.entries, settings.mode, { m -> onUpdate { it.copy(mode = m) } }, { it.name }, Modifier.fillMaxWidth())
                     }

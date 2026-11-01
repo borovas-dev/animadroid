@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_source">Źródło</string>
+    <string name="provider_hianime">HiAnime (angielski)</string>
+    <string name="provider_shinden">Shinden (polski)</string>
+    <string name="settings_source_shinden_hint">Polski dźwięk (lektor/dubbing) jest używany dla opcji Dub, a Sub korzysta z napisów polskich, potem angielskich. Działają tylko osadzane odtwarzacze, linki do serwisów takich jak Crunchyroll czy Netflix są pomijane.</string>
+</resources>

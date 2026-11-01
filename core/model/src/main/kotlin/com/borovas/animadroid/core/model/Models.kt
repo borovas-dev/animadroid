@@ -58,6 +58,8 @@ data class StreamSet(
      * decoding frames from the stream itself.
      */
     val spriteVttUrl: String? = null,
+    /** Human-readable audio/subtitle language of this source (e.g. "Polish dub/lektor", "JP audio + PL subs"); null when the provider has a single fixed language. */
+    val languageLabel: String? = null,
 )
 
 @Serializable

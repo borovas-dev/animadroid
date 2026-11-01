@@ -22,6 +22,7 @@ dependencies {
     listOf("model","network","database","datastore","designsystem").forEach { implementation(project(":core:$it")) }
     implementation(project(":provider:api"))
     implementation(project(":provider:hianime"))
+    implementation(project(":provider:shinden"))
     listOf("aniskip","search","details","player","library","downloads","settings","recommend").forEach { implementation(project(":feature:$it")) }
     implementation(libs.androidx.core.ktx); implementation(libs.androidx.core.splashscreen); implementation(libs.androidx.activity.compose)
     implementation(libs.navigation3.runtime); implementation(libs.navigation3.ui); implementation(libs.androidx.lifecycle.viewmodel.navigation3)
