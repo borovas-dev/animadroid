@@ -98,7 +98,7 @@ internal object JwPlayerExtractor : HostExtractor {
     private val FILE = Regex(""""?file"?\s*:\s*["']([^"']{20,}\.(?:mp4|m3u8)[^"']*)["']""")
     private val HLS = Regex(""""hls([234]?)"\s*:\s*"([^"]+\.m3u8[^"]*)"""")
     private val PACKER = Regex(
-        """}\s*\(\s*'((?:[^'\\]|\\.)*?)'\s*,\s*(\d+)\s*,\s*\d+\s*,\s*'([^']*)'\s*(?:\.split\('\|'\))?\s*\)\s*\)""", RegexOption.DOT_MATCHES_ALL,
+        """\}\s*\(\s*'((?:[^'\\]|\\.)*?)'\s*,\s*(\d+)\s*,\s*\d+\s*,\s*'([^']*)'\s*(?:\.split\('\|'\))?\s*\)\s*\)""", RegexOption.DOT_MATCHES_ALL,
     )
     private const val ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
