@@ -47,7 +47,7 @@ internal object SpriteVtt {
 
     /** Tolerant parser: BOM, CRLF/CR, optional cue ids, NOTE blocks, `HH:MM:SS.mmm` or `MM:SS.mmm`. Result is sorted by start. */
     fun parse(text: String, vttUrl: String): List<SpriteCue> {
-        val lines = text.removePrefix("﻿").lines().map { it.trim('\r', ' ', '\t') }
+        val lines = text.removePrefix("\uFEFF").lines().map { it.trim('\r', ' ', '\t') }
         val cues = ArrayList<SpriteCue>()
         var i = 0
         while (i < lines.size) {
