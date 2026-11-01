@@ -188,6 +188,7 @@ class DownloadCoordinator @Inject constructor(
         manager.currentDownloads
             .filter { it.state == Download.STATE_QUEUED || it.state == Download.STATE_DOWNLOADING || it.state == Download.STATE_RESTARTING }
             .forEach { manager.setStopReason(it.request.id, DownloadPolicy.STOP_REASON_SYSTEM) }
+        notifier.clearWaiting() // nothing waits for the network any more, it is paused
         notifier.pausedBySystem()
     }
 

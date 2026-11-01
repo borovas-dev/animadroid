@@ -8,6 +8,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.offline.Download
 import androidx.media3.exoplayer.offline.DownloadManager
@@ -47,6 +48,9 @@ class AnimadroidDownloadService : DownloadService(
     override fun onDestroy() {
         if (instance === this) instance = null
         super.onDestroy()
+        // After a timeout stop the ongoing progress notification would otherwise linger (stale "Downloading N
+        // episodes", not dismissable); once the service is gone nothing updates it any more.
+        NotificationManagerCompat.from(this).cancel(NOTIFICATION_ID)
     }
 
     override fun getDownloadManager(): DownloadManager = coordinator.manager
