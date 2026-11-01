@@ -29,6 +29,17 @@ fast Jetpack Compose UI built on **Material 3 Expressive**.
 
 ---
 
+## 📲 Install
+
+1. Download the latest APK from the [**Releases**](https://github.com/borovas-dev/animadroid/releases) page
+2. Open it on your phone and allow "install unknown apps" for your browser or file manager when asked
+3. Requires **Android 12 (API 31) or newer**. Recommendations additionally need about 6 GB of RAM and a ~2.5 GB download
+
+## 🆕 What's new in 0.1.0
+- **Shinden provider** for Polish audio and subtitles, selectable under *Settings → Playback → Source*
+- **On-device recommendations** now run in an isolated process, work in release builds, and use the CPU backend by default for compatibility
+- Seek-bar scrub previews, native subtitle rendering, background downloads with notification actions, backup and import, launcher icons
+
 ## ✨ Features
 
 ### 🔎 Discover and watch
