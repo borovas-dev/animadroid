@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="common_back">Wstecz</string>
+    <string name="common_clear">Wyczyść</string>
+    <string name="common_cancel">Anuluj</string>
+    <string name="common_retry">Ponów</string>
+    <string name="common_delete">Usuń</string>
+    <string name="common_remove">Usuń</string>
+    <string name="common_close">Zamknij</string>
+    <string name="common_download">Pobierz</string>
+    <string name="common_pause">Wstrzymaj</string>
+    <string name="common_resume">Wznów</string>
+    <string name="common_off">Wyłączone</string>
+    <string name="error_default_title">Coś poszło nie tak</string>
+    <string name="verify_in_browser">Zweryfikuj w przeglądarce</string>
+    <string name="verification_needed">Wymagana weryfikacja</string>
+    <string name="error_cloudflare">Cloudflare wymaga sprawdzenia w przeglądarce.</string>
+    <string name="error_no_provider">Brak dostępnego źródła anime.</string>
+    <string name="common_open">Otwórz</string>
+</resources>

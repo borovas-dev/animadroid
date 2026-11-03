@@ -2,6 +2,9 @@
 
 package com.borovas.animadroid.navigation
 
+import com.borovas.animadroid.R
+import androidx.compose.ui.res.stringResource
+import androidx.annotation.StringRes
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
@@ -40,6 +43,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.Box
+import com.borovas.animadroid.core.designsystem.maxContentWidth
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.layout.PaddingValues
@@ -66,16 +72,18 @@ import com.borovas.animadroid.feature.recommend.RecommendSettingsSection
 import com.borovas.animadroid.feature.recommend.recommendEntry
 import com.borovas.animadroid.feature.search.SearchRoute
 import com.borovas.animadroid.feature.search.searchEntry
+import com.borovas.animadroid.feature.settings.HealthRoute
 import com.borovas.animadroid.feature.settings.SettingsRoute
+import com.borovas.animadroid.feature.settings.healthEntry
 import com.borovas.animadroid.feature.settings.settingsEntry
 
-private data class TopLevel(val route: NavKey, val label: String, val icon: ImageVector)
+private data class TopLevel(val route: NavKey, @StringRes val label: Int, val icon: ImageVector)
 
 private val topLevels = listOf(
-    TopLevel(LibraryRoute, "Home", Icons.Rounded.Home),
-    TopLevel(SearchRoute, "Search", Icons.Rounded.Search),
-    TopLevel(DownloadsRoute, "Downloads", Icons.Rounded.Download),
-    TopLevel(SettingsRoute, "Settings", Icons.Rounded.Settings),
+    TopLevel(LibraryRoute, R.string.nav_home, Icons.Rounded.Home),
+    TopLevel(SearchRoute, R.string.nav_search, Icons.Rounded.Search),
+    TopLevel(DownloadsRoute, R.string.nav_downloads, Icons.Rounded.Download),
+    TopLevel(SettingsRoute, R.string.nav_settings, Icons.Rounded.Settings),
 )
 
 @Composable
@@ -145,7 +153,9 @@ fun AnimadroidApp(aiRecommendationsEnabled: Boolean, openDownloads: Boolean = fa
                 onImportAniCli = { aniCliLauncher.launch(arrayOf("*/*")) },
                 onAiToggled = { on -> if (!on) RecommendLifecycle.onDisabled(context) },
                 recommendationsSection = { RecommendSettingsSection() },
+                onOpenSourceHealth = { backStack.add(HealthRoute) },
             )
+            healthEntry(onBack = { backStack.removeLastOrNull() })
             recommendEntry(
                 onAnimeClick = { backStack.add(DetailsRoute(it)) },
                 onOpenSettings = { selectTab(SettingsRoute) },
@@ -167,7 +177,7 @@ fun AnimadroidApp(aiRecommendationsEnabled: Boolean, openDownloads: Boolean = fa
                 topLevels.forEach { t ->
                     NavigationRailItem(
                         selected = t.route == selected, onClick = { selectTab(t.route) },
-                        icon = { Icon(t.icon, null) }, label = { Text(t.label) },
+                        icon = { Icon(t.icon, null) }, label = { Text(stringResource(t.label)) },
                     )
                 }
             }
@@ -179,7 +189,7 @@ fun AnimadroidApp(aiRecommendationsEnabled: Boolean, openDownloads: Boolean = fa
                         topLevels.forEach { t ->
                             ShortNavigationBarItem(
                                 selected = t.route == selected, onClick = { selectTab(t.route) },
-                                icon = { Icon(t.icon, null) }, label = { Text(t.label) },
+                                icon = { Icon(t.icon, null) }, label = { Text(stringResource(t.label)) },
                             )
                         }
                     }
@@ -187,9 +197,12 @@ fun AnimadroidApp(aiRecommendationsEnabled: Boolean, openDownloads: Boolean = fa
             },
         ) { pad ->
             val bottom = PaddingValues(bottom = pad.calculateBottomPadding())
+            // Cap content width on desktop-class windows (the player stays edge to edge).
+            val widthCap = if (top is PlayerRoute) Modifier else Modifier.maxContentWidth()
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
             NavDisplay(
                 backStack = backStack,
-                modifier = Modifier.padding(bottom).consumeWindowInsets(bottom),
+                modifier = widthCap.fillMaxSize().padding(bottom).consumeWindowInsets(bottom),
                 onBack = { backStack.removeLastOrNull() },
                 entryDecorators = listOf(
                     rememberSaveableStateHolderNavEntryDecorator(),
@@ -198,6 +211,7 @@ fun AnimadroidApp(aiRecommendationsEnabled: Boolean, openDownloads: Boolean = fa
                 sceneStrategies = listOf(listDetail),
                 entryProvider = provider,
             )
+            }
         }
     }
 }

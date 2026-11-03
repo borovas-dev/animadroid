@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_title">下载</string>
+    <string name="downloads_nothing_saved">尚未保存任何内容</string>
+    <string name="downloads_storage_used">已用存储：%1$s</string>
+    <string name="downloads_empty_title">还没有下载</string>
+    <string name="downloads_empty_body">点按剧集旁的下载按钮，即可保存以便离线观看。</string>
+    <string name="downloads_delete_episode_title">删除第 %1$s 集？</string>
+    <string name="downloads_delete_episode_body">“%1$s”的已下载文件将从此设备中删除。</string>
+    <string name="downloads_delete_all_title">删除“%1$s”的全部内容？</string>
+    <string name="downloads_waiting_banner">正在等待 Wi-Fi。连接后将自动继续下载（可在设置中更改）。</string>
+    <string name="downloads_delete_group_cd">删除“%1$s”的所有剧集</string>
+    <string name="downloads_status_queued">排队中</string>
+    <string name="downloads_status_paused">已暂停 · %1$d%%</string>
+    <string name="downloads_status_downloaded">已下载 · %1$s</string>
+    <string name="downloads_status_failed">失败：%1$s · 点按重试</string>
+    <string name="downloads_unknown_reason">未知原因</string>
+    <string name="downloads_episode">第 %1$s 集</string>
+    <string name="downloads_play_offline_cd">离线播放第 %1$s 集</string>
+    <string name="downloads_delete_episode_cd">删除第 %1$s 集</string>
+    <string name="downloads_paused_by_system">已被系统暂停 – 点按继续</string>
+    <string name="downloads_payload_label">%1$s · 第 %2$s 集</string>
+    <string name="downloads_notif_downloaded">下载完成</string>
+    <string name="downloads_notif_body">%1$s · 第 %2$s 集</string>
+    <string name="downloads_notif_failed_title">下载失败：%1$s · 第 %2$s 集</string>
+    <string name="downloads_notif_waiting_wifi">正在等待 Wi-Fi</string>
+    <string name="downloads_notif_waiting_network">正在等待网络</string>
+    <string name="downloads_notif_resume_wifi">Wi-Fi 可用时将自动继续下载</string>
+    <string name="downloads_notif_resume_network">网络可用时将自动继续下载</string>
+    <string name="downloads_notif_paused">下载已暂停</string>
+    <string name="downloads_notif_results_title">下载</string>
+    <string name="downloads_notif_results_text">下载结果</string>
+    <string name="downloads_notif_downloading_one">正在下载剧集</string>
+    <string name="downloads_notif_pause_all">全部暂停</string>
+    <string name="downloads_notif_resume_all">全部继续</string>
+    <string name="downloads_notif_cancel_all">全部取消</string>
+    <string name="downloads_fail_refused">服务器拒绝访问（HTTP %1$d），链接可能已过期</string>
+    <string name="downloads_fail_not_found">服务器上未找到视频（HTTP %1$d）</string>
+    <string name="downloads_fail_server_error">服务器错误（HTTP %1$d）</string>
+    <string name="downloads_fail_http">服务器返回 HTTP %1$d</string>
+    <string name="downloads_fail_unreachable">无法连接到服务器</string>
+    <string name="downloads_fail_timeout">连接超时</string>
+    <string name="downloads_fail_with_message">下载失败：%1$s</string>
+    <string name="downloads_fail_generic">下载失败</string>
+    <string name="downloads_fail_interrupted">下载开始前被中断</string>
+    <string name="downloads_fail_no_stream">未找到可下载的视频流</string>
+    <string name="downloads_fail_start_reason">无法开始：%1$s</string>
+    <string name="downloads_fail_start_message">无法开始下载：%1$s</string>
+    <string name="downloads_unknown_error">未知错误</string>
+    <plurals name="downloads_delete_all_body">
+        <item quantity="other">全部 %1$d 个已下载或排队中的剧集将从此设备中删除。</item>
+    </plurals>
+    <plurals name="downloads_episode_count">
+        <item quantity="other">%1$d 集</item>
+    </plurals>
+    <plurals name="downloads_notif_downloading_many">
+        <item quantity="other">正在下载 %1$d 集</item>
+    </plurals>
+    <string name="download_channel_name">下载</string>
+    <string name="download_events_channel_name">下载动态</string>
+    <string name="download_events_channel_description">已完成和失败的下载，以及等待网络的下载</string>
+    <string name="download_channel_description">为离线观看而下载的剧集的进度</string>
+    <string name="downloads_retrying">正在重试 (%1$d/%2$d)…</string>
+</resources>

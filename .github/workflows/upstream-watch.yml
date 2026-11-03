@@ -1,0 +1,40 @@
+name: upstream-watch
+# Weekly: has pystardust/ani-cli changed since we last looked? If so, open an issue.
+on:
+  schedule: [{ cron: "0 6 * * 1" }]
+  workflow_dispatch:
+permissions:
+  contents: read
+  issues: write
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compare with last-seen state
+        id: cmp
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          sha=$(gh api repos/pystardust/ani-cli/commits/master --jq .sha)
+          hash=$(curl -fsSL https://raw.githubusercontent.com/pystardust/ani-cli/master/ani-cli | sha256sum | cut -d' ' -f1)
+          new=$(printf 'commit=%s\nscript_sha256=%s\n' "$sha" "$hash")
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "hash=$hash" >> "$GITHUB_OUTPUT"
+          if [ "$new" = "$(cat .github/upstream-ani-cli.txt)" ]; then echo "changed=false" >> "$GITHUB_OUTPUT"; else echo "changed=true" >> "$GITHUB_OUTPUT"; fi
+          printf '%s\n' "$new" > "$RUNNER_TEMP/new.txt"
+      - name: Open issue
+        if: steps.cmp.outputs.changed == 'true'
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          old=$(sed -n 's/^commit=//p' .github/upstream-ani-cli.txt)
+          gh issue create --title "ani-cli changed upstream ($(echo "${{ steps.cmp.outputs.sha }}" | cut -c1-7))" \
+            --body "pystardust/ani-cli master moved from \`$old\` to \`${{ steps.cmp.outputs.sha }}\` (script sha256 \`${{ steps.cmp.outputs.hash }}\`).
+
+          Compare: https://github.com/pystardust/ani-cli/compare/${old}...${{ steps.cmp.outputs.sha }}
+
+          Check for domain / key / server changes, update \`config/providers.json\` (see config/README.md) or the provider code, then replace the contents of \`.github/upstream-ani-cli.txt\` with:
+
+          \`\`\`
+          commit=${{ steps.cmp.outputs.sha }}
+          script_sha256=${{ steps.cmp.outputs.hash }}
+          \`\`\`"

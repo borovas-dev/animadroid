@@ -24,6 +24,8 @@ data class BackupAnime(
     val isFavorite: Boolean = false,
     val favoritedAt: Long? = null,
     val lastWatchedAt: Long? = null,
+    /** providerId -> animeId on other providers (added in 0.2; absent in older backups). */
+    val alternates: Map<String, String> = emptyMap(),
 )
 
 @Serializable
@@ -59,7 +61,7 @@ class BackupManager @Inject constructor(private val db: AnimadroidDatabase) {
         val file = BackupFile(
             anime = db.animeDao().getAll().map {
                 BackupAnime(it.providerId, it.animeId, it.title, it.coverUrl, it.synopsis, it.malId, it.subEpisodes,
-                    it.dubEpisodes, it.isFavorite, it.favoritedAt, it.lastWatchedAt)
+                    it.dubEpisodes, it.isFavorite, it.favoritedAt, it.lastWatchedAt, decodeAlternates(it.alternatesJson))
             },
             progress = db.progressDao().getAll().map {
                 BackupProgress(it.providerId, it.animeId, it.episodeNumber, it.positionMs, it.durationMs, it.updatedAt)
@@ -83,7 +85,7 @@ class BackupManager @Inject constructor(private val db: AnimadroidDatabase) {
             t.immediateTransaction {
                 for (b in file.anime) {
                     val incoming = AnimeEntity(b.providerId, b.animeId, b.title, b.coverUrl, b.synopsis, b.malId,
-                        b.subEpisodes, b.dubEpisodes, b.isFavorite, b.favoritedAt, b.lastWatchedAt)
+                        b.subEpisodes, b.dubEpisodes, b.isFavorite, b.favoritedAt, b.lastWatchedAt, encodeAlternates(b.alternates))
                     val existing = animeDao.get(b.providerId, b.animeId)
                     if (existing == null) {
                         animeDao.upsert(incoming)
@@ -95,6 +97,7 @@ class BackupManager @Inject constructor(private val db: AnimadroidDatabase) {
                                 coverUrl = base.coverUrl ?: existing.coverUrl ?: incoming.coverUrl,
                                 synopsis = base.synopsis ?: existing.synopsis ?: incoming.synopsis,
                                 malId = base.malId ?: existing.malId ?: incoming.malId,
+                                alternatesJson = encodeAlternates(decodeAlternates(incoming.alternatesJson) + decodeAlternates(existing.alternatesJson)),
                                 isFavorite = fav.isFavorite,
                                 favoritedAt = fav.favoritedAt,
                                 lastWatchedAt = maxOfNullable(existing.lastWatchedAt, incoming.lastWatchedAt),

@@ -2,7 +2,17 @@
 
 package com.borovas.animadroid.feature.settings
 
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.draw.clip
+import androidx.compose.animation.AnimatedVisibility
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,7 +25,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
@@ -35,6 +52,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
@@ -51,14 +69,12 @@ import com.borovas.animadroid.core.designsystem.ConnectedToggleGroup
 import com.borovas.animadroid.core.model.AppSettings
 import com.borovas.animadroid.core.model.QualityPreference
 import com.borovas.animadroid.core.model.SkipBehavior
+import com.borovas.animadroid.core.model.SourceStrategy
 import com.borovas.animadroid.core.model.ThemeMode
 import com.borovas.animadroid.core.model.TranslationMode
 import com.borovas.animadroid.feature.subtitles.MlKitLanguages
 import com.borovas.animadroid.feature.subtitles.SubtitleLanguages
 import kotlin.math.roundToInt
-
-/** Provider ids as registered by the provider modules. Default stays "hianime" (see [AppSettings]). */
-private val PROVIDER_CHOICES = listOf("hianime" to R.string.provider_hianime, "shinden" to R.string.provider_shinden)
 
 private const val SOURCE_URL = "https://github.com/borovas-dev/animadroid"
 
@@ -68,11 +84,17 @@ fun EntryProviderScope<NavKey>.settingsEntry(
     onImportAniCli: () -> Unit = {},
     onAiToggled: (Boolean) -> Unit = {},
     recommendationsSection: (@Composable () -> Unit)? = null,
+    onOpenSourceHealth: () -> Unit = {},
 ) {
     entry<SettingsRoute> {
         val vm: SettingsViewModel = hiltViewModel()
         val state by vm.state.collectAsStateWithLifecycle()
-        SettingsScreen(state.settings, vm::update, onExport, onImport, onImportAniCli, onAiToggled = onAiToggled, recommendationsSection = recommendationsSection)
+        SettingsScreen(
+            state.settings, vm::update, onExport, onImport, onImportAniCli, onAiToggled = onAiToggled, recommendationsSection = recommendationsSection,
+            trackingSection = { TrackingContent() },
+            languages = state.languages, sources = state.sources, onMoveSource = vm::moveSource, onSourceEnabled = vm::setSourceEnabled,
+            onOpenSourceHealth = onOpenSourceHealth,
+        )
     }
 }
 
@@ -86,14 +108,29 @@ fun SettingsScreen(
     modifier: Modifier = Modifier,
     onAiToggled: (Boolean) -> Unit = {},
     recommendationsSection: (@Composable () -> Unit)? = null,
+    trackingSection: (@Composable () -> Unit)? = null,
+    languages: List<String> = BASE_LANGUAGES,
+    sources: List<SourceItem> = emptyList(),
+    onMoveSource: (String, Int) -> Unit = { _, _ -> },
+    onSourceEnabled: (String, Boolean) -> Unit = { _, _ -> },
+    onOpenSourceHealth: () -> Unit = {},
 ) {
     val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val context = LocalContext.current
     val version = remember { appVersion(context) }
     val uri = LocalUriHandler.current
+    val strategyReliable = stringResource(R.string.strategy_reliable)
+    val strategyBest = stringResource(R.string.strategy_best_quality)
+    val audioSub = stringResource(R.string.audio_sub)
+    val audioDub = stringResource(R.string.audio_dub)
+    val skipAuto = stringResource(R.string.skip_auto)
+    val skipButton = stringResource(R.string.skip_button)
+    val themeSystem = stringResource(R.string.theme_system)
+    val themeLight = stringResource(R.string.theme_light)
+    val themeDark = stringResource(R.string.theme_dark)
     Scaffold(
         modifier.nestedScroll(scroll.nestedScrollConnection),
-        topBar = { LargeFlexibleTopAppBar(title = { Text("Settings") }, scrollBehavior = scroll) },
+        topBar = { LargeFlexibleTopAppBar(title = { Text(stringResource(R.string.settings_title)) }, scrollBehavior = scroll) },
     ) { pad ->
         LazyColumn(
             Modifier.fillMaxSize(),
@@ -103,27 +140,27 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             item {
-                Group("Playback") {
-                    Labeled(stringResource(R.string.settings_source)) {
+                Group(stringResource(R.string.settings_playback)) {
+                    Labeled(stringResource(R.string.settings_content_language)) {
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            PROVIDER_CHOICES.forEach { (id, label) ->
+                            languages.forEach { code ->
                                 FilterChip(
-                                    selected = settings.providerId == id, onClick = { onUpdate { it.copy(providerId = id) } },
-                                    label = { Text(stringResource(label)) },
+                                    selected = settings.contentLanguage == code, onClick = { onUpdate { it.copy(contentLanguage = code) } },
+                                    label = { Text(languageName(code)) },
                                 )
                             }
                         }
-                        if (settings.providerId == "shinden") {
-                            Text(
-                                stringResource(R.string.settings_source_shinden_hint),
-                                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
+                        Text(
+                            stringResource(R.string.settings_content_language_desc),
+                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     }
-                    Labeled("Audio") {
-                        ConnectedToggleGroup(TranslationMode.entries, settings.mode, { m -> onUpdate { it.copy(mode = m) } }, { it.name }, Modifier.fillMaxWidth())
+                    Labeled(stringResource(R.string.settings_audio)) {
+                        ConnectedToggleGroup(
+                            TranslationMode.entries, settings.mode, { m -> onUpdate { it.copy(mode = m) } },
+                            { if (it == TranslationMode.SUB) audioSub else audioDub }, Modifier.fillMaxWidth())
                     }
-                    Labeled("Preferred quality") {
+                    Labeled(stringResource(R.string.settings_quality)) {
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             QualityPreference.entries.forEach { q ->
                                 FilterChip(
@@ -133,10 +170,15 @@ fun SettingsScreen(
                             }
                         }
                     }
-                    SwitchRow("Autoplay next episode", "Start the next episode when one finishes", settings.autoPlayNext) { v -> onUpdate { it.copy(autoPlayNext = v) } }
-                    SwitchRow("Seek bar previews", "Show a thumbnail while dragging the seek bar", settings.scrubPreviewEnabled) { v -> onUpdate { it.copy(scrubPreviewEnabled = v) } }
+                    SwitchRow(stringResource(R.string.settings_autoplay), stringResource(R.string.settings_autoplay_desc), settings.autoPlayNext) { v -> onUpdate { it.copy(autoPlayNext = v) } }
+                    SwitchRow(stringResource(R.string.settings_prefetch), stringResource(R.string.settings_prefetch_desc), settings.prefetchNextEpisode) { v -> onUpdate { it.copy(prefetchNextEpisode = v) } }
+                    if (settings.prefetchNextEpisode) {
+                        SwitchRow(stringResource(R.string.settings_prefetch_mobile), stringResource(R.string.settings_prefetch_mobile_desc), settings.prefetchOnMetered) { v -> onUpdate { it.copy(prefetchOnMetered = v) } }
+                    }
+                    SwitchRow(stringResource(R.string.settings_dub), stringResource(R.string.settings_dub_desc), settings.dubEnabled) { v -> onUpdate { it.copy(dubEnabled = v) } }
+                    SwitchRow(stringResource(R.string.settings_scrub), stringResource(R.string.settings_scrub_desc), settings.scrubPreviewEnabled) { v -> onUpdate { it.copy(scrubPreviewEnabled = v) } }
                     if (settings.scrubPreviewEnabled) {
-                        SwitchRow("Previews on mobile data", "Decode previews from the stream even on metered networks (uses data)", settings.scrubPreviewMobileData) { v -> onUpdate { it.copy(scrubPreviewMobileData = v) } }
+                        SwitchRow(stringResource(R.string.settings_scrub_mobile), stringResource(R.string.settings_scrub_mobile_desc), settings.scrubPreviewMobileData) { v -> onUpdate { it.copy(scrubPreviewMobileData = v) } }
                     }
                 }
             }
@@ -153,16 +195,20 @@ fun SettingsScreen(
                 }
             }
             item {
-                Group("Ani-skip") {
-                    SwitchRow("Skip openings & endings", "Uses ani-skip timestamps when available", settings.aniSkipEnabled) { v -> onUpdate { it.copy(aniSkipEnabled = v) } }
+                Group(stringResource(R.string.settings_aniskip)) {
+                    SwitchRow(stringResource(R.string.settings_skip), stringResource(R.string.settings_skip_desc), settings.aniSkipEnabled) { v -> onUpdate { it.copy(aniSkipEnabled = v) } }
                     if (settings.aniSkipEnabled) {
-                        Labeled("Behavior") {
+                        Labeled(stringResource(R.string.settings_skip_behavior)) {
                             ConnectedToggleGroup(
                                 SkipBehavior.entries, settings.skipBehavior, { b -> onUpdate { it.copy(skipBehavior = b) } },
-                                { if (it == SkipBehavior.AUTO) "Auto skip" else "Show button" }, Modifier.fillMaxWidth(),
+                                { if (it == SkipBehavior.AUTO) skipAuto else skipButton }, Modifier.fillMaxWidth(),
                             )
                         }
-                        Labeled("Offset: ${settings.skipOffsetSec} s") {
+                        if (settings.skipBehavior == SkipBehavior.BUTTON) {
+                            SwitchRow(stringResource(R.string.settings_auto_skip_intro), stringResource(R.string.settings_auto_skip_desc), settings.autoSkipIntro) { v -> onUpdate { it.copy(autoSkipIntro = v) } }
+                            SwitchRow(stringResource(R.string.settings_auto_skip_outro), stringResource(R.string.settings_auto_skip_desc), settings.autoSkipOutro) { v -> onUpdate { it.copy(autoSkipOutro = v) } }
+                        }
+                        Labeled(stringResource(R.string.settings_skip_offset, settings.skipOffsetSec)) {
                             Slider(
                                 value = settings.skipOffsetSec.toFloat(), onValueChange = { v -> onUpdate { it.copy(skipOffsetSec = v.roundToInt()) } },
                                 valueRange = 0f..5f, steps = 4,
@@ -172,61 +218,95 @@ fun SettingsScreen(
                 }
             }
             item {
-                Group("Appearance") {
-                    Labeled("Theme") {
+                Group(stringResource(R.string.settings_appearance)) {
+                    Labeled(stringResource(R.string.settings_theme)) {
                         ConnectedToggleGroup(
                             ThemeMode.entries, settings.themeMode, { t -> onUpdate { it.copy(themeMode = t) } },
-                            { it.name.lowercase().replaceFirstChar(Char::titlecase) }, Modifier.fillMaxWidth(),
+                            { when (it) { ThemeMode.SYSTEM -> themeSystem; ThemeMode.LIGHT -> themeLight; ThemeMode.DARK -> themeDark } }, Modifier.fillMaxWidth(),
                         )
                     }
-                    SwitchRow("Dynamic color", "Use colors from your wallpaper", settings.dynamicColor) { v -> onUpdate { it.copy(dynamicColor = v) } }
-                }
-            }
-            item {
-                Group("Data") {
-                    Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        FilledTonalButton(onClick = onExport, Modifier.weight(1f)) { Text("Export") }
-                        FilledTonalButton(onClick = onImport, Modifier.weight(1f)) { Text("Import") }
+                    if (Build.VERSION.SDK_INT >= 33) {
+                        ListItem(
+                            headlineContent = { Text(stringResource(R.string.settings_app_language)) },
+                            supportingContent = { Text(stringResource(R.string.settings_app_language_desc)) },
+                            colors = transparent(),
+                            modifier = Modifier.clickable {
+                                runCatching {
+                                    context.startActivity(
+                                        Intent(Settings.ACTION_APP_LOCALE_SETTINGS, Uri.fromParts("package", context.packageName, null))
+                                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                                    )
+                                }
+                            },
+                        )
                     }
-                    OutlinedButton(onClick = onImportAniCli, Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 16.dp)) {
-                        Text("Import ani-cli history")
-                    }
+                    SwitchRow(stringResource(R.string.settings_dynamic), stringResource(R.string.settings_dynamic_desc), settings.dynamicColor) { v -> onUpdate { it.copy(dynamicColor = v) } }
                 }
             }
             item {
-                Group("Downloads") {
-                    SwitchRow("Download on Wi-Fi only", "Pause downloads on mobile data", settings.downloadWifiOnly) { v -> onUpdate { it.copy(downloadWifiOnly = v) } }
+                Group(stringResource(R.string.settings_downloads)) {
+                    SwitchRow(stringResource(R.string.settings_wifi_only), stringResource(R.string.settings_wifi_only_desc), settings.downloadWifiOnly) { v -> onUpdate { it.copy(downloadWifiOnly = v) } }
                 }
             }
             item {
-                Group("Recommendations") {
+                Group(stringResource(R.string.settings_recommendations)) {
                     SwitchRow(
-                        "On-device AI recommendations",
-                        "Uses the Gemma model, running entirely on your device. Requires a one-time download of about 2 GB. Nothing leaves your phone.",
+                        stringResource(R.string.settings_ai),
+                        stringResource(R.string.settings_ai_desc),
                         settings.aiRecommendationsEnabled,
                     ) { v -> onUpdate { it.copy(aiRecommendationsEnabled = v) }; onAiToggled(v) }
                     if (settings.aiRecommendationsEnabled) recommendationsSection?.invoke()
                 }
             }
             item {
-                Group("About") {
-                    ListItem(headlineContent = { Text("Animadroid") }, supportingContent = { Text("Version $version"); }, colors = transparent())
-                    ListItem(headlineContent = { Text("License") }, supportingContent = { Text("GNU GPL-3.0") }, colors = transparent())
+                var advancedOpen by rememberSaveable { mutableStateOf(false) }
+                CollapsibleGroup(stringResource(R.string.settings_advanced), advancedOpen, { advancedOpen = !advancedOpen }) {
+                    Labeled(stringResource(R.string.settings_source_strategy)) {
+                        ConnectedToggleGroup(
+                            SourceStrategy.entries, settings.sourceStrategy, { v -> onUpdate { it.copy(sourceStrategy = v) } },
+                            { if (it == SourceStrategy.RELIABLE) strategyReliable else strategyBest },
+                            Modifier.fillMaxWidth(),
+                        )
+                    }
+                    AdvancedSources(sources, onMoveSource, onSourceEnabled)
                     ListItem(
-                        headlineContent = { Text("Credits") },
-                        supportingContent = { Text("A native port of ani-cli by pystardust and contributors. Skip timestamps from ani-skip (aniskip.com).") },
+                        headlineContent = { Text(stringResource(R.string.settings_source_health)) },
+                        supportingContent = { Text(stringResource(R.string.settings_source_health_desc)) },
+                        modifier = Modifier.clickable(onClick = onOpenSourceHealth),
                         colors = transparent(),
                     )
-                    TextButton(onClick = { uri.openUri(SOURCE_URL) }, Modifier.padding(horizontal = 8.dp)) { Text("Source code on GitHub") }
+                    Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilledTonalButton(onClick = onExport, Modifier.weight(1f)) { Text(stringResource(R.string.settings_export)) }
+                        FilledTonalButton(onClick = onImport, Modifier.weight(1f)) { Text(stringResource(R.string.settings_import)) }
+                    }
+                    OutlinedButton(onClick = onImportAniCli, Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 16.dp)) {
+                        Text(stringResource(R.string.settings_import_anicli))
+                    }
+                    if (trackingSection != null) trackingSection()
+                }
+            }
+            item {
+                Group(stringResource(R.string.settings_about)) {
+                    SwitchRow(stringResource(R.string.settings_check_updates), stringResource(R.string.settings_check_updates_desc), settings.checkForUpdates) { v -> onUpdate { it.copy(checkForUpdates = v) } }
+                    if (settings.checkForUpdates) SwitchRow(stringResource(R.string.settings_prereleases), stringResource(R.string.settings_prereleases_desc), settings.includePrereleases) { v -> onUpdate { it.copy(includePrereleases = v) } }
+                    ListItem(headlineContent = { Text("Animadroid") }, supportingContent = { Text(stringResource(R.string.settings_version, version)) }, colors = transparent())
+                    ListItem(headlineContent = { Text(stringResource(R.string.settings_license)) }, supportingContent = { Text("GNU GPL-3.0") }, colors = transparent())
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.settings_credits)) },
+                        supportingContent = { Text(stringResource(R.string.settings_credits_desc)) },
+                        colors = transparent(),
+                    )
+                    TextButton(onClick = { uri.openUri(SOURCE_URL) }, Modifier.padding(horizontal = 8.dp)) { Text(stringResource(R.string.settings_source_code)) }
                 }
             }
         }
     }
 }
 
+@Composable
 private fun QualityPreference.label() = when (this) {
-    QualityPreference.BEST -> "Best"
-    QualityPreference.WORST -> "Worst"
+    QualityPreference.BEST -> stringResource(R.string.quality_best)
+    QualityPreference.WORST -> stringResource(R.string.quality_worst)
     QualityPreference.P1080 -> "1080p"
     QualityPreference.P720 -> "720p"
     QualityPreference.P480 -> "480p"
@@ -253,11 +333,73 @@ private fun Group(title: String, content: @Composable () -> Unit) {
     }
 }
 
+/** A [Group] whose body is hidden until the header (title + chevron) is tapped: "Advanced >" / "Advanced v". */
+@Composable
+private fun CollapsibleGroup(title: String, expanded: Boolean, onToggle: () -> Unit, content: @Composable () -> Unit) {
+    Column {
+        Row(
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).clickable(onClickLabel = title, role = Role.Button, onClick = onToggle)
+                .padding(start = 16.dp, top = 4.dp, bottom = 8.dp, end = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+            Icon(
+                if (expanded) Icons.Filled.KeyboardArrowDown else Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null, tint = MaterialTheme.colorScheme.primary,
+            )
+        }
+        AnimatedVisibility(expanded) {
+            Surface(shape = RoundedCornerShape(28.dp), color = MaterialTheme.colorScheme.surfaceContainer) {
+                Column(Modifier.fillMaxWidth()) { content() }
+            }
+        }
+    }
+}
+
 @Composable
 private fun Labeled(label: String, content: @Composable () -> Unit) {
     Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(label, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
         content()
+    }
+}
+
+/** Own-language name of a content language code; "auto" is localised. */
+@Composable
+private fun languageName(code: String): String =
+    if (code == "auto") stringResource(R.string.language_auto)
+    else java.util.Locale.forLanguageTag(code).let { it.getDisplayLanguage(it).replaceFirstChar(Char::titlecase) }
+
+@Composable
+private fun AdvancedSources(sources: List<SourceItem>, onMove: (String, Int) -> Unit, onEnabled: (String, Boolean) -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    Column {
+        ListItem(
+            headlineContent = { Text(stringResource(R.string.settings_advanced_sources)) },
+            supportingContent = { Text(stringResource(R.string.settings_advanced_sources_desc)) },
+            trailingContent = { Icon(if (open) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore, null) },
+            modifier = Modifier.clickable { open = !open },
+            colors = transparent(),
+        )
+        if (open) {
+            sources.forEachIndexed { i, src ->
+                ListItem(
+                    headlineContent = { Text(src.name) },
+                    leadingContent = { Switch(src.enabled, { onEnabled(src.id, it) }) },
+                    trailingContent = {
+                        Row {
+                            IconButton(onClick = { onMove(src.id, -1) }, enabled = i > 0) {
+                                Icon(Icons.Filled.KeyboardArrowUp, stringResource(R.string.settings_move_up))
+                            }
+                            IconButton(onClick = { onMove(src.id, 1) }, enabled = i < sources.lastIndex) {
+                                Icon(Icons.Filled.KeyboardArrowDown, stringResource(R.string.settings_move_down))
+                            }
+                        }
+                    },
+                    colors = transparent(),
+                )
+            }
+        }
     }
 }
 

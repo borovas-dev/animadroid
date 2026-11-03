@@ -1,0 +1,29 @@
+<resources>
+    <string name="update_available">Dostępna aktualizacja: %1$s</string>
+    <string name="update_install">Zainstaluj</string>
+    <string name="update_later">Później</string>
+    <string name="update_changelog">Co nowego</string>
+    <string name="update_downloading">Pobieranie aktualizacji…</string>
+    <string name="update_ready">Aktualizacja pobrana</string>
+    <string name="update_failed">Aktualizacja nie powiodła się: %1$s</string>
+    <string name="update_allow_unknown">Zezwól na instalowanie aplikacji z tego źródła, a następnie ponownie dotknij Zainstaluj.</string>
+    <string name="nav_home">Start</string>
+    <string name="nav_search">Szukaj</string>
+    <string name="nav_downloads">Pobrane</string>
+    <string name="nav_settings">Ustawienia</string>
+    <string name="cloudflare_verify_title">Potwierdź, że jesteś człowiekiem</string>
+    <string name="backup_export_ok">Kopia zapasowa wyeksportowana</string>
+    <string name="backup_export_failed">Eksport nie powiódł się: %1$s</string>
+    <string name="backup_import_failed">Import nie powiódł się: %1$s</string>
+    <string name="backup_import_ok">Zaimportowane seriale: %1$d, wpisy postępu: %2$d</string>
+    <string name="backup_import_anicli_ok">Zaimportowane wpisy z ani-cli: %1$d</string>
+    <string name="shortcuts_player_group">Skróty odtwarzacza</string>
+    <string name="shortcut_play_pause">Odtwarzaj / pauza</string>
+    <string name="shortcut_seek_back">Cofnij o 10 s</string>
+    <string name="shortcut_seek_forward">Przewiń o 10 s</string>
+    <string name="shortcut_volume_up">Głośniej</string>
+    <string name="shortcut_volume_down">Ciszej</string>
+    <string name="shortcut_mute">Wycisz / włącz dźwięk</string>
+    <string name="shortcut_fullscreen">Przełącz pełny ekran</string>
+    <string name="shortcut_exit_fullscreen">Wyjdź z pełnego ekranu</string>
+</resources>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="details_back_cd">Back</string>
+    <string name="details_download_episodes">Download episodes</string>
+    <string name="details_remove_favorite">Remove from favorites</string>
+    <string name="details_add_favorite">Add to favorites</string>
+    <string name="details_episodes">Episodes</string>
+    <string name="details_episodes_count">Episodes (%1$d)</string>
+    <string name="details_no_episodes">No episodes</string>
+    <string name="details_no_episodes_body">No %1$s episodes were found.</string>
+    <string name="details_load_failed">Could not load episodes.</string>
+    <string name="details_range_body">Choose a range of the %1$d episodes (by position in the list). Already downloaded episodes are skipped.</string>
+    <string name="details_range_from">From</string>
+    <string name="details_range_to">To</string>
+    <string name="details_sub_episodes">SUB: %1$d episodes</string>
+    <string name="details_dub_episodes">DUB: %1$d episodes</string>
+    <string name="details_show_less">Show less</string>
+    <string name="details_read_more">Read more</string>
+    <string name="details_episode_n">Episode %1$s</string>
+    <string name="details_watched">Watched</string>
+    <string name="details_percent_watched">%1$d%% watched</string>
+    <string name="details_download_episode">Download episode</string>
+    <string name="details_cancel_queued">Cancel queued download</string>
+    <string name="details_pause_download">Pause download</string>
+    <string name="details_resume_download">Resume download</string>
+    <string name="details_downloaded">Downloaded</string>
+    <string name="details_download_failed_retry">Download failed, retry</string>
+    <string name="details_play_ep">Play Ep %1$s</string>
+    <string name="details_continue_ep">Continue Ep %1$s</string>
+    <string name="details_replay_ep">Replay Ep %1$s</string>
+    <string name="details_no_recorded_dub">No recorded dub - a generated voice-over will read the subtitles</string>
+</resources>

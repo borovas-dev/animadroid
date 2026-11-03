@@ -1,0 +1,1 @@
+{"data":{"anime":{"id":"naruto","titles":{"BR":"Naruto"}},"streams":[{"audio":"dublado","url":"BASE/hls/dub/master.m3u8"},{"audio":"legendado","url":"BASE/hls/mtl/master.m3u8","is_mtl":true},{"audio":"legendado","url":"BASE/hls/sub/master.m3u8"},{"audio":"legendado","url":"BASE/hls/off/master.m3u8","is_offline":true}]}}

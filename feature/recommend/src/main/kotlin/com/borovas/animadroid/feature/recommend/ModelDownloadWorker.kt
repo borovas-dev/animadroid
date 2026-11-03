@@ -40,7 +40,7 @@ internal interface RecommendEntryPoint {
 class ModelDownloadWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     private val ep = EntryPointAccessors.fromApplication(context.applicationContext, RecommendEntryPoint::class.java)
 
-    override suspend fun getForegroundInfo(): ForegroundInfo = foreground("Downloading on-device model", 0, indeterminate = true)
+    override suspend fun getForegroundInfo(): ForegroundInfo = foreground(applicationContext.getString(R.string.recommend_notif_downloading), 0, indeterminate = true)
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         val dir = File(applicationContext.filesDir, "models").apply { mkdirs() }
@@ -51,18 +51,18 @@ class ModelDownloadWorker(context: Context, params: WorkerParameters) : Coroutin
             runCatching { setForeground(getForegroundInfo()) }
             download(part)
             ensureActive()
-            if (part.length() != ModelSpec.SIZE_BYTES) return@withContext fail(part, "Downloaded file has the wrong size; it was discarded.", keep = false)
+            if (part.length() != ModelSpec.SIZE_BYTES) return@withContext fail(part, applicationContext.getString(R.string.recommend_wrong_size), keep = false)
             setProgress(Data.Builder().putLong(KEY_BYTES, part.length()).putBoolean(KEY_VERIFYING, true).build())
-            runCatching { setForeground(foreground("Verifying model", 100, indeterminate = true)) }
+            runCatching { setForeground(foreground(applicationContext.getString(R.string.recommend_notif_verifying), 100, indeterminate = true)) }
             val sha = sha256(part)
-            if (!sha.equals(ModelSpec.SHA256, ignoreCase = true)) return@withContext fail(part, "Checksum mismatch; the file was discarded. Try again.", keep = false)
+            if (!sha.equals(ModelSpec.SHA256, ignoreCase = true)) return@withContext fail(part, applicationContext.getString(R.string.recommend_checksum_mismatch), keep = false)
             target.delete()
-            if (!part.renameTo(target)) return@withContext fail(part, "Could not store the model file.", keep = true)
+            if (!part.renameTo(target)) return@withContext fail(part, applicationContext.getString(R.string.recommend_store_failed), keep = true)
             Result.success()
         } catch (e: AuthFailure) {
             fail(part, e.message.orEmpty(), keep = true)
         } catch (e: IOException) {
-            if (runAttemptCount >= MAX_ATTEMPTS) fail(part, "Network error: ${e.message}. Tap download to resume.", keep = true)
+            if (runAttemptCount >= MAX_ATTEMPTS) fail(part, applicationContext.getString(R.string.recommend_network_error, e.message.orEmpty()), keep = true)
             else Result.retry()
         }
     }
@@ -85,7 +85,7 @@ class ModelDownloadWorker(context: Context, params: WorkerParameters) : Coroutin
         ep.okHttpClient().newCall(req).execute().use { resp ->
             when {
                 resp.code == 416 -> { part.delete(); throw IOException("Server rejected resume; restarting") }
-                resp.code == 401 || resp.code == 403 -> throw AuthFailure("Hugging Face refused the download (HTTP ${resp.code}). Add a valid access token in settings.")
+                resp.code == 401 || resp.code == 403 -> throw AuthFailure(applicationContext.getString(R.string.recommend_auth_failed, resp.code))
                 !resp.isSuccessful -> throw IOException("HTTP ${resp.code}")
             }
             val resumed = resp.code == 206
@@ -106,7 +106,7 @@ class ModelDownloadWorker(context: Context, params: WorkerParameters) : Coroutin
                         if (now - lastReport > 700) {
                             lastReport = now
                             setProgress(Data.Builder().putLong(KEY_BYTES, done).build())
-                            runCatching { setForeground(foreground("Downloading on-device model", (done * 100 / ModelSpec.SIZE_BYTES).toInt(), false)) }
+                            runCatching { setForeground(foreground(applicationContext.getString(R.string.recommend_notif_downloading), (done * 100 / ModelSpec.SIZE_BYTES).toInt(), false)) }
                         }
                     }
                 }
@@ -128,13 +128,13 @@ class ModelDownloadWorker(context: Context, params: WorkerParameters) : Coroutin
 
     private fun foreground(title: String, percent: Int, indeterminate: Boolean): ForegroundInfo {
         val nm = applicationContext.getSystemService(NotificationManager::class.java)
-        nm.createNotificationChannel(NotificationChannel(CHANNEL, "Model download", NotificationManager.IMPORTANCE_LOW))
+        nm.createNotificationChannel(NotificationChannel(CHANNEL, applicationContext.getString(R.string.recommend_notif_channel), NotificationManager.IMPORTANCE_LOW))
         val n = NotificationCompat.Builder(applicationContext, CHANNEL)
             .setSmallIcon(android.R.drawable.stat_sys_download)
             .setContentTitle(title)
             .setProgress(100, percent, indeterminate)
             .setOngoing(true).setOnlyAlertOnce(true)
-            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Cancel", androidx.work.WorkManager.getInstance(applicationContext).createCancelPendingIntent(id))
+            .addAction(android.R.drawable.ic_menu_close_clear_cancel, applicationContext.getString(R.string.recommend_cancel), androidx.work.WorkManager.getInstance(applicationContext).createCancelPendingIntent(id))
             .build()
         return ForegroundInfo(NOTIFICATION_ID, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
     }

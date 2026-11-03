@@ -2,6 +2,8 @@
 
 package com.borovas.animadroid.feature.recommend
 
+import com.borovas.animadroid.core.designsystem.R as DR
+import androidx.compose.ui.res.stringResource
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -92,10 +94,10 @@ fun RecommendScreen(
         modifier,
         topBar = {
             TopAppBar(
-                title = { Text("For you") },
-                navigationIcon = { IconButton(onBack) { Icon(Icons.Rounded.ArrowBack, "Back") } },
+                title = { Text(stringResource(R.string.recommend_title)) },
+                navigationIcon = { IconButton(onBack) { Icon(Icons.Rounded.ArrowBack, stringResource(DR.string.common_back)) } },
                 actions = {
-                    if (state.modelReady) IconButton(onRefresh, enabled = !state.generating) { Icon(Icons.Rounded.Refresh, "Refresh recommendations") }
+                    if (state.modelReady) IconButton(onRefresh, enabled = !state.generating) { Icon(Icons.Rounded.Refresh, stringResource(R.string.recommend_refresh)) }
                 },
             )
         },
@@ -104,7 +106,7 @@ fun RecommendScreen(
             if (state.generating) {
                 LinearWavyProgressIndicator(Modifier.fillMaxWidth().padding(horizontal = 16.dp))
                 Text(
-                    "Thinking on your device. The first run can take a minute.",
+                    stringResource(R.string.recommend_thinking),
                     Modifier.padding(16.dp), style = MaterialTheme.typography.bodyMedium,
                 )
             }
@@ -114,8 +116,8 @@ fun RecommendScreen(
                     ModelMissingCard(state.model, onOpenSettings)
                 }
                 state.items.isEmpty() && !state.generating -> EmptyState(
-                    Icons.Rounded.AutoAwesome, "No recommendations yet",
-                    "Pick refresh to generate personalized picks from your watch history.",
+                    Icons.Rounded.AutoAwesome, stringResource(R.string.recommend_empty_title),
+                    stringResource(R.string.recommend_empty_body),
                 )
                 else -> LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     items(state.items, key = { it.anime.providerId + it.anime.id }) { r -> RecommendRow(r) { onAnimeClick(r.anime) } }
@@ -148,18 +150,18 @@ private fun ModelMissingCard(model: ModelState?, onOpenSettings: () -> Unit) {
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Rounded.AutoAwesome, null)
                 Column {
-                    Text("For you", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.recommend_title), style = MaterialTheme.typography.titleMedium)
                     Text(
                         when (model) {
-                            is ModelState.Downloading -> "The model is downloading (${model.fraction?.let { "${(it * 100).toInt()}%" } ?: "waiting"})."
+                            is ModelState.Downloading -> stringResource(R.string.recommend_model_downloading, model.fraction?.let { "${(it * 100).toInt()}%" } ?: stringResource(R.string.recommend_model_waiting))
                             is ModelState.Error -> model.message
-                            else -> "Download the on-device model to get personalized picks. Nothing leaves your phone."
+                            else -> stringResource(R.string.recommend_model_missing)
                         },
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 }
             }
-            FilledTonalButton(onOpenSettings) { Text("Set up in Settings") }
+            FilledTonalButton(onOpenSettings) { Text(stringResource(R.string.recommend_setup)) }
         }
     }
 }
@@ -193,14 +195,14 @@ internal fun RecommendSection(
             else -> {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Rounded.AutoAwesome, null, Modifier.padding(end = 8.dp))
-                    Text("For you", Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
-                    if (state.items.isNotEmpty()) TextButton(onSeeAll) { Text("See all") }
-                    IconButton(onRefresh, enabled = !state.generating) { Icon(Icons.Rounded.Refresh, "Refresh recommendations") }
+                    Text(stringResource(R.string.recommend_title), Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
+                    if (state.items.isNotEmpty()) TextButton(onSeeAll) { Text(stringResource(R.string.recommend_see_all)) }
+                    IconButton(onRefresh, enabled = !state.generating) { Icon(Icons.Rounded.Refresh, stringResource(R.string.recommend_refresh)) }
                 }
                 if (state.generating) {
                     LinearWavyProgressIndicator(Modifier.fillMaxWidth())
                     Text(
-                        "Thinking on your device. The first run can take a minute.",
+                        stringResource(R.string.recommend_thinking),
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
@@ -255,44 +257,42 @@ internal fun RecommendSettingsContent(
 ) {
     Column(modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
-            "Gemma 4 E2B runs entirely on this device with LiteRT-LM. Your watch history is never sent anywhere. " +
-                "The model file is about ${formatBytes(ModelSpec.SIZE_BYTES)}, is downloaded once from Hugging Face " +
-                "(${ModelSpec.REPO}, Apache 2.0), and needs a device with 6 GB of RAM or more.",
+            stringResource(R.string.recommend_about, formatBytes(ModelSpec.SIZE_BYTES), ModelSpec.REPO),
             style = MaterialTheme.typography.bodyMedium,
         )
         when (val m = state.model) {
             is ModelState.Ready -> {
-                Text("Model installed (${formatBytes(m.sizeBytes)}).", style = MaterialTheme.typography.titleSmall)
-                OutlinedButton(onDelete, Modifier.fillMaxWidth()) { Text("Delete model") }
+                Text(stringResource(R.string.recommend_model_installed, formatBytes(m.sizeBytes)), style = MaterialTheme.typography.titleSmall)
+                OutlinedButton(onDelete, Modifier.fillMaxWidth()) { Text(stringResource(R.string.recommend_delete_model)) }
             }
             is ModelState.Downloading -> {
                 val label = when (m.phase) {
-                    ModelState.Downloading.Phase.WAITING_FOR_NETWORK -> "Waiting for ${"a Wi-Fi connection".takeIf { state.wifiOnly } ?: "a connection"}"
-                    ModelState.Downloading.Phase.DOWNLOADING -> "Downloading ${formatBytes(m.bytes)} of ${formatBytes(m.total)}"
-                    ModelState.Downloading.Phase.VERIFYING -> "Verifying checksum"
-                    ModelState.Downloading.Phase.IMPORTING -> "Importing ${formatBytes(m.bytes)}"
+                    ModelState.Downloading.Phase.WAITING_FOR_NETWORK -> stringResource(if (state.wifiOnly) R.string.recommend_phase_wait_wifi else R.string.recommend_phase_wait_net)
+                    ModelState.Downloading.Phase.DOWNLOADING -> stringResource(R.string.recommend_phase_downloading, formatBytes(m.bytes), formatBytes(m.total))
+                    ModelState.Downloading.Phase.VERIFYING -> stringResource(R.string.recommend_phase_verifying)
+                    ModelState.Downloading.Phase.IMPORTING -> stringResource(R.string.recommend_phase_importing, formatBytes(m.bytes))
                 }
                 Text(label, style = MaterialTheme.typography.titleSmall)
                 m.fraction?.let { LinearWavyProgressIndicator(progress = { it }, Modifier.fillMaxWidth()) }
                     ?: LinearWavyProgressIndicator(Modifier.fillMaxWidth())
-                OutlinedButton(onCancel, Modifier.fillMaxWidth()) { Text("Cancel") }
+                OutlinedButton(onCancel, Modifier.fillMaxWidth()) { Text(stringResource(R.string.recommend_cancel)) }
             }
             else -> {
                 if (m is ModelState.Error) Text(m.message, color = MaterialTheme.colorScheme.error)
-                state.problems.forEach { Text(it.describe(), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium) }
+                state.problems.forEach { Text(it.localized(), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium) }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Switch(state.wifiOnly, onWifiOnly)
-                    Text("Download on Wi-Fi only", Modifier.align(Alignment.CenterVertically))
+                    Text(stringResource(R.string.recommend_wifi_only), Modifier.align(Alignment.CenterVertically))
                 }
                 Button(onDownload, Modifier.fillMaxWidth(), enabled = state.problems.isEmpty()) {
-                    Text(if (m is ModelState.Error) "Retry download" else "Download model (${formatBytes(ModelSpec.SIZE_BYTES)})")
+                    Text(if (m is ModelState.Error) stringResource(R.string.recommend_retry_download) else stringResource(R.string.recommend_download_model, formatBytes(ModelSpec.SIZE_BYTES)))
                 }
-                OutlinedButton(onPickFile, Modifier.fillMaxWidth()) { Text("Use a file from this device") }
+                OutlinedButton(onPickFile, Modifier.fillMaxWidth()) { Text(stringResource(R.string.recommend_use_file)) }
                 var token by remember { mutableStateOf(state.token) }
                 OutlinedTextField(
                     token, { token = it; onToken(it) }, Modifier.fillMaxWidth(),
-                    label = { Text("Hugging Face token (optional)") },
-                    supportingText = { Text("Only needed if Hugging Face asks for it. Stored on this device.") },
+                    label = { Text(stringResource(R.string.recommend_hf_token)) },
+                    supportingText = { Text(stringResource(R.string.recommend_hf_token_hint)) },
                     singleLine = true, visualTransformation = PasswordVisualTransformation(),
                 )
             }
@@ -311,4 +311,11 @@ private fun RecommendPreview() = AnimadroidTheme(dynamicColor = false) {
         RecommendSection(RecommendUiState(ModelState.Ready(1), items), {}, {}, {}, {})
         RecommendSettingsContent(RecommendSettingsUiState(), {}, {}, {}, {}, {}, {})
     }
+}
+
+@Composable
+private fun RequirementProblem.localized(): String = when (this) {
+    is RequirementProblem.NotEnoughRam -> stringResource(R.string.recommend_problem_ram, "%.1f".format(totalBytes / 1_073_741_824.0))
+    RequirementProblem.Unsupported32BitDevice -> stringResource(R.string.recommend_problem_32bit)
+    is RequirementProblem.NotEnoughSpace -> stringResource(R.string.recommend_problem_space, formatBytes(neededBytes), formatBytes(freeBytes))
 }

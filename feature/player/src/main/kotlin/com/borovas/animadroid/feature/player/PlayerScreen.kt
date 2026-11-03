@@ -2,6 +2,7 @@
 
 package com.borovas.animadroid.feature.player
 
+import com.borovas.animadroid.core.designsystem.R as DR
 import android.content.pm.ActivityInfo
 import android.media.AudioManager
 import androidx.activity.compose.BackHandler
@@ -55,12 +56,25 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.focusable
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isAltPressed
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.isMetaPressed
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.material.icons.automirrored.rounded.VolumeOff
+import com.borovas.animadroid.core.designsystem.LocalIsTelevision
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -93,22 +107,37 @@ fun PlayerScreen(route: PlayerRoute, onBack: () -> Unit, modifier: Modifier = Mo
     var controlsVisible by remember { mutableStateOf(true) }
     var locked by remember { mutableStateOf(false) }
     var sheetOpen by remember { mutableStateOf(false) }
+    val installVoiceLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult(),
+    ) { vm.recheckDub() }
     var interaction by remember { mutableIntStateOf(0) }
     var inPip by remember { mutableStateOf(activity?.isInPictureInPictureMode == true) }
     var hud by remember { mutableStateOf<HudInfo?>(null) }
     var seekFlash by remember { mutableStateOf<String?>(null) }
 
-    // Immersive, landscape-preferred, keep screen on.
+    val tv = LocalIsTelevision.current
+    val largeScreen = tv || (activity?.resources?.configuration?.smallestScreenWidthDp ?: 0) >= 600
+    var fullscreen by rememberSaveable { mutableStateOf(true) }
+    val rootFocus = remember { FocusRequester() }
+    val playFocus = remember { FocusRequester() }
+    val audioManager = remember(context) { context.getSystemService(AudioManager::class.java) }
+
+    // System bars follow the fullscreen flag (F / Esc on a keyboard).
+    LaunchedEffect(activity, fullscreen) {
+        val window = activity?.window ?: return@LaunchedEffect
+        val c = WindowInsetsControllerCompat(window, view)
+        if (fullscreen) c.hide(WindowInsetsCompat.Type.systemBars()) else c.show(WindowInsetsCompat.Type.systemBars())
+    }
+
+    // Immersive, landscape-preferred on phones, keep screen on.
     DisposableEffect(activity) {
         val window = activity?.window
         val previousOrientation = activity?.requestedOrientation
-        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+        // Large screens / TV / free-form windows ignore or fight an orientation lock; only lock on phone-sized devices.
+        if (!largeScreen) activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
         if (window != null) {
             WindowCompat.setDecorFitsSystemWindows(window, false)
-            WindowInsetsControllerCompat(window, view).apply {
-                systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-                hide(WindowInsetsCompat.Type.systemBars())
-            }
+            WindowInsetsControllerCompat(window, view).systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
         view.keepScreenOn = true
         onDispose {
@@ -135,7 +164,7 @@ fun PlayerScreen(route: PlayerRoute, onBack: () -> Unit, modifier: Modifier = Mo
         activity?.let { PictureInPictureController.update(it, state.isPlaying, state.videoAspect) }
     }
 
-    BackHandler { if (locked) Unit else onBack() }
+    BackHandler { if (locked) Unit else if (tv && controlsVisible) { controlsVisible = false } else onBack() }
 
     val currentVisible by rememberUpdatedState(controlsVisible)
     LaunchedEffect(controlsVisible, state.isPlaying, interaction, sheetOpen) {
@@ -147,7 +176,46 @@ fun PlayerScreen(route: PlayerRoute, onBack: () -> Unit, modifier: Modifier = Mo
     LaunchedEffect(hud) { if (hud != null) { delay(900); hud = null } }
     LaunchedEffect(seekFlash) { if (seekFlash != null) { delay(700); seekFlash = null } }
 
-    Box(modifier.fillMaxSize().background(Color.Black)) {
+    // Keyboard focus lives on the root so shortcuts work without clicking; on TV the play button takes it while controls show.
+    LaunchedEffect(tv, controlsVisible, inPip) {
+        if (inPip) return@LaunchedEffect
+        runCatching { if (tv && controlsVisible) playFocus.requestFocus() else rootFocus.requestFocus() }
+    }
+
+    fun volumeStep(raise: Boolean) {
+        audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, if (raise) AudioManager.ADJUST_RAISE else AudioManager.ADJUST_LOWER, 0)
+        val max = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC).coerceAtLeast(1)
+        hud = HudInfo(Icons.Rounded.VolumeUp, audioManager.getStreamVolume(AudioManager.STREAM_MUSIC) * 100 / max)
+    }
+
+    Box(
+        modifier.fillMaxSize().background(Color.Black)
+            .focusRequester(rootFocus).focusable()
+            .onPreviewKeyEvent { e ->
+                if (locked || inPip) return@onPreviewKeyEvent false
+                val action = mapPlayerKey(
+                    e.nativeKeyEvent.keyCode, controlsVisible, tv, fullscreen,
+                    ctrlOrAltOrMeta = e.isCtrlPressed || e.isAltPressed || e.isMetaPressed,
+                ) ?: return@onPreviewKeyEvent false
+                if (e.type != KeyEventType.KeyDown) return@onPreviewKeyEvent true
+                when (action) {
+                    PlayerKeyAction.PlayPause -> { vm.togglePlay(); interaction++ }
+                    PlayerKeyAction.PlayPauseAndShowControls -> { vm.togglePlay(); controlsVisible = true; interaction++ }
+                    PlayerKeyAction.ShowControls -> { controlsVisible = true; interaction++ }
+                    PlayerKeyAction.SeekBack -> { vm.seekBy(-KEY_SEEK_STEP_MS); seekFlash = "-10s"; interaction++ }
+                    PlayerKeyAction.SeekForward -> { vm.seekBy(KEY_SEEK_STEP_MS); seekFlash = "+10s"; interaction++ }
+                    PlayerKeyAction.VolumeUp -> volumeStep(true)
+                    PlayerKeyAction.VolumeDown -> volumeStep(false)
+                    PlayerKeyAction.ToggleFullscreen -> fullscreen = !fullscreen
+                    PlayerKeyAction.ExitFullscreen -> fullscreen = false
+                    PlayerKeyAction.ToggleMute -> {
+                        val muted = vm.toggleMute()
+                        hud = HudInfo(if (muted) Icons.AutoMirrored.Rounded.VolumeOff else Icons.Rounded.VolumeUp, if (muted) 0 else 100)
+                    }
+                }
+                true
+            },
+    ) {
         player?.let { p ->
             ContentFrame(p, Modifier.fillMaxSize().pipSourceRect(), contentScale = ContentScale.Fit)
             val translatedCues by vm.translatedCues.collectAsStateWithLifecycle()
@@ -185,6 +253,13 @@ fun PlayerScreen(route: PlayerRoute, onBack: () -> Unit, modifier: Modifier = Mo
                 modifier = Modifier.align(Alignment.TopCenter).safeDrawingPadding().padding(top = 56.dp),
             )
 
+            state.autoSkipped?.let { seg ->
+                AutoSkipUndo(
+                    seg, onUndo = vm::undoAutoSkip, onDismiss = vm::dismissAutoSkip,
+                    modifier = Modifier.align(Alignment.BottomCenter).safeDrawingPadding().padding(bottom = 96.dp),
+                )
+            }
+
             if (state.loading || state.buffering) {
                 LoadingIndicator(Modifier.align(Alignment.Center).size(64.dp))
             }
@@ -197,9 +272,9 @@ fun PlayerScreen(route: PlayerRoute, onBack: () -> Unit, modifier: Modifier = Mo
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     Text(err.message, color = Color.White, textAlign = TextAlign.Center)
-                    if (err is PlayerError.Cloudflare) Button(onClick = { onCloudflare(err.url) }) { Text("Verify in browser") }
-                    else Button(onClick = vm::retry) { Text("Retry") }
-                    TextButtonLike("Back", onBack)
+                    if (err is PlayerError.Cloudflare) Button(onClick = { onCloudflare(err.url) }) { Text(stringResource(DR.string.verify_in_browser)) }
+                    else Button(onClick = vm::retry) { Text(stringResource(DR.string.common_retry)) }
+                    TextButtonLike(stringResource(DR.string.common_back), onBack)
                 }
             }
 
@@ -213,7 +288,7 @@ fun PlayerScreen(route: PlayerRoute, onBack: () -> Unit, modifier: Modifier = Mo
                 ExtendedFloatingActionButton(
                     onClick = vm::onSkipButton,
                     icon = { Icon(Icons.Rounded.SkipNext, null) },
-                    text = { Text(if (seg == SkipSegment.ENDING) "Skip Ending" else "Skip Opening") },
+                    text = { Text(stringResource(if (seg == SkipSegment.ENDING) R.string.player_skip_ending else R.string.player_skip_opening)) },
                 )
             }
 
@@ -231,6 +306,21 @@ fun PlayerScreen(route: PlayerRoute, onBack: () -> Unit, modifier: Modifier = Mo
                     onSeek = { vm.seekTo(it); interaction++ },
                     onInteraction = { interaction++ },
                     scrubPreview = scrubPreview,
+                    playFocus = playFocus,
+                )
+            }
+
+            AnimatedVisibility(
+                visible = controlsVisible && err == null && state.sourceLabel != null,
+                modifier = Modifier.align(Alignment.TopStart).safeDrawingPadding().padding(start = 16.dp, top = 64.dp),
+                enter = fadeIn(), exit = fadeOut(),
+            ) {
+                val label = state.sourceLabel.orEmpty()
+                Text(
+                    text = if (state.isFallback) stringResource(R.string.player_source_fallback, label) else stringResource(R.string.player_source, label),
+                    color = Color.White,
+                    style = MaterialTheme.typography.labelMedium,
+                    modifier = Modifier.background(Color.Black.copy(0.55f), RoundedCornerShape(50)).padding(horizontal = 12.dp, vertical = 6.dp),
                 )
             }
 
@@ -242,6 +332,13 @@ fun PlayerScreen(route: PlayerRoute, onBack: () -> Unit, modifier: Modifier = Mo
                     onSubtitle = vm::selectTextTrack,
                     onTranslated = vm::selectTranslated,
                     onSpeed = vm::setSpeed,
+                    onDubEnabled = vm::setDubEnabled,
+                    onInstallVoice = {
+                        val intent = vm.dubInstallIntent()
+                        if (intent != null) {
+                            try { installVoiceLauncher.launch(intent) } catch (e: android.content.ActivityNotFoundException) { vm.dubInstallFailed() }
+                        }
+                    },
                 )
             }
         }

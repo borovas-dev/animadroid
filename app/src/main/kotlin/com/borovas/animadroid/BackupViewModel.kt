@@ -1,5 +1,6 @@
 package com.borovas.animadroid
 
+import androidx.annotation.StringRes
 import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
@@ -23,25 +24,25 @@ class BackupViewModel @Inject constructor(
     private val _messages = MutableSharedFlow<String>(extraBufferCapacity = 4)
     val messages: SharedFlow<String> = _messages
 
-    fun export(uri: Uri) = run("Export failed") {
+    fun export(uri: Uri) = run(R.string.backup_export_failed) {
         context.contentResolver.openOutputStream(uri)!!.use { backup.exportJson(it, settings.exportJson()) }
-        "Backup exported"
+        context.getString(R.string.backup_export_ok)
     }
 
-    fun import(uri: Uri) = run("Import failed") {
+    fun import(uri: Uri) = run(R.string.backup_import_failed) {
         val r = context.contentResolver.openInputStream(uri)!!.use { backup.importJson(it) }
         r.settingsJson?.let { settings.importJson(it) }
-        "Imported ${r.anime} shows, ${r.progress} progress entries"
+        context.getString(R.string.backup_import_ok, r.anime, r.progress)
     }
 
-    fun importAniCli(uri: Uri) = run("Import failed") {
+    fun importAniCli(uri: Uri) = run(R.string.backup_import_failed) {
         val n = context.contentResolver.openInputStream(uri)!!.use { backup.importAniCliHistory(it) }
-        "Imported $n entries from ani-cli"
+        context.getString(R.string.backup_import_anicli_ok, n)
     }
 
-    private fun run(failure: String, block: suspend () -> String) {
+    private fun run(@StringRes failure: Int, block: suspend () -> String) {
         viewModelScope.launch {
-            _messages.emit(runCatching { block() }.getOrElse { "$failure: ${it.message}" })
+            _messages.emit(runCatching { block() }.getOrElse { context.getString(failure, it.message.orEmpty()) })
         }
     }
 }

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="health_title">Source health</string>
+    <string name="health_intro">Checks each source live from your own network (search, episodes, streams). A source that fails here will not work for you.</string>
+    <string name="health_chain">Order for language %1$s: %2$s</string>
+    <string name="health_run_again">Run again</string>
+    <string name="health_running">Running…</string>
+    <string name="health_disabled">Disabled by you</string>
+    <string name="health_not_in_chain">Not in the active chain</string>
+    <string name="health_step_search">Search</string>
+    <string name="health_step_episodes">Episodes</string>
+    <string name="health_step_streams">Streams</string>
+    <string name="health_back">Back</string>
+    <string name="settings_source_health">Source health</string>
+    <string name="settings_source_health_desc">Check which sources work on your network</string>
+</resources>

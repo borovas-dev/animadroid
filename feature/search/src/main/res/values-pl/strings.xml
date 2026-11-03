@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_placeholder">Szukaj anime</string>
+    <string name="search_idle_title">Znajdź swój następny serial</string>
+    <string name="search_idle_body">Szukaj po tytule. Ostatnie wyszukiwania pojawią się po dotknięciu paska.</string>
+    <string name="search_no_results">Brak wyników</string>
+    <string name="search_no_results_body">Nic nie znaleziono dla „%1$s” w trybie %2$s. Spróbuj drugiego trybu lub innego tytułu.</string>
+    <string name="search_no_recents">Brak ostatnich wyszukiwań</string>
+    <string name="search_no_recents_body">Tutaj pojawią się wysłane wyszukiwania.</string>
+    <string name="search_recent">Ostatnie</string>
+    <string name="search_clear_all">Wyczyść wszystko</string>
+    <string name="search_failed">Wyszukiwanie nie powiodło się.</string>
+</resources>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="common_back">Back</string>
+    <string name="common_clear">Clear</string>
+    <string name="common_cancel">Cancel</string>
+    <string name="common_retry">Retry</string>
+    <string name="common_delete">Delete</string>
+    <string name="common_remove">Remove</string>
+    <string name="common_close">Close</string>
+    <string name="common_download">Download</string>
+    <string name="common_pause">Pause</string>
+    <string name="common_resume">Resume</string>
+    <string name="common_off">Off</string>
+    <string name="error_default_title">Something went wrong</string>
+    <string name="verify_in_browser">Verify in browser</string>
+    <string name="verification_needed">Verification needed</string>
+    <string name="error_cloudflare">Cloudflare is asking for a browser check.</string>
+    <string name="error_no_provider">No anime provider is available.</string>
+    <string name="common_open">Open</string>
+</resources>

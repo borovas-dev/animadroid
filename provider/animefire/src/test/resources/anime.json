@@ -1,0 +1,1 @@
+{"data":{"hero":{"id":"naruto","titles":{"BR":"Naruto"},"poster_src":"https://img.example/naruto.jpg","synopsis":"Um ninja."},"seasons":[{"number":1,"first_episode_number":1},{"number":2,"first_episode_number":3}],"episodes":[{"id":"e3","number":1,"season":2,"title":"Volta"},{"id":"e2","number":2,"season":1},{"id":"e1","number":1,"season":1,"title":"Entrada"}]}}

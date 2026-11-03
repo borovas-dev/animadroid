@@ -98,5 +98,5 @@ class RoomLibraryRepository @Inject constructor(
 internal suspend fun touchWatched(db: AnimadroidDatabase, a: AnimeEntity, watchedAt: Long) {
     val dao = db.animeDao()
     dao.insertIgnore(a.copy(lastWatchedAt = watchedAt))
-    dao.updateMeta(a.providerId, a.animeId, a.title, a.coverUrl, a.synopsis, a.malId, a.subEpisodes, a.dubEpisodes, watchedAt)
+    dao.updateMeta(a.providerId, a.animeId, a.title, a.coverUrl, a.synopsis, a.malId, a.alternatesJson, a.subEpisodes, a.dubEpisodes, watchedAt)
 }

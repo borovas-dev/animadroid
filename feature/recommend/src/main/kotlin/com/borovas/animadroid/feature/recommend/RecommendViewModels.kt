@@ -1,5 +1,7 @@
 package com.borovas.animadroid.feature.recommend
 
+import dagger.hilt.android.qualifiers.ApplicationContext
+import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -34,6 +36,7 @@ data class RecommendUiState(
 /** Backs both the home card and the full screen. Starts no model work until the model is Ready and the list is stale. */
 @HiltViewModel
 class RecommendViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val models: ModelRepository,
     private val service: RecommendationService,
 ) : ViewModel() {
@@ -66,7 +69,11 @@ class RecommendViewModel @Inject constructor(
             } catch (c: CancellationException) {
                 throw c
             } catch (t: Throwable) {
-                error.value = t.message ?: "Could not generate recommendations."
+                error.value = when (t) {
+                    is NoHistoryException -> context.getString(R.string.recommend_err_no_history)
+                    is NoResultsException -> context.getString(R.string.recommend_err_no_results)
+                    else -> t.message ?: context.getString(R.string.recommend_err_generic)
+                }
             } finally {
                 generating.value = false
             }

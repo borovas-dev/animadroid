@@ -16,6 +16,8 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.DefaultLoadControl
+import androidx.media3.exoplayer.DefaultRenderersFactory
+import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.SeekParameters
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
@@ -25,6 +27,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
@@ -69,6 +72,11 @@ internal class PlayerFramePreviewSource(
     private var closed = false
     private var consecutiveErrors = 0
 
+    /** Guards the ImageReader's native memory: held while converting an Image and while closing the reader. */
+    private val imageLock = Any()
+    /** Bumped (under [imageLock]) whenever the reader is closed, so an Image of a closed reader is never read. */
+    @Volatile private var readerGeneration = 0
+
     // Frame hand-off state, main thread only.
     private var rendered = false
     private var pendingImage: Image? = null
@@ -99,12 +107,21 @@ internal class PlayerFramePreviewSource(
             if (closed || !allowed()) return@withLock null
             idleJob?.cancel()
             val image = grab(key) ?: return@withLock null
-            try {
-                withContext(Dispatchers.Default) { YuvConverter.toBitmap(image, MAX_OUT_WIDTH) }.asImageBitmap()
-                    .also { cache.put(key, it); consecutiveErrors = 0 }
-            } finally {
-                image.close()
-            }
+            // Same thread as releasePlayer(), no suspension since grab() returned: this generation is the image's reader.
+            val generation = readerGeneration
+            // The conversion reads native memory owned by the ImageReader: it must neither be cancelled (the caller cancels
+            // stale requests and its cleanup would close the Image under the reader thread) nor overlap releasePlayer().
+            // Either race ends in a native "JNI DETECTED ERROR ... NewDirectByteBuffer" SIGABRT that no catch can stop.
+            val bitmap = withContext(Dispatchers.Default + NonCancellable) {
+                synchronized(imageLock) {
+                    try {
+                        if (generation != readerGeneration) null else YuvConverter.toBitmap(image, MAX_OUT_WIDTH)
+                    } finally {
+                        runCatching { image.close() }
+                    }
+                }
+            } ?: return@withLock null
+            bitmap.asImageBitmap().also { cache.put(key, it); consecutiveErrors = 0 }
         }
     }
 
@@ -152,7 +169,16 @@ internal class PlayerFramePreviewSource(
                 tryDeliver()
             }
         }, main)
-        val p = ExoPlayer.Builder(context)
+        // SOFTWARE decoders only. Many hardware decoders (notably MediaTek, e.g. Infinix) emit vendor block-tiled YUV that
+        // ImageReader cannot map into CPU memory: Image.getPlanes() then aborts the whole process natively (JNI DETECTED
+        // ERROR "non-zero capacity for nullptr pointer"), which no catch can stop. Software decoders output plain flexible
+        // YUV, and at <= 360p they are cheap and leave the hardware decoder to the main player. No software decoder for the
+        // stream's codec -> an empty list -> a normal playback error -> previews quietly stay off.
+        val softwareOnly = MediaCodecSelector { mimeType, secure, tunneling ->
+            MediaCodecSelector.DEFAULT.getDecoderInfos(mimeType, secure, tunneling).filter { it.softwareOnly }
+        }
+        val renderers = DefaultRenderersFactory(context).setMediaCodecSelector(softwareOnly)
+        val p = ExoPlayer.Builder(context, renderers)
             .setMediaSourceFactory(DefaultMediaSourceFactory(cacheSources.forPlayback(headers)))
             .setLoadControl(
                 DefaultLoadControl.Builder()
@@ -183,7 +209,10 @@ internal class PlayerFramePreviewSource(
     private fun releasePlayer() {
         player?.let { it.removeListener(listener); it.clearVideoSurface(); it.release() }
         player = null
-        reader?.let { it.setOnImageAvailableListener(null, null); it.close() }
+        reader?.let {
+            it.setOnImageAvailableListener(null, null)
+            synchronized(imageLock) { readerGeneration++; it.close() }
+        }
         reader = null
         pendingImage = null // closed together with the reader
         rendered = false

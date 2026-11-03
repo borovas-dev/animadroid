@@ -23,6 +23,14 @@ class TrackPickerTest {
         assertEquals("Polski", SubtitleLanguages.displayName("pl"))
     }
 
+    @Test fun hardsubInPreferredLanguageSkipsEverything() {
+        val en = t("en", "English")
+        assertEquals(SubtitleDecision.None, TrackPicker.decide(listOf(en), "zh", translate = true, hardsubLanguage = "zh"))
+        assertEquals(SubtitleDecision.None, TrackPicker.decide(listOf(t("zh", "Chinese")), "zh", translate = true, hardsubLanguage = "zh-Hans"))
+        // A hardsub in another language does not suppress translation.
+        assertEquals(SubtitleDecision.Translate(en, "en"), TrackPicker.decide(listOf(en), "zh", translate = true, hardsubLanguage = "pl"))
+    }
+
     @Test fun providedTrackInPreferredLanguageWins() {
         val zh = t("zh", "Chinese")
         val d = TrackPicker.decide(listOf(t("en", "English"), zh), "zh", translate = true)

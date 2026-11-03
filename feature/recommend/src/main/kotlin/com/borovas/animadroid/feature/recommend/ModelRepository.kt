@@ -112,15 +112,15 @@ class ModelRepository @Inject constructor(
             try {
                 val total = context.contentResolver.query(uri, arrayOf(OpenableColumns.SIZE), null, null, null)
                     ?.use { if (it.moveToFirst() && !it.isNull(0)) it.getLong(0) else null } ?: 0L
-                if (total in 1 until ModelSpec.MIN_IMPORT_BYTES) fail("That file is too small to be the model.");
+                if (total in 1 until ModelSpec.MIN_IMPORT_BYTES) fail(context.getString(R.string.recommend_import_too_small))
                 val free = StatFs(dir.path).availableBytes
                 if (total > 0 && free < total + ModelSpec.FREE_SPACE_MARGIN_BYTES) {
-                    fail("Not enough free storage to import: ${formatBytes(total)} needed, ${formatBytes(free)} available.")
+                    fail(context.getString(R.string.recommend_import_no_space, formatBytes(total), formatBytes(free)))
                 }
                 importing.value = ImportSnapshot(0, total)
                 var copied = 0L
                 var lastEmit = 0L
-                val input = context.contentResolver.openInputStream(uri) ?: fail("Could not open the selected file.")
+                val input = context.contentResolver.openInputStream(uri) ?: fail(context.getString(R.string.recommend_import_open_failed))
                 tmp.delete()
                 input.use { ins -> tmp.outputStream().use { out ->
                     val buf = ByteArray(1 shl 20)
@@ -131,14 +131,14 @@ class ModelRepository @Inject constructor(
                         if (copied - lastEmit > 8_000_000) { lastEmit = copied; importing.value = ImportSnapshot(copied, total) }
                     }
                 } }
-                if (copied < ModelSpec.MIN_IMPORT_BYTES) fail("That file is too small to be the model.")
+                if (copied < ModelSpec.MIN_IMPORT_BYTES) fail(context.getString(R.string.recommend_import_too_small))
                 modelFile().delete()
-                if (!tmp.renameTo(modelFile())) fail("Could not store the model file.")
+                if (!tmp.renameTo(modelFile())) fail(context.getString(R.string.recommend_store_failed))
             } catch (c: kotlinx.coroutines.CancellationException) {
                 tmp.delete(); throw c
             } catch (t: Throwable) {
                 tmp.delete()
-                importError.value = (t as? ImportFailure)?.message ?: "Import failed: ${t.message}"
+                importError.value = (t as? ImportFailure)?.message ?: context.getString(R.string.recommend_import_failed, t.message.orEmpty())
             } finally {
                 importing.value = null
                 fileTick.value++

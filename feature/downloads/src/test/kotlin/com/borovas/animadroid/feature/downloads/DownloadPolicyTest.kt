@@ -73,3 +73,33 @@ class DownloadPolicyTest {
         assertNull(DownloadAggregator.aggregate(listOf(part("k", PartState.COMPLETED)))!!.reason)
     }
 }
+
+@org.junit.runner.RunWith(org.robolectric.RobolectricTestRunner::class)
+class DownloadRetryPolicyTest {
+    @Test fun backoffGrowsAndIsCapped() {
+        assertEquals(30_000L, DownloadPolicy.backoffMs(1))
+        assertEquals(120_000L, DownloadPolicy.backoffMs(2))
+        assertEquals(480_000L, DownloadPolicy.backoffMs(3))
+        assertEquals(600_000L, DownloadPolicy.backoffMs(4))
+        assertEquals(600_000L, DownloadPolicy.backoffMs(50))
+        assertEquals(30_000L, DownloadPolicy.backoffMs(0))
+    }
+
+    @Test fun retriesStopAfterMax() {
+        assertTrue(DownloadPolicy.shouldRetry(0))
+        assertTrue(DownloadPolicy.shouldRetry(DownloadPolicy.MAX_AUTO_RETRIES - 1))
+        assertTrue(!DownloadPolicy.shouldRetry(DownloadPolicy.MAX_AUTO_RETRIES))
+    }
+
+    private fun http(code: Int) = HttpDataSource.InvalidResponseCodeException(
+        code, null, null, emptyMap(), DataSpec(android.net.Uri.EMPTY), ByteArray(0),
+    )
+
+    @Test fun detectsExpiredLinks() {
+        listOf(401, 403, 404, 410).forEach { assertTrue(DownloadPolicy.isExpiredLink(http(it))) }
+        assertTrue(DownloadPolicy.isExpiredLink(IOException("wrapped", http(403))))
+        assertTrue(!DownloadPolicy.isExpiredLink(http(503)))
+        assertTrue(!DownloadPolicy.isExpiredLink(UnknownHostException()))
+        assertTrue(!DownloadPolicy.isExpiredLink(null))
+    }
+}

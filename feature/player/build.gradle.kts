@@ -2,9 +2,11 @@ plugins { alias(libs.plugins.animadroid.android.feature) }
 dependencies {
     implementation(project(":feature:aniskip"))
     implementation(project(":feature:downloads"))
+    implementation(project(":feature:dubbing"))
     implementation(project(":feature:subtitles"))
     implementation(project(":provider:api"))
     implementation(project(":core:network"))
+    implementation(project(":core:sync"))
     implementation(libs.androidx.activity.compose); implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.media3.exoplayer); implementation(libs.media3.exoplayer.hls); implementation(libs.media3.datasource.okhttp)

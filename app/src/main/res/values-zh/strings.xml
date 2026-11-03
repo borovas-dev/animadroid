@@ -1,0 +1,29 @@
+<resources>
+    <string name="update_available">有可用更新：%1$s</string>
+    <string name="update_install">安装</string>
+    <string name="update_later">稍后</string>
+    <string name="update_changelog">更新内容</string>
+    <string name="update_downloading">正在下载更新…</string>
+    <string name="update_ready">更新已下载</string>
+    <string name="update_failed">更新失败：%1$s</string>
+    <string name="update_allow_unknown">请允许从此来源安装应用，然后再次点击“安装”。</string>
+    <string name="nav_home">主页</string>
+    <string name="nav_search">搜索</string>
+    <string name="nav_downloads">下载</string>
+    <string name="nav_settings">设置</string>
+    <string name="cloudflare_verify_title">验证你是真人</string>
+    <string name="backup_export_ok">备份已导出</string>
+    <string name="backup_export_failed">导出失败：%1$s</string>
+    <string name="backup_import_failed">导入失败：%1$s</string>
+    <string name="backup_import_ok">已导入番剧：%1$d，观看进度记录：%2$d</string>
+    <string name="backup_import_anicli_ok">已从 ani-cli 导入的记录：%1$d</string>
+    <string name="shortcuts_player_group">播放器快捷键</string>
+    <string name="shortcut_play_pause">播放 / 暂停</string>
+    <string name="shortcut_seek_back">后退 10 秒</string>
+    <string name="shortcut_seek_forward">快进 10 秒</string>
+    <string name="shortcut_volume_up">音量增大</string>
+    <string name="shortcut_volume_down">音量减小</string>
+    <string name="shortcut_mute">静音 / 取消静音</string>
+    <string name="shortcut_fullscreen">切换全屏</string>
+    <string name="shortcut_exit_fullscreen">退出全屏</string>
+</resources>

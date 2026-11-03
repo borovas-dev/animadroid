@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="library_title">Start</string>
+    <string name="library_empty_title">Twoja biblioteka jest pusta</string>
+    <string name="library_empty_body">Wyszukaj serial i zacznij oglądać. Postępy i ulubione pojawią się tutaj.</string>
+    <string name="library_continue_watching">Kontynuuj oglądanie</string>
+    <string name="library_favorites">Ulubione</string>
+    <string name="library_remove_history">Usuń z historii</string>
+    <string name="library_episode_n">Odcinek %1$s</string>
+</resources>

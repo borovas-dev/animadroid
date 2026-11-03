@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="downloads_title">Pobrane</string>
+    <string name="downloads_nothing_saved">Nic jeszcze nie zapisano</string>
+    <string name="downloads_storage_used">Zajęte miejsce: %1$s</string>
+    <string name="downloads_empty_title">Brak pobranych odcinków</string>
+    <string name="downloads_empty_body">Dotknij przycisku pobierania obok odcinka, aby zapisać go do oglądania offline.</string>
+    <string name="downloads_delete_episode_title">Usunąć odcinek %1$s?</string>
+    <string name="downloads_delete_episode_body">Pobrany plik „%1$s” zostanie usunięty z tego urządzenia.</string>
+    <string name="downloads_delete_all_title">Usunąć wszystko z „%1$s”?</string>
+    <string name="downloads_waiting_banner">Oczekiwanie na Wi-Fi. Pobieranie będzie kontynuowane automatycznie po połączeniu (zmienisz to w Ustawieniach).</string>
+    <string name="downloads_delete_group_cd">Usuń wszystkie odcinki: %1$s</string>
+    <string name="downloads_status_queued">W kolejce</string>
+    <string name="downloads_status_paused">Wstrzymano · %1$d%%</string>
+    <string name="downloads_status_downloaded">Pobrano · %1$s</string>
+    <string name="downloads_status_failed">Niepowodzenie: %1$s · dotknij, aby ponowić</string>
+    <string name="downloads_unknown_reason">nieznany powód</string>
+    <string name="downloads_episode">Odcinek %1$s</string>
+    <string name="downloads_play_offline_cd">Odtwórz odcinek %1$s offline</string>
+    <string name="downloads_delete_episode_cd">Usuń odcinek %1$s</string>
+    <string name="downloads_paused_by_system">Wstrzymane przez system – dotknij, aby wznowić</string>
+    <string name="downloads_payload_label">%1$s · odcinek %2$s</string>
+    <string name="downloads_notif_downloaded">Pobrano</string>
+    <string name="downloads_notif_body">%1$s · odc. %2$s</string>
+    <string name="downloads_notif_failed_title">Pobieranie nie powiodło się: %1$s · odc. %2$s</string>
+    <string name="downloads_notif_waiting_wifi">Oczekiwanie na Wi-Fi</string>
+    <string name="downloads_notif_waiting_network">Oczekiwanie na sieć</string>
+    <string name="downloads_notif_resume_wifi">Pobieranie wznowi się automatycznie, gdy Wi-Fi będzie dostępne</string>
+    <string name="downloads_notif_resume_network">Pobieranie wznowi się automatycznie, gdy połączenie będzie dostępne</string>
+    <string name="downloads_notif_paused">Pobieranie wstrzymane</string>
+    <string name="downloads_notif_results_title">Pobrane</string>
+    <string name="downloads_notif_results_text">Wyniki pobierania</string>
+    <string name="downloads_notif_downloading_one">Pobieranie odcinka</string>
+    <string name="downloads_notif_pause_all">Wstrzymaj wszystko</string>
+    <string name="downloads_notif_resume_all">Wznów wszystko</string>
+    <string name="downloads_notif_cancel_all">Anuluj wszystko</string>
+    <string name="downloads_fail_refused">Serwer odmówił dostępu (HTTP %1$d); link mógł wygasnąć</string>
+    <string name="downloads_fail_not_found">Nie znaleziono wideo na serwerze (HTTP %1$d)</string>
+    <string name="downloads_fail_server_error">Błąd serwera (HTTP %1$d)</string>
+    <string name="downloads_fail_http">Serwer zwrócił HTTP %1$d</string>
+    <string name="downloads_fail_unreachable">Nie można połączyć się z serwerem</string>
+    <string name="downloads_fail_timeout">Przekroczono limit czasu połączenia</string>
+    <string name="downloads_fail_with_message">Pobieranie nie powiodło się: %1$s</string>
+    <string name="downloads_fail_generic">Pobieranie nie powiodło się</string>
+    <string name="downloads_fail_interrupted">Przerwano, zanim pobieranie zdążyło się rozpocząć</string>
+    <string name="downloads_fail_no_stream">Nie znaleziono strumienia do pobrania</string>
+    <string name="downloads_fail_start_reason">Nie udało się rozpocząć: %1$s</string>
+    <string name="downloads_fail_start_message">Nie udało się rozpocząć pobierania: %1$s</string>
+    <string name="downloads_unknown_error">nieznany błąd</string>
+    <plurals name="downloads_delete_all_body">
+        <item quantity="one">Pobrany lub oczekujący odcinek zostanie usunięty z tego urządzenia.</item>
+        <item quantity="few">Wszystkie %1$d pobrane lub oczekujące odcinki zostaną usunięte z tego urządzenia.</item>
+        <item quantity="many">Wszystkie %1$d pobranych lub oczekujących odcinków zostanie usuniętych z tego urządzenia.</item>
+        <item quantity="other">Wszystkie %1$d pobranych lub oczekujących odcinków zostanie usuniętych z tego urządzenia.</item>
+    </plurals>
+    <plurals name="downloads_episode_count">
+        <item quantity="one">%1$d odcinek</item>
+        <item quantity="few">%1$d odcinki</item>
+        <item quantity="many">%1$d odcinków</item>
+        <item quantity="other">%1$d odcinka</item>
+    </plurals>
+    <plurals name="downloads_notif_downloading_many">
+        <item quantity="one">Pobieranie %1$d odcinka</item>
+        <item quantity="few">Pobieranie %1$d odcinków</item>
+        <item quantity="many">Pobieranie %1$d odcinków</item>
+        <item quantity="other">Pobieranie %1$d odcinków</item>
+    </plurals>
+    <string name="download_channel_name">Pobieranie</string>
+    <string name="download_events_channel_name">Aktualizacje pobierania</string>
+    <string name="download_events_channel_description">Ukończone i nieudane pobrania oraz pobrania oczekujące na sieć</string>
+    <string name="download_channel_description">Postęp pobierania odcinków do oglądania offline</string>
+    <string name="downloads_retrying">Ponawianie (%1$d/%2$d)…</string>
+</resources>

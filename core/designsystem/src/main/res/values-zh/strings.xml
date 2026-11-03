@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="common_back">返回</string>
+    <string name="common_clear">清除</string>
+    <string name="common_cancel">取消</string>
+    <string name="common_retry">重试</string>
+    <string name="common_delete">删除</string>
+    <string name="common_remove">移除</string>
+    <string name="common_close">关闭</string>
+    <string name="common_download">下载</string>
+    <string name="common_pause">暂停</string>
+    <string name="common_resume">继续</string>
+    <string name="common_off">关闭</string>
+    <string name="error_default_title">出错了</string>
+    <string name="verify_in_browser">在浏览器中验证</string>
+    <string name="verification_needed">需要验证</string>
+    <string name="error_cloudflare">Cloudflare 要求进行浏览器验证。</string>
+    <string name="error_no_provider">没有可用的番剧片源。</string>
+    <string name="common_open">打开</string>
+</resources>

@@ -17,14 +17,20 @@ class SkipController(
     private val times: SkipTimes?,
     private val offsetSec: Int,
     private val behavior: SkipBehavior,
+    /** Per-segment opt-in to auto-seek regardless of [behavior]; an auto-skipped segment is never re-armed by seeking back. */
+    private val autoOpening: Boolean = false,
+    private val autoEnding: Boolean = false,
 ) {
+    private var autoDoneOp = false
+    private var autoDoneEd = false
+
     private var skippedOp = false
     private var skippedEd = false
     private var enabled = true
     private var lastPos = Double.NaN
 
     fun reset() {
-        skippedOp = false; skippedEd = false; lastPos = Double.NaN
+        skippedOp = false; skippedEd = false; autoDoneOp = false; autoDoneEd = false; lastPos = Double.NaN
     }
 
     fun setEnabled(value: Boolean) {
@@ -44,8 +50,8 @@ class SkipController(
         if (!enabled || t == null) return SkipAction.None
         // A backward seek before a section start re-arms it.
         if (!prev.isNaN() && posSec < prev) {
-            t.opening?.let { if (posSec < it.startSec) skippedOp = false }
-            t.ending?.let { if (posSec < it.startSec) skippedEd = false }
+            t.opening?.let { if (posSec < it.startSec && !autoDoneOp) skippedOp = false }
+            t.ending?.let { if (posSec < it.startSec && !autoDoneEd) skippedEd = false }
         }
         evaluate(t.opening, SkipSegment.OPENING, posSec, skippedOp)?.let { return it }
         evaluate(t.ending, SkipSegment.ENDING, posSec, skippedEd)?.let { return it }
@@ -57,12 +63,12 @@ class SkipController(
         val target = i.endSec - offsetSec
         if (t < i.startSec || t >= target) return null
         val ms = (target * 1000).toLong()
-        return when (behavior) {
-            SkipBehavior.AUTO -> {
-                markSkipped(seg); SkipAction.AutoSeek(ms, seg)
-            }
-            SkipBehavior.BUTTON -> SkipAction.ShowButton(seg, ms)
-        }
+        val flagged = if (seg == SkipSegment.OPENING) autoOpening else autoEnding
+        val auto = behavior == SkipBehavior.AUTO || flagged
+        if (!auto) return SkipAction.ShowButton(seg, ms)
+        markSkipped(seg)
+        if (flagged) { if (seg == SkipSegment.OPENING) autoDoneOp = true else autoDoneEd = true }
+        return SkipAction.AutoSeek(ms, seg)
     }
 }
 

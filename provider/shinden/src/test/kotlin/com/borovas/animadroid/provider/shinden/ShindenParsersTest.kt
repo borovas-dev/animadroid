@@ -1,5 +1,6 @@
 package com.borovas.animadroid.provider.shinden
 
+import com.borovas.animadroid.provider.common.hosts.HostRegistry
 import com.borovas.animadroid.core.model.TranslationMode
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull

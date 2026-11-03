@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="library_title">Home</string>
+    <string name="library_empty_title">Your library is empty</string>
+    <string name="library_empty_body">Search for a show and start watching. Progress and favorites will show up here.</string>
+    <string name="library_continue_watching">Continue watching</string>
+    <string name="library_favorites">Favorites</string>
+    <string name="library_remove_history">Remove from history</string>
+    <string name="library_episode_n">Episode %1$s</string>
+</resources>

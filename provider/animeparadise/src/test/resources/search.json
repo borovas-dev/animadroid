@@ -1,0 +1,66 @@
+{
+ "success": true,
+ "error": null,
+ "data": [
+  {
+   "_id": "LQ6ZwEAGo2KDWD7I",
+   "title": "Naruto: Shippuuden",
+   "link": "naruto-shippuden",
+   "episodes": 500,
+   "ageRating": "PG",
+   "animeSeason": {
+    "season": "Winter",
+    "year": 2007
+   },
+   "posterImage": {
+    "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx1735-kGfVm0YqCPcu.png",
+    "medium": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx1735-kGfVm0YqCPcu.png",
+    "small": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/small/bx1735-kGfVm0YqCPcu.png",
+    "tiny": "https://media.kitsu.app/anime/poster_images/1555/tiny.jpg",
+    "original": "https://media.kitsu.app/anime/poster_images/1555/original.jpg"
+   },
+   "post": true,
+   "startDate": "2007-02-15",
+   "alternativeTitle": {
+    "english": "Naruto: Shippuden",
+    "native": "NARUTO -ナルト- 疾風伝",
+    "romaji": "NARUTO: Shippuuden"
+   },
+   "episodeCount": 500
+  },
+  {
+   "_id": "OGCLrfH4Gdr4yGZg",
+   "title": "Naruto",
+   "link": "naruto",
+   "episodes": 220,
+   "ageRating": "PG",
+   "animeSeason": {
+    "season": "Fall",
+    "year": 2002
+   },
+   "posterImage": {
+    "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx20-dE6UHbFFg1A5.jpg",
+    "medium": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx20-dE6UHbFFg1A5.jpg",
+    "small": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/small/bx20-dE6UHbFFg1A5.jpg",
+    "tiny": "https://media.kitsu.app/anime/11/poster_image/tiny-47d378c5faf258491fd1a2025fc1507c.jpeg",
+    "original": "https://media.kitsu.app/anime/11/poster_image/4512d403727b2a19a6eb7e7a959be0c3.jpg"
+   },
+   "post": true,
+   "startDate": "2002-10-03",
+   "alternativeTitle": {
+    "english": "Naruto",
+    "native": "NARUTO -ナルト-",
+    "romaji": "NARUTO"
+   },
+   "episodeCount": 220
+  }
+ ],
+ "pagination": {
+  "page": 0,
+  "pageSize": 16,
+  "totalPages": 0,
+  "totalItems": 16,
+  "hasNext": false,
+  "hasPrevious": false
+ }
+}

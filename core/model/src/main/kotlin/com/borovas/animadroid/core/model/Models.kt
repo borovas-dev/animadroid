@@ -17,6 +17,11 @@ data class Anime(
     val dubEpisodes: Int? = null,
     val year: Int? = null,
     val malId: Int? = null,
+    /**
+     * The same show on other providers (providerId -> animeId), filled by ProviderChain.search when results are
+     * merged. Used as failover when the primary provider ([providerId]) fails. Does not include this anime itself.
+     */
+    val alternates: Map<String, String> = emptyMap(),
 )
 
 @Serializable
@@ -60,6 +65,11 @@ data class StreamSet(
     val spriteVttUrl: String? = null,
     /** Human-readable audio/subtitle language of this source (e.g. "Polish dub/lektor", "JP audio + PL subs"); null when the provider has a single fixed language. */
     val languageLabel: String? = null,
+    /**
+     * ML Kit-style language code ("zh", "pl", ...) of subtitles burned into the video, or null when the video has none.
+     * When it equals the user's subtitle language, no translation is needed (see TrackPicker.decide).
+     */
+    val hardsubLanguage: String? = null,
 )
 
 @Serializable

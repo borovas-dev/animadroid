@@ -1,5 +1,11 @@
 package com.borovas.animadroid.provider.shinden
 
+import com.borovas.animadroid.core.remoteconfig.ProviderRemoteConfig
+import com.borovas.animadroid.provider.common.HostHttp
+import com.borovas.animadroid.provider.common.withMirrors
+import com.borovas.animadroid.provider.common.HttpStatusException
+import com.borovas.animadroid.provider.common.hosts.HostExtractor
+import com.borovas.animadroid.provider.common.hosts.HostRegistry
 import com.borovas.animadroid.core.model.Anime
 import com.borovas.animadroid.core.model.Episode
 import com.borovas.animadroid.core.model.StreamSet
@@ -16,35 +22,38 @@ import okhttp3.OkHttpClient
  * Polish provider for shinden.pl (port of alt-ani-cli-win-shinden, using the in-app Cloudflare solver instead of FlareSolverr).
  *
  * Mode mapping: [TranslationMode.DUB] = Polish audio (lektor/dubbing); [TranslationMode.SUB] = original audio with
- * Polish (then English) subtitles. Only the public guest token documented by the reference tool is used; no account.
+ * Polish (then English) subtitles. Base URL(s) come from [config] per request (mirrors are tried on connection failure/5xx; `params.apiUrl` overrides the API host). Only the public guest token documented by the reference tool is used; no account.
  */
 class ShindenProvider(
     client: OkHttpClient,
-    baseUrl: String = DEFAULT_BASE_URL,
-    apiBaseUrl: String = DEFAULT_API_URL,
+    private val config: () -> ProviderRemoteConfig = { ProviderRemoteConfig.DEFAULT },
     /** Server-enforced pause between `player_load` and `player_show`; shorter values make `player_show` come back empty. */
     private val antibotDelayMs: Long = 5_000,
     private val maxResolveAttempts: Int = 3,
 ) : AnimeProvider {
     override val id = ID
     override val displayName = "Shinden (PL)"
+    override val contentLanguages = setOf("pl")
+    override val priority = 0
 
-    private val base = baseUrl.trimEnd('/')
-    private val api = apiBaseUrl.trimEnd('/')
-    private val http = ShindenHttp(client)
+    private fun bases() = config().mirrorsOr(listOf(DEFAULT_BASE_URL))
+    private fun api() = config().param("apiUrl", DEFAULT_API_URL).trimEnd('/')
+    private val http = HostHttp(client, acceptLanguage = "pl-PL,pl;q=0.9,en-US;q=0.8,en;q=0.7")
     private val kinds = ConcurrentHashMap<String, String>()
     private val mal = ConcurrentHashMap<String, Int>()
 
     /** Host lookup; overridable in tests so a mock server can stand in for a real video host. */
     internal var hostResolver: (String) -> HostExtractor? = HostRegistry::byHost
 
-    override suspend fun search(query: String, mode: TranslationMode): List<Anime> {
+    override suspend fun search(query: String, mode: TranslationMode): List<Anime> = withMirrors(bases()) { searchAt(it, query) }
+
+    private suspend fun searchAt(base: String, query: String): List<Anime> {
         val url = base.toHttpUrl().newBuilder().addPathSegment("series").addQueryParameter("search", query.trim()).build().toString()
         return ShindenParsers.parseSearch(http.get(url, referer = "$base/"), ID, base)
     }
 
     override suspend fun details(anime: Anime): Anime {
-        val (kind, html) = runCatching { seriesPage(anime.id, "") }.getOrNull() ?: return anime
+        val (kind, html, base) = runCatching { withMirrors(bases()) { b -> seriesPage(b, anime.id, "").let { Triple(it.first, it.second, b) } } }.getOrNull() ?: return anime
         kinds[anime.id] = kind
         val d = ShindenParsers.parseDetails(html)
         d.malId?.let { mal[anime.id] = it }
@@ -55,8 +64,10 @@ class ShindenProvider(
         )
     }
 
-    override suspend fun episodes(anime: Anime, mode: TranslationMode): List<Episode> {
-        val (kind, first) = seriesPage(anime.id, "/episodes?na_stronie=100")
+    override suspend fun episodes(anime: Anime, mode: TranslationMode): List<Episode> = withMirrors(bases()) { episodesAt(it, anime) }
+
+    private suspend fun episodesAt(base: String, anime: Anime): List<Episode> {
+        val (kind, first) = seriesPage(base, anime.id, "/episodes?na_stronie=100")
         kinds[anime.id] = kind
         val rows = ShindenParsers.parseEpisodeRows(first).toMutableList()
         for (page in 2..minOf(ShindenParsers.pageCount(first), MAX_PAGES)) {
@@ -68,7 +79,10 @@ class ShindenProvider(
         return episodes
     }
 
-    override suspend fun streams(anime: Anime, episode: Episode, mode: TranslationMode): StreamSet {
+    override suspend fun streams(anime: Anime, episode: Episode, mode: TranslationMode): StreamSet =
+        withMirrors(bases()) { streamsAt(it, anime, episode, mode) }
+
+    private suspend fun streamsAt(base: String, anime: Anime, episode: Episode, mode: TranslationMode): StreamSet {
         val page = http.get("$base/episode/${anime.id}/view/${episode.id}", referer = "$base/")
         val players = ShindenParsers.parsePlayers(page)
         val candidates = ShindenSelection.rank(players, mode)
@@ -86,7 +100,7 @@ class ShindenProvider(
             if (attempts >= maxResolveAttempts) { skipped += "${p.player}: not tried (attempt limit)"; continue }
             attempts++
             val show = try {
-                resolveShow(p.onlineId)
+                resolveShow(base, p.onlineId)
             } catch (e: CloudflareChallengeException) {
                 throw e
             } catch (e: ProviderException) {
@@ -103,7 +117,7 @@ class ShindenProvider(
                         skipped += "${p.player}: unsupported host '$host'"
                     } else {
                         try {
-                            val r = extractor.extract(show.url, http)
+                            val r = extractor.extract(show.url, http, referer = "https://shinden.pl/")
                             return StreamSet(
                                 masterUrl = if (r.hls) r.url else null,
                                 variants = if (r.hls) emptyList() else r.variants.ifEmpty { listOf(com.borovas.animadroid.core.model.StreamVariant(p.res, r.url)) },
@@ -124,7 +138,8 @@ class ShindenProvider(
     }
 
     /** `player_load` then, after the antibot pause, `player_show`; mirrors the reference tool's two-step protocol. */
-    private suspend fun resolveShow(onlineId: String): PlayerShow {
+    private suspend fun resolveShow(base: String, onlineId: String): PlayerShow {
+        val api = api()
         val auth = "auth=$GUEST_AUTH"
         http.get("$api/xhr/$onlineId/player_load?$auth", referer = "$base/")
         delay(antibotDelayMs)
@@ -132,7 +147,7 @@ class ShindenProvider(
     }
 
     /** Fetches `/<kind>/<id><suffix>`, trying `series` then `titles` (the site uses both prefixes for anime). */
-    private suspend fun seriesPage(idSlug: String, suffix: String): Pair<String, String> {
+    private suspend fun seriesPage(base: String, idSlug: String, suffix: String): Pair<String, String> {
         if (!ShindenParsers.isValidId(idSlug)) throw ProviderException("Unsupported Shinden id '$idSlug'")
         val order = (kinds[idSlug]?.let { listOf(it) }.orEmpty() + listOf("series", "titles")).distinct()
         var last: HttpStatusException? = null

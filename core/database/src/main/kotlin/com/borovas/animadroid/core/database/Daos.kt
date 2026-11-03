@@ -24,12 +24,12 @@ interface AnimeDao {
 
     @Query(
         "UPDATE anime SET title = :title, coverUrl = COALESCE(:coverUrl, coverUrl), synopsis = COALESCE(:synopsis, synopsis), " +
-            "malId = COALESCE(:malId, malId), subEpisodes = COALESCE(:sub, subEpisodes), dubEpisodes = COALESCE(:dub, dubEpisodes), " +
+            "malId = COALESCE(:malId, malId), alternatesJson = COALESCE(:alternatesJson, alternatesJson), subEpisodes = COALESCE(:sub, subEpisodes), dubEpisodes = COALESCE(:dub, dubEpisodes), " +
             "lastWatchedAt = :watchedAt WHERE providerId = :providerId AND animeId = :animeId",
     )
     suspend fun updateMeta(
         providerId: String, animeId: String, title: String, coverUrl: String?, synopsis: String?,
-        malId: Int?, sub: Int?, dub: Int?, watchedAt: Long,
+        malId: Int?, alternatesJson: String?, sub: Int?, dub: Int?, watchedAt: Long,
     )
 
     @Query("UPDATE anime SET lastWatchedAt = NULL WHERE providerId = :providerId AND animeId = :animeId")

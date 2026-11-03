@@ -32,7 +32,7 @@ import com.borovas.animadroid.core.model.DownloadState
 import com.borovas.animadroid.core.model.Episode
 import com.borovas.animadroid.core.model.SettingsRepository
 import com.borovas.animadroid.core.model.TranslationMode
-import com.borovas.animadroid.provider.api.AnimeProvider
+import com.borovas.animadroid.provider.api.ProviderChain
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import javax.inject.Inject
@@ -87,7 +87,7 @@ class DownloadCoordinator @Inject constructor(
     private val sources: CacheDataSources,
     private val repository: DownloadRepository,
     private val settings: SettingsRepository,
-    private val providers: Map<String, @JvmSuppressWildcards AnimeProvider>,
+    private val chain: ProviderChain,
     private val notifier: DownloadNotifier,
 ) : DownloadController {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -101,6 +101,10 @@ class DownloadCoordinator @Inject constructor(
     private val notified = ConcurrentHashMap<String, DownloadState>()
 
     @Volatile private var wifiOnly = true
+
+    /** Automatic retries made so far per episode key; cleared on success, removal or a manual start. */
+    private val attempts = ConcurrentHashMap<String, Int>()
+    private val retryJobs = ConcurrentHashMap<String, Job>()
     private var ticker: Job? = null
     private var reconcileJob: Job? = null
 
@@ -120,11 +124,16 @@ class DownloadCoordinator @Inject constructor(
         override fun onDownloadChanged(downloadManager: DownloadManager, download: Download, finalException: Exception?) {
             val prev = known.put(download.request.id, download)
             if (download.state == Download.STATE_FAILED) {
-                failures[download.request.id] = DownloadPolicy.describeFailure(finalException)
+                failures[download.request.id] = DownloadPolicy.describeFailure(finalException, context)
             } else {
                 failures.remove(download.request.id)
             }
-            syncKey(DownloadIds.keyOf(download.request.id), notify = prev?.state != download.state)
+            val key = DownloadIds.keyOf(download.request.id)
+            if (download.state == Download.STATE_COMPLETED && DownloadIds.isMain(download.request.id)) attempts.remove(key)
+            if (download.state == Download.STATE_FAILED && prev?.state != Download.STATE_FAILED && DownloadIds.isMain(download.request.id)) {
+                scheduleRetry(key)
+            }
+            syncKey(key, notify = prev?.state != download.state)
             ensureTicker()
         }
 
@@ -215,11 +224,11 @@ class DownloadCoordinator @Inject constructor(
                 if (item.state != DownloadState.COMPLETED && item.state != DownloadState.FAILED) {
                     repository.updateProgress(
                         item.providerId, item.animeId, item.episodeNumber, DownloadState.FAILED, item.bytes, item.percent,
-                        "Interrupted before the download could start",
+                        context.getString(R.string.downloads_fail_interrupted),
                     )
                 }
             } else {
-                parts.forEach { if (it.state == Download.STATE_FAILED) failures.putIfAbsent(it.request.id, item.failureReason ?: "Download failed") }
+                parts.forEach { if (it.state == Download.STATE_FAILED) failures.putIfAbsent(it.request.id, item.failureReason ?: context.getString(R.string.downloads_fail_generic)) }
                 DownloadAggregator.aggregate(parts.map(::partState))?.let { notified[key] = it.state }
                 syncKey(key)
                 if (parts.any { it.state == Download.STATE_QUEUED || it.state == Download.STATE_DOWNLOADING || it.state == Download.STATE_RESTARTING }) pending = true
@@ -269,8 +278,40 @@ class DownloadCoordinator @Inject constructor(
         d.request.id, d.state, d.bytesDownloaded, d.percentDownloaded, d.stopReason, failures[d.request.id],
     )
 
+    /**
+     * Failed main part: retry with exponential backoff up to [DownloadPolicy.MAX_AUTO_RETRIES]. The retry goes through
+     * [enqueueNow], which re-resolves the stream via [ProviderChain], so expired signed URLs get fresh links.
+     */
+    private fun scheduleRetry(key: String) {
+        val done = attempts[key] ?: 0
+        if (!DownloadPolicy.shouldRetry(done)) { attempts.remove(key); return }
+        val attempt = done + 1
+        attempts[key] = attempt
+        val p = DownloadIds.parse(key) ?: return
+        retryJobs.remove(key)?.cancel()
+        retryJobs[key] = scope.launch {
+            try {
+                delay(DownloadPolicy.backoffMs(attempt))
+                val item = repository.get(p.providerId, p.animeId, p.episodeNumber) ?: return@launch
+                if (item.state == DownloadState.COMPLETED) return@launch
+                retryJobs.remove(key)
+                val anime = Anime(id = item.animeId, providerId = item.providerId, title = item.title, coverUrl = item.coverUrl)
+                enqueueNow(anime, Episode(item.episodeId, item.episodeNumber), item.mode, manual = false)
+            } finally {
+                retryJobs.remove(key, coroutineContext[Job])
+            }
+        }
+    }
+
     private fun syncKey(key: String, notify: Boolean = false) {
-        val agg = DownloadAggregator.aggregate(partsOf(key).map(::partState)) ?: return
+        var agg = DownloadAggregator.aggregate(partsOf(key).map(::partState)) ?: return
+        if (agg.state == DownloadState.FAILED && retryJobs.containsKey(key)) {
+            // Waiting for an automatic retry: show it as queued instead of failed (and do not notify yet).
+            agg = agg.copy(
+                state = DownloadState.QUEUED,
+                reason = context.getString(R.string.downloads_retrying, attempts[key] ?: 1, DownloadPolicy.MAX_AUTO_RETRIES),
+            )
+        }
         val p = DownloadIds.parse(key) ?: return
         val terminal = agg.state == DownloadState.COMPLETED || agg.state == DownloadState.FAILED
         val announce = notify && terminal && notified.put(key, agg.state) != agg.state
@@ -280,7 +321,7 @@ class DownloadCoordinator @Inject constructor(
             if (announce) {
                 val row = repository.get(p.providerId, p.animeId, p.episodeNumber) ?: return@launch
                 if (agg.state == DownloadState.COMPLETED) notifier.completed(key, row.title, row.episodeNumber)
-                else notifier.failed(key, row.title, row.episodeNumber, agg.reason ?: "Download failed")
+                else notifier.failed(key, row.title, row.episodeNumber, agg.reason ?: context.getString(R.string.downloads_fail_generic))
             }
         }
     }
@@ -319,8 +360,9 @@ class DownloadCoordinator @Inject constructor(
         scope.launch { episodes.forEach { enqueueNow(anime, it, mode) } }.join()
     }
 
-    private suspend fun enqueueNow(anime: Anime, episode: Episode, mode: TranslationMode) {
+    private suspend fun enqueueNow(anime: Anime, episode: Episode, mode: TranslationMode, manual: Boolean = true) {
         val key = DownloadIds.episodeKey(anime.providerId, anime.id, episode.number)
+        if (manual) { attempts.remove(key); retryJobs.remove(key)?.cancel() }
         val existing = repository.get(anime.providerId, anime.id, episode.number)
         when (existing?.state) {
             DownloadState.COMPLETED, DownloadState.QUEUED, DownloadState.DOWNLOADING -> return
@@ -337,13 +379,14 @@ class DownloadCoordinator @Inject constructor(
         repository.upsert(base)
         try {
             val pref = settings.settings.first().quality
-            val provider = providers[anime.providerId] ?: error("Unknown provider ${anime.providerId}")
-            val set = provider.streams(anime, episode, mode)
-            val plan = DownloadPlanner.plan(set, pref) ?: error("No downloadable stream found")
+            // Fails over to alternate providers; the download stays filed under the original provider/episode.
+            val set = chain.streams(anime, episode, mode).set
+            val plan = DownloadPlanner.plan(set, pref) ?: error(context.getString(R.string.downloads_fail_no_stream))
             repository.upsert(base.copy(quality = plan.quality, streamSet = plan.snapshot))
-            val payload = DownloadPayload(plan.snapshot.headers, "${anime.title} · Episode ${episode.number}").encode()
+            val payload = DownloadPayload(plan.snapshot.headers, context.getString(R.string.downloads_payload_label, anime.title, episode.number)).encode()
             // Drop leftovers of a previous failed attempt so it restarts from a clean state.
-            partsOf(key).forEach { sendRemove(it.request.id) }
+            // Automatic retries re-add under the same ids (Media3 restarts the failed download and keeps the row).
+            if (manual) partsOf(key).forEach { sendRemove(it.request.id) }
             val requests = DownloadPlanner.parts(key, plan.snapshot).map { part ->
                 DownloadRequest.Builder(part.id, part.url.toUri())
                     .setMimeType(if (part.isHls) MimeTypes.APPLICATION_M3U8 else null)
@@ -360,10 +403,17 @@ class DownloadCoordinator @Inject constructor(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            val reason = "Could not start: ${e.message ?: "unknown error"}"
+            val unknown = context.getString(R.string.downloads_unknown_error)
+            val reason = context.getString(R.string.downloads_fail_start_reason, e.message ?: unknown)
+            // Stream lookup failed (offline, provider down): back off and retry like a failed transfer.
+            if (!manual && DownloadPolicy.shouldRetry(attempts[key] ?: 0)) {
+                repository.updateProgress(anime.providerId, anime.id, episode.number, DownloadState.FAILED, 0, 0f, reason)
+                scheduleRetry(key)
+                return
+            }
             repository.updateProgress(anime.providerId, anime.id, episode.number, DownloadState.FAILED, 0, 0f, reason)
             notifier.failed(key, anime.title, episode.number, reason)
-            _messages.tryEmit("Could not start download: ${e.message ?: "unknown error"}")
+            _messages.tryEmit(context.getString(R.string.downloads_fail_start_message, e.message ?: unknown))
         }
     }
 
@@ -392,6 +442,7 @@ class DownloadCoordinator @Inject constructor(
     override fun remove(providerId: String, animeId: String, episodeNumber: String) {
         val key = DownloadIds.episodeKey(providerId, animeId, episodeNumber)
         val parts = partsOf(key)
+        attempts.remove(key); retryJobs.remove(key)?.cancel()
         parts.forEach { sendRemove(it.request.id) }
         scope.launch { repository.delete(providerId, animeId, episodeNumber) }
     }

@@ -1,6 +1,8 @@
 package com.borovas.animadroid.provider.shinden
 
+import com.borovas.animadroid.provider.common.hosts.SibnetExtractor
 import com.borovas.animadroid.core.model.Anime
+import com.borovas.animadroid.core.remoteconfig.ProviderRemoteConfig
 import com.borovas.animadroid.core.model.Episode
 import com.borovas.animadroid.core.model.TranslationMode
 import com.borovas.animadroid.provider.api.ProviderException
@@ -26,7 +28,9 @@ class ShindenProviderTest {
 
     private fun res(name: String) = javaClass.classLoader!!.getResource(name)!!.readText()
     private fun origin() = server.url("/").toString().trimEnd('/')
-    private fun provider() = ShindenProvider(OkHttpClient(), origin(), origin(), antibotDelayMs = 0)
+    private fun provider(base: () -> String = ::origin, mirrors: List<String>? = null) = ShindenProvider(OkHttpClient(), {
+        ProviderRemoteConfig(baseUrls = mirrors ?: listOf(base()), params = mapOf("apiUrl" to origin()))
+    }, antibotDelayMs = 0)
     private val anime = Anime("61064-sousou-no-frieren", "shinden", "Frieren")
 
     @Before fun setUp() {
@@ -125,5 +129,18 @@ class ShindenProviderTest {
         assertEquals("Polish dub/lektor", set.languageLabel)
         assertEquals("https://video.sibnet.ru/", set.headers["Referer"])
         assertTrue(seen.any { it.contains("/xhr/9001/player_load") && it.contains("auth=X2d1ZXN0XzowLDUs") })
+    }
+
+    @Test fun baseUrlIsReadPerRequest() = runTest {
+        var base = "http://127.0.0.1:1"
+        val p = provider(base = { base })
+        try { p.search("x", TranslationMode.SUB); fail() } catch (_: ProviderException) {}
+        base = origin()
+        assertTrue(p.search("x", TranslationMode.SUB).isNotEmpty())
+    }
+
+    @Test fun mirrorIsTriedOnConnectionFailure() = runTest {
+        val p = provider(mirrors = listOf("http://127.0.0.1:1", origin()))
+        assertTrue(p.search("x", TranslationMode.SUB).isNotEmpty())
     }
 }

@@ -2,6 +2,7 @@ package com.borovas.animadroid.core.datastore
 
 import android.content.Context
 import androidx.datastore.core.CorruptionException
+import androidx.datastore.core.DataMigration
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.core.Serializer
@@ -22,10 +23,14 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.Json
 
+/** Defaults for a fresh install / reset: the legacy `providerId` default must not be mapped to a language. */
+internal val FreshSettings = AppSettings(migratedV2 = true)
+
 internal val SettingsJson = Json { ignoreUnknownKeys = true; encodeDefaults = true }
 
 object AppSettingsSerializer : Serializer<AppSettings> {
-    override val defaultValue: AppSettings = AppSettings()
+    /** A fresh install has nothing to migrate: already "migrated", so contentLanguage stays "auto". */
+    override val defaultValue: AppSettings = FreshSettings
 
     override suspend fun readFrom(input: InputStream): AppSettings = try {
         SettingsJson.decodeFromString(AppSettings.serializer(), input.readBytes().decodeToString())
@@ -38,6 +43,24 @@ object AppSettingsSerializer : Serializer<AppSettings> {
     }
 }
 
+/**
+ * One-time 0.2 migration: the legacy single `providerId` becomes a content language (shinden -> "pl", hianime -> "en")
+ * unless [AppSettings.contentLanguage] was already set. Guarded by [AppSettings.migratedV2] so it runs exactly once.
+ */
+internal fun migrateSettingsV2(s: AppSettings): AppSettings {
+    if (s.migratedV2) return s
+    val lang = if (s.contentLanguage == "auto") {
+        when (s.providerId) { "shinden" -> "pl"; "hianime" -> "en"; else -> "auto" }
+    } else s.contentLanguage
+    return s.copy(contentLanguage = lang, migratedV2 = true)
+}
+
+internal object SettingsV2Migration : DataMigration<AppSettings> {
+    override suspend fun shouldMigrate(currentData: AppSettings) = !currentData.migratedV2
+    override suspend fun migrate(currentData: AppSettings) = migrateSettingsV2(currentData)
+    override suspend fun cleanUp() = Unit
+}
+
 @Singleton
 class DataStoreSettingsRepository internal constructor(
     private val store: DataStore<AppSettings>,
@@ -46,7 +69,8 @@ class DataStoreSettingsRepository internal constructor(
     constructor(@ApplicationContext context: Context) : this(
         DataStoreFactory.create(
             serializer = AppSettingsSerializer,
-            corruptionHandler = ReplaceFileCorruptionHandler { AppSettings() },
+            migrations = listOf(SettingsV2Migration),
+            corruptionHandler = ReplaceFileCorruptionHandler { FreshSettings },
             produceFile = { File(context.filesDir, "datastore/settings.json") },
         ),
     )
@@ -62,7 +86,7 @@ class DataStoreSettingsRepository internal constructor(
 
     suspend fun importJson(json: String) {
         val imported = SettingsJson.decodeFromString(AppSettings.serializer(), json)
-        store.updateData { imported }
+        store.updateData { migrateSettingsV2(imported) }
     }
 
     companion object {

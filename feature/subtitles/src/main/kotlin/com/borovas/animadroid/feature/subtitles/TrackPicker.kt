@@ -18,8 +18,16 @@ object TrackPicker {
 
     private fun isRealTrack(t: SubtitleTrack) = t.label?.contains("thumbnail", ignoreCase = true) != true
 
-    fun decide(tracks: List<SubtitleTrack>, preferred: String, translate: Boolean, canTranslate: (String) -> Boolean = { true }): SubtitleDecision {
+    /**
+     * @param hardsubLanguage language of subtitles burned into the video ([com.borovas.animadroid.core.model.StreamSet.hardsubLanguage]);
+     * when it equals the preferred language nothing is selected or translated.
+     */
+    fun decide(
+        tracks: List<SubtitleTrack>, preferred: String, translate: Boolean,
+        hardsubLanguage: String? = null, canTranslate: (String) -> Boolean = { true },
+    ): SubtitleDecision {
         val target = SubtitleLanguages.normalize(preferred) ?: return SubtitleDecision.None
+        if (SubtitleLanguages.normalize(hardsubLanguage) == target) return SubtitleDecision.None
         val real = tracks.filter(::isRealTrack)
         real.firstOrNull { languageOf(it) == target }?.let { return SubtitleDecision.UseProvided(it) }
         if (!translate || !canTranslate(target) || real.isEmpty()) return SubtitleDecision.None

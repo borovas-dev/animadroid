@@ -37,6 +37,10 @@ class SubtitleTranslationService @Inject constructor(
     /** Whether [language] (two-letter code) can be translated to/from. Loads ML Kit lazily. */
     fun isSupported(language: String): Boolean = runCatching { engine.isSupported(language) }.getOrDefault(false)
 
+    /** Downloads and parses a provider subtitle track as-is (no translation), e.g. for generated voice-over. */
+    suspend fun fetchCues(url: String, headers: Map<String, String>): List<SubtitleCue> =
+        SubtitleParser.parse(OkHttpSubtitleFetcher(http).fetch(url, headers))
+
     fun translate(request: TranslationRequest, positionMs: () -> Long): Flow<TranslationProgress> =
         translator.translate(request, positionMs)
 }

@@ -35,7 +35,32 @@ fast Jetpack Compose UI built on **Material 3 Expressive**.
 2. Open it on your phone and allow "install unknown apps" for your browser or file manager when asked
 3. Requires **Android 12 (API 31) or newer**. Recommendations additionally need about 6 GB of RAM and a ~2.5 GB download
 
-## 🆕 What's new in 0.1.0
+## 🆕 What's new in 0.2.0
+**Sources and languages**
+- **Sources by language, with automatic fallback**: *Settings → Playback* has a content language (Auto follows your phone) instead of a long provider list. If a source fails or times out, the next one in the chain is tried. If a show's own source has no playable episodes (e.g. Shinden lists some titles without players), the details screen switches to the next source that does.
+- **New providers**: KickAssAnime and AnimeParadise (English fallbacks), AniLibria (Russian) and AnimeFire (Portuguese, beta)
+- **Polish and Chinese UI** follows the phone language; per-app language setting on Android 13+
+- **Updatable backend**: base URLs, mirrors and a few scraper parameters come from a remote config file, so many upstream breakages are fixed without a new release. Signature checking of that file is built but currently switched off
+- **Updates from GitHub Releases**: optional in-app update check, with an opt-in **include pre-releases** switch (alpha and beta builds install over the current app, so "allow from this source" is needed only once)
+
+**Generated voice-over (experimental, opt-in)**
+- Switch it on in *Settings → Playback*, then choose **Dub** on a show with no recorded dub in your language. The subtitles (the provider's own in your language, else on-device translated) are read aloud by your phone's text-to-speech voice, sped up to fit each line, over the original audio, which is lowered while it speaks
+- With the switch on, **Dub lists every show**; with it off, Dub lists only shows with a recorded dub, and picking a show without one plays the original audio with subtitles
+- Markup such as `*`, `<i>`, `{\an8}`, `[sighs]` and music notes is not read out. Quality depends on the voice installed on your phone; if the language voice is missing the player offers to install it
+
+**Player and settings**
+- **Auto-skip** for intros and outros with undo, opt-in **next-episode prefetch**, download retries with backoff and a Wi-Fi-only option
+- **Advanced** (collapsed by default, *Settings → Advanced*) now holds source strategy (reliable / best quality), source order, **Source health** (checks every source from your own network), import / export and tracking
+- **AniList / MyAnimeList** progress sync (needs client ids, see [docs/tracking.md](docs/tracking.md))
+- **Large screens and TV**: resizable windows, navigation rail, keyboard shortcuts and mouse menus in the player, Android TV launcher and D-pad support
+- New launch screen with the app icon
+
+**Fixes**
+- Release crash when opening the player ("Cannot create an instance of class …"): caused by Hilt code generation silently skipped in some builds, now prevented by the build settings (see Build)
+- Crash when holding the seek bar with previews on some MediaTek phones: frame previews now decode in software. A preview can take about half a second to appear
+- Dub search no longer comes back empty for Shinden and HiAnime
+
+## What was new in 0.1.0
 - **Shinden provider** for Polish audio and subtitles, selectable under *Settings → Playback → Source*
 - **On-device recommendations** now run in an isolated process, work in release builds, and use the CPU backend by default for compatibility
 - **Translated subtitles** with on-device ML Kit translation (*Settings → Subtitles*), Chinese first
@@ -44,7 +69,7 @@ fast Jetpack Compose UI built on **Material 3 Expressive**.
 ## ✨ Features
 
 ### 🔎 Discover and watch
-- **Pluggable providers** — HiAnime and Shinden (Polish) today, more can be added behind one small interface
+- **Pluggable providers** with per-language chains and automatic fallback — see [Providers](#-providers)
 - **Sub / dub** switch per title, preferred quality (best, worst, 1080p to 360p) and autoplay of the next episode
 - **Cover art and details** with synopsis and an episode grid, in an adaptive list-detail layout for tablets and foldables
 - **Recent searches** and **favorites**, stored locally
@@ -54,6 +79,7 @@ fast Jetpack Compose UI built on **Material 3 Expressive**.
 - **Seek-bar scrub previews** — a thumbnail follows your finger on the slider, from the stream's sprite sheet when available, otherwise decoded from the stream itself
 - **Subtitles** rendered natively, with external tracks from the provider
 - **Translated subtitles** — optional on-device machine translation (Google ML Kit) of the English track into any of ~59 languages, starting with Chinese; language packs (~30 MB) download once, translation then runs offline and never sends subtitle text anywhere
+- **Generated voice-over** (experimental) — optional offline text-to-speech reading of the subtitles when "Dub" is selected but no recorded dub exists in your language; quality depends on the voice installed on your phone
 - **Picture-in-Picture**, background audio with a media notification and playback controls
 - **Gestures**: double-tap to seek, brightness and volume swipes, gesture lock, adjustable playback speed
 - **Exact resume** — every episode remembers the second you stopped at; "Continue watching" picks up where you were
@@ -74,6 +100,8 @@ fast Jetpack Compose UI built on **Material 3 Expressive**.
 - **Fully local inference** — your watch history never leaves the device
 - Runs in an isolated process, so a native failure can never take the app down
 
+- **AniList / MyAnimeList tracking**: optional progress sync (Settings > Tracking); needs owner-registered client ids, see [docs/tracking.md](docs/tracking.md).
+
 ### 🎨 Design
 - **Material 3 Expressive**: expressive motion scheme, wavy progress and loading indicators, expressive components
 - **Dynamic color** with a seeded fallback theme, light and dark, themed launcher icon
@@ -83,15 +111,21 @@ fast Jetpack Compose UI built on **Material 3 Expressive**.
 
 | Provider | Language | Notes |
 |---|---|---|
-| **HiAnime** | English sub / dub | Default. Ported from ani-cli v5, with a built-in Cloudflare challenge solver |
+| **HiAnime** | English sub / dub | Primary English source. Ported from ani-cli v5.1, with a built-in Cloudflare challenge solver |
+| **KickAssAnime** | English sub / dub | Fallback. Separate audio tracks, soft subtitles |
+| **AnimeParadise** | English sub | Second fallback |
 | **Shinden** | Polish (lektor, dubbing, subtitles) | Hosts: CDA, Vidara, VK, YourUpload, Sibnet and the streamwish / filemoon family |
+| **AniLibria** | Russian | Official API |
+| **AnimeFire** | Portuguese (Brazil) | Beta: not yet tested against the live site |
+
+Other languages use the English chain with on-device subtitle translation. Chinese has no native-subtitle source yet: the candidates we tried need a login or are unreliable.
 
 Providers implement a small `AnimeProvider` interface (search, episodes, streams), so adding one does not touch the UI.
 
 ## 🗺️ Roadmap
 - Translated subtitles for downloaded episodes without a network, and better handling of styled (ASS) subtitles
 - More providers and more video hosts
-- Signed release builds in CI
+- Signed release builds in CI, and re-enabling the signed remote config
 
 ## 🛠️ Build
 
@@ -102,8 +136,7 @@ Requires **JDK 21+** (CI uses 25) and Android SDK platform **37.2**.
 ./gradlew :app:assembleRelease        # minified (R8) release APK, unsigned
 ```
 
-After a pull or a branch switch, a stale incremental cache can cause odd Hilt errors at launch. If that happens, run
-`./gradlew clean :app:assembleDebug --no-build-cache`.
+`gradle.properties` deliberately turns **parallel execution and KSP incremental processing off**: with them on, KSP intermittently dropped Hilt-generated classes, which showed up as `MissingBinding` build errors or a release-only launch crash ("Cannot create an instance of class …"). Builds are slower but reliable. After a pull or a branch switch, if Hilt errors still appear, run `./gradlew clean :app:assembleRelease`. Add `-PqaSuffix=.qa` to install a debug build next to the real app.
 
 <details>
 <summary><b>Testing</b></summary>
@@ -121,9 +154,9 @@ After a pull or a branch switch, a stale incremental cache can cause odd Hilt er
 
 ```
 app/                 MainActivity, navigation, theme wiring
-core/                model · network · database · datastore · designsystem
-provider/            api · hianime · shinden
-feature/             search · details · player · aniskip · library · downloads · settings · recommend
+core/                model · network · database · datastore · designsystem · remoteconfig · sync
+provider/            api · common · hianime · kickassanime · animeparadise · shinden · anilibria · animefire
+feature/             search · details · player · aniskip · library · downloads · settings · recommend · subtitles · dubbing
 ```
 
 </details>

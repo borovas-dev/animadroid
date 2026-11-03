@@ -5,7 +5,7 @@ import androidx.room3.RoomDatabase
 
 @Database(
     entities = [AnimeEntity::class, EpisodeProgressEntity::class, SearchHistoryEntity::class, DownloadEntity::class],
-    version = 3,
+    version = 4,
     exportSchema = true,
 )
 abstract class AnimadroidDatabase : RoomDatabase() {

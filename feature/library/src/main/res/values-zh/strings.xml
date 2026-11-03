@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="library_title">主页</string>
+    <string name="library_empty_title">资料库是空的</string>
+    <string name="library_empty_body">搜索一部番剧并开始观看，观看进度和收藏会显示在这里。</string>
+    <string name="library_continue_watching">继续观看</string>
+    <string name="library_favorites">收藏</string>
+    <string name="library_remove_history">从历史记录中移除</string>
+    <string name="library_episode_n">第 %1$s 集</string>
+</resources>
