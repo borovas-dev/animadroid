@@ -1,0 +1,58 @@
+{
+ "current_page": 1,
+ "pages": [
+  {
+   "number": 1,
+   "from": "01",
+   "to": "28",
+   "eps": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28
+   ]
+  }
+ ],
+ "result": [
+  {
+   "slug": "f897b3",
+   "title": "The Journey's End",
+   "duration_ms": 1559935,
+   "episode_number": 1,
+   "episode_string": "1",
+   "thumbnail": {
+    "formats": [
+     "jpeg",
+     "webp"
+    ],
+    "sm": "642602549d33f3e832425f22/ep-1-ad5b-sm",
+    "aspectRatio": 1.77,
+    "hq": "642602549d33f3e832425f22/ep-1-ad5b-hq"
+   }
+  }
+ ]
+}

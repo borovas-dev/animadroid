@@ -19,4 +19,9 @@ val MIGRATION_2_3 = Migration(2, 3) { connection ->
     connection.execSQL("ALTER TABLE `download` ADD COLUMN `failureReason` TEXT")
 }
 
-val ALL_MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3)
+/** v3 -> v4: stores a show's ids on other providers (JSON map) for provider failover. */
+val MIGRATION_3_4 = Migration(3, 4) { connection ->
+    connection.execSQL("ALTER TABLE `anime` ADD COLUMN `alternatesJson` TEXT")
+}
+
+val ALL_MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)

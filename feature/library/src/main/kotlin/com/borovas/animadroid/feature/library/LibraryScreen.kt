@@ -2,6 +2,11 @@
 
 package com.borovas.animadroid.feature.library
 
+import com.borovas.animadroid.core.designsystem.R as DR
+import com.borovas.animadroid.core.designsystem.posterCellMinWidth
+import com.borovas.animadroid.core.designsystem.InteractiveItem
+import com.borovas.animadroid.core.designsystem.ContextMenuAction
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -75,21 +80,22 @@ fun LibraryScreen(
     modifier: Modifier = Modifier,
 ) {
     val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val openLabel = stringResource(DR.string.common_open)
     Scaffold(
         modifier.nestedScroll(scroll.nestedScrollConnection),
-        topBar = { LargeFlexibleTopAppBar(title = { Text("Home") }, scrollBehavior = scroll) },
+        topBar = { LargeFlexibleTopAppBar(title = { Text(stringResource(R.string.library_title)) }, scrollBehavior = scroll) },
     ) { pad ->
         when {
             state.loading -> SkeletonLoading(Modifier.padding(pad))
             state.continueWatching.isEmpty() && state.favorites.isEmpty() -> Column(Modifier.padding(pad)) {
                 if (recommendations != null) Box(Modifier.padding(horizontal = 16.dp)) { recommendations() }
                 EmptyState(
-                    Icons.Rounded.VideoLibrary, "Your library is empty",
-                    "Search for a show and start watching. Progress and favorites will show up here.",
+                    Icons.Rounded.VideoLibrary, stringResource(R.string.library_empty_title),
+                    stringResource(R.string.library_empty_body),
                 )
             }
             else -> LazyVerticalGrid(
-                GridCells.Adaptive(130.dp),
+                GridCells.Adaptive(posterCellMinWidth()),
                 Modifier.fillMaxSize().padding(top = pad.calculateTopPadding()),
                 contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = pad.calculateBottomPadding() + 24.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -99,7 +105,7 @@ fun LibraryScreen(
                 if (state.continueWatching.isNotEmpty()) {
                     item(span = { GridItemSpan(maxLineSpan) }) {
                         Column {
-                            SectionHeader("Continue watching", horizontalPadding = 0.dp)
+                            SectionHeader(stringResource(R.string.library_continue_watching), horizontalPadding = 0.dp)
                             PosterCarousel(
                                 state.continueWatching, Modifier.height(260.dp),
                                 contentPadding = PaddingValues(0.dp),
@@ -110,9 +116,9 @@ fun LibraryScreen(
                     }
                 }
                 if (state.favorites.isNotEmpty()) {
-                    item(span = { GridItemSpan(maxLineSpan) }) { SectionHeader("Favorites", horizontalPadding = 0.dp) }
+                    item(span = { GridItemSpan(maxLineSpan) }) { SectionHeader(stringResource(R.string.library_favorites), horizontalPadding = 0.dp) }
                     items(state.favorites, key = { "f" + it.providerId + it.id }) { a ->
-                        AnimeCard(a, onClick = { onAnimeClick(a) })
+                        AnimeCard(a, onClick = { onAnimeClick(a) }, menu = listOf(ContextMenuAction(openLabel) { onAnimeClick(a) }))
                     }
                 }
             }
@@ -122,17 +128,21 @@ fun LibraryScreen(
 
 @Composable
 private fun ContinueCard(entry: WatchEntry, onClick: () -> Unit, onRemove: () -> Unit, modifier: Modifier = Modifier) {
-    Box(modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceContainerHigh).clickable(onClick = onClick)) {
+    val menu = listOf(
+        ContextMenuAction(stringResource(DR.string.common_open), onClick),
+        ContextMenuAction(stringResource(R.string.library_remove_history), onRemove),
+    )
+    InteractiveItem(onClick, modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceContainerHigh), menu = menu) {
         Cover(entry.anime.coverUrl, entry.anime.title, Modifier.fillMaxSize())
         Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.78f)), startY = 250f)))
         IconButton(
             onClick = onRemove,
             modifier = Modifier.align(Alignment.TopEnd).padding(4.dp),
             colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Black.copy(alpha = 0.4f), contentColor = Color.White),
-        ) { Icon(Icons.Rounded.Close, "Remove from history") }
+        ) { Icon(Icons.Rounded.Close, stringResource(R.string.library_remove_history)) }
         Column(Modifier.align(Alignment.BottomStart).padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(entry.anime.title, color = Color.White, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            Text("Episode ${entry.last.episodeNumber}", color = Color.White.copy(alpha = 0.8f), style = MaterialTheme.typography.labelMedium, maxLines = 1)
+            Text(stringResource(R.string.library_episode_n, entry.last.episodeNumber), color = Color.White.copy(alpha = 0.8f), style = MaterialTheme.typography.labelMedium, maxLines = 1)
             LinearWavyProgressIndicator(progress = { entry.last.fraction }, Modifier.fillMaxWidth())
         }
     }

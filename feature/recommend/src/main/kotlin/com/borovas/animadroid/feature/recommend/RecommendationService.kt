@@ -3,7 +3,7 @@ package com.borovas.animadroid.feature.recommend
 import com.borovas.animadroid.core.model.Anime
 import com.borovas.animadroid.core.model.LibraryRepository
 import com.borovas.animadroid.core.model.SettingsRepository
-import com.borovas.animadroid.provider.api.AnimeProvider
+import com.borovas.animadroid.provider.api.ProviderChain
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -38,7 +38,7 @@ class RecommendationService(
     private val engine: LlmEngine,
     private val library: LibraryRepository,
     private val settings: SettingsRepository,
-    private val providers: Map<String, @JvmSuppressWildcards AnimeProvider>,
+    private val chain: ProviderChain,
     private val cache: RecommendationCache,
     private val clock: Clock,
 ) {
@@ -46,9 +46,9 @@ class RecommendationService(
         engine: LlmEngine,
         library: LibraryRepository,
         settings: SettingsRepository,
-        providers: Map<String, @JvmSuppressWildcards AnimeProvider>,
+        chain: ProviderChain,
         cache: RecommendationCache,
-    ) : this(engine, library, settings, providers, cache, Clock { System.currentTimeMillis() })
+    ) : this(engine, library, settings, chain, cache, Clock { System.currentTimeMillis() })
 
     fun interface Clock { fun now(): Long }
 
@@ -66,11 +66,11 @@ class RecommendationService(
         val snap = snapshot()
         if (snap.isEmpty) throw NoHistoryException()
         val app = settings.settings.first()
-        val provider = providers[app.providerId] ?: providers.values.firstOrNull() ?: error("No anime provider is available.")
+        if (chain.chainFor(app).isEmpty()) error("No anime provider is available.")
 
         val raw = engine.generate(PromptBuilder.SYSTEM, PromptBuilder.user(snap.watched, snap.favorites))
         val suggestions = SuggestionParser.parse(raw)
-        val items = resolve(suggestions, snap, provider, app.mode)
+        val items = resolve(suggestions, snap, chain::search, app.mode)
         if (items.isEmpty()) throw NoResultsException()
         return CachedRecommendations(items, snap.signature, clock.now()).also { cache.save(it) }
     }
@@ -80,7 +80,7 @@ class RecommendationService(
     internal suspend fun resolve(
         suggestions: List<RawSuggestion>,
         snap: HistorySnapshot,
-        provider: AnimeProvider,
+        search: suspend (String, com.borovas.animadroid.core.model.TranslationMode) -> List<Anime>,
         mode: com.borovas.animadroid.core.model.TranslationMode,
     ): List<Recommendation> = withContext(Dispatchers.IO) {
         val gate = Semaphore(3)
@@ -89,7 +89,7 @@ class RecommendationService(
         val found = coroutineScope {
             suggestions.map { s ->
                 async {
-                    val hit = gate.withPermit { runCatching { provider.search(s.title, mode) }.getOrNull() }
+                    val hit = gate.withPermit { runCatching { search(s.title, mode) }.getOrNull() }
                         ?.let { bestMatch(s.title, it) }
                     hit?.let { Recommendation(it, s.reason) }
                 }

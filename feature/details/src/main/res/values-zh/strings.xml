@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="details_back_cd">返回</string>
+    <string name="details_download_episodes">下载剧集</string>
+    <string name="details_remove_favorite">从收藏中移除</string>
+    <string name="details_add_favorite">加入收藏</string>
+    <string name="details_episodes">剧集</string>
+    <string name="details_episodes_count">剧集（%1$d）</string>
+    <string name="details_no_episodes">没有剧集</string>
+    <string name="details_no_episodes_body">未找到 %1$s 剧集。</string>
+    <string name="details_load_failed">无法加载剧集。</string>
+    <string name="details_range_body">从 %1$d 集中选择范围（按列表位置）。已下载的剧集会被跳过。</string>
+    <string name="details_range_from">从</string>
+    <string name="details_range_to">到</string>
+    <string name="details_sub_episodes">SUB：%1$d 集</string>
+    <string name="details_dub_episodes">DUB：%1$d 集</string>
+    <string name="details_show_less">收起</string>
+    <string name="details_read_more">展开</string>
+    <string name="details_episode_n">第 %1$s 集</string>
+    <string name="details_watched">已观看</string>
+    <string name="details_percent_watched">已观看 %1$d%%</string>
+    <string name="details_download_episode">下载此集</string>
+    <string name="details_cancel_queued">取消排队中的下载</string>
+    <string name="details_pause_download">暂停下载</string>
+    <string name="details_resume_download">继续下载</string>
+    <string name="details_downloaded">已下载</string>
+    <string name="details_download_failed_retry">下载失败，点按重试</string>
+    <string name="details_play_ep">播放第 %1$s 集</string>
+    <string name="details_continue_ep">继续第 %1$s 集</string>
+    <string name="details_replay_ep">重播第 %1$s 集</string>
+    <string name="details_no_recorded_dub">没有录制配音 - 将由生成的配音朗读字幕</string>
+</resources>

@@ -8,10 +8,15 @@ android {
     namespace = "com.borovas.animadroid"
     defaultConfig {
         applicationId = "com.borovas.animadroid"
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.2.0"
         testInstrumentationRunner = "com.borovas.animadroid.HiltTestRunner"
+        // Tracker OAuth client ids (no secrets): -PANILIST_CLIENT_ID=... -PMAL_CLIENT_ID=... or ~/.gradle/gradle.properties. Blank = sync disabled.
+        listOf("ANILIST_CLIENT_ID", "MAL_CLIENT_ID").forEach { buildConfigField("String", it, "\"${(project.findProperty(it) as? String).orEmpty()}\"") }
     }
+    // Only the UI languages we translate; keeps library locales (and the per-app language list) in sync with locales_config.xml.
+    buildFeatures { buildConfig = true }
+    androidResources { localeFilters += listOf("en", "pl", "zh") }
     buildTypes {
         // ./gradlew -PqaSuffix=.qa lets parallel worktrees install side by side on a shared device.
         debug { (project.findProperty("qaSuffix") as? String)?.let { applicationIdSuffix = it } }
@@ -26,9 +31,15 @@ android {
 dependencies {
     listOf("model","network","database","datastore","designsystem").forEach { implementation(project(":core:$it")) }
     implementation(project(":provider:api"))
+    implementation(project(":provider:anilibria"))
     implementation(project(":provider:hianime"))
     implementation(project(":provider:shinden"))
-    listOf("aniskip","search","details","player","library","downloads","settings","recommend").forEach { implementation(project(":feature:$it")) }
+    implementation(project(":provider:animefire"))
+    implementation(project(":provider:animeparadise"))
+    implementation(project(":provider:kickassanime"))
+    implementation(project(":core:remoteconfig"))
+    implementation(project(":core:sync"))
+    listOf("aniskip","search","details","player","library","downloads","settings","recommend","dubbing").forEach { implementation(project(":feature:$it")) }
     implementation(libs.androidx.core.ktx); implementation(libs.androidx.core.splashscreen); implementation(libs.androidx.activity.compose)
     implementation(libs.navigation3.runtime); implementation(libs.navigation3.ui); implementation(libs.androidx.lifecycle.viewmodel.navigation3)
     implementation(libs.compose.adaptive); implementation(libs.compose.adaptive.layout); implementation(libs.compose.adaptive.navigation3)

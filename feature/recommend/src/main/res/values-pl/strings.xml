@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="recommend_title">Dla ciebie</string>
+    <string name="recommend_refresh">Odśwież rekomendacje</string>
+    <string name="recommend_thinking">Model myśli na twoim urządzeniu. Pierwsze uruchomienie może potrwać minutę.</string>
+    <string name="recommend_empty_title">Brak rekomendacji</string>
+    <string name="recommend_empty_body">Wybierz odświeżenie, aby wygenerować spersonalizowane propozycje na podstawie historii oglądania.</string>
+    <string name="recommend_model_downloading">Model jest pobierany (%1$s).</string>
+    <string name="recommend_model_waiting">oczekiwanie</string>
+    <string name="recommend_model_missing">Pobierz model działający na urządzeniu, aby otrzymywać spersonalizowane propozycje. Nic nie opuszcza telefonu.</string>
+    <string name="recommend_setup">Skonfiguruj w Ustawieniach</string>
+    <string name="recommend_see_all">Zobacz wszystko</string>
+    <string name="recommend_about">Gemma 4 E2B działa w całości na tym urządzeniu dzięki LiteRT-LM. Historia oglądania nigdzie nie jest wysyłana. Plik modelu ma około %1$s, jest pobierany jednorazowo z Hugging Face (%2$s, Apache 2.0) i wymaga urządzenia z co najmniej 6 GB pamięci RAM.</string>
+    <string name="recommend_model_installed">Model zainstalowany (%1$s).</string>
+    <string name="recommend_delete_model">Usuń model</string>
+    <string name="recommend_phase_wait_wifi">Oczekiwanie na połączenie Wi-Fi</string>
+    <string name="recommend_phase_wait_net">Oczekiwanie na połączenie</string>
+    <string name="recommend_phase_downloading">Pobieranie %1$s z %2$s</string>
+    <string name="recommend_phase_verifying">Weryfikacja sumy kontrolnej</string>
+    <string name="recommend_phase_importing">Importowanie %1$s</string>
+    <string name="recommend_cancel">Anuluj</string>
+    <string name="recommend_wifi_only">Pobieraj tylko przez Wi-Fi</string>
+    <string name="recommend_retry_download">Ponów pobieranie</string>
+    <string name="recommend_download_model">Pobierz model (%1$s)</string>
+    <string name="recommend_use_file">Użyj pliku z tego urządzenia</string>
+    <string name="recommend_hf_token">Token Hugging Face (opcjonalnie)</string>
+    <string name="recommend_hf_token_hint">Potrzebny tylko, jeśli Hugging Face o niego poprosi. Przechowywany na tym urządzeniu.</string>
+    <string name="recommend_problem_ram">To urządzenie ma %1$s GB pamięci RAM. Model wymaga urządzenia z co najmniej 6 GB.</string>
+    <string name="recommend_problem_32bit">Model działający na urządzeniu wymaga urządzenia 64-bitowego; to jest tylko 32-bitowe.</string>
+    <string name="recommend_problem_space">Za mało wolnego miejsca: potrzeba %1$s, dostępne %2$s.</string>
+    <string name="recommend_err_no_history">Najpierw obejrzyj coś lub dodaj do ulubionych, aby było na czym oprzeć propozycje.</string>
+    <string name="recommend_err_no_results">Model nie zaproponował niczego, co można teraz obejrzeć. Spróbuj odświeżyć.</string>
+    <string name="recommend_err_generic">Nie udało się wygenerować rekomendacji.</string>
+    <string name="recommend_import_too_small">Ten plik jest za mały, aby być modelem.</string>
+    <string name="recommend_import_no_space">Za mało miejsca na import: potrzeba %1$s, dostępne %2$s.</string>
+    <string name="recommend_import_open_failed">Nie udało się otworzyć wybranego pliku.</string>
+    <string name="recommend_import_failed">Import nie powiódł się: %1$s</string>
+    <string name="recommend_store_failed">Nie udało się zapisać pliku modelu.</string>
+    <string name="recommend_wrong_size">Pobrany plik ma nieprawidłowy rozmiar i został odrzucony.</string>
+    <string name="recommend_checksum_mismatch">Niezgodna suma kontrolna; plik został odrzucony. Spróbuj ponownie.</string>
+    <string name="recommend_network_error">Błąd sieci: %1$s. Dotknij pobierania, aby wznowić.</string>
+    <string name="recommend_auth_failed">Hugging Face odmówił pobrania (HTTP %1$d). Dodaj prawidłowy token dostępu w ustawieniach.</string>
+    <string name="recommend_notif_downloading">Pobieranie modelu na urządzenie</string>
+    <string name="recommend_notif_verifying">Weryfikacja modelu</string>
+    <string name="recommend_notif_channel">Pobieranie modelu</string>
+</resources>

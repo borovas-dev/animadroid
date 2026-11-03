@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="health_title">Stan źródeł</string>
+    <string name="health_intro">Sprawdza każde źródło na żywo z Twojej sieci (wyszukiwanie, odcinki, strumienie). Źródło, które tu zawodzi, nie zadziała u Ciebie.</string>
+    <string name="health_chain">Kolejność dla języka %1$s: %2$s</string>
+    <string name="health_run_again">Uruchom ponownie</string>
+    <string name="health_running">Sprawdzanie…</string>
+    <string name="health_disabled">Wyłączone przez Ciebie</string>
+    <string name="health_not_in_chain">Poza aktywnym łańcuchem</string>
+    <string name="health_step_search">Wyszukiwanie</string>
+    <string name="health_step_episodes">Odcinki</string>
+    <string name="health_step_streams">Strumienie</string>
+    <string name="health_back">Wstecz</string>
+    <string name="settings_source_health">Stan źródeł</string>
+    <string name="settings_source_health_desc">Sprawdź, które źródła działają w Twojej sieci</string>
+</resources>

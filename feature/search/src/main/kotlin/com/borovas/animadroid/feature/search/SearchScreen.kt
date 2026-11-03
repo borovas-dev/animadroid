@@ -2,6 +2,12 @@
 
 package com.borovas.animadroid.feature.search
 
+import androidx.compose.foundation.shape.RoundedCornerShape
+import com.borovas.animadroid.core.designsystem.posterCellMinWidth
+import com.borovas.animadroid.core.designsystem.InteractiveItem
+import com.borovas.animadroid.core.designsystem.ContextMenuAction
+import com.borovas.animadroid.core.designsystem.R as DR
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -123,17 +129,17 @@ fun SearchScreen(
             textFieldState = textState,
             searchBarState = searchBarState,
             onSearch = { submit(it) },
-            placeholder = { Text("Search anime") },
+            placeholder = { Text(stringResource(R.string.search_placeholder)) },
             leadingIcon = {
                 if (searchBarState.currentValue == SearchBarValue.Expanded) {
                     IconButton(onClick = { scope.launch { searchBarState.animateToCollapsed() } }) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back")
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(DR.string.common_back))
                     }
                 } else Icon(Icons.Rounded.Search, null)
             },
             trailingIcon = {
                 if (textState.text.isNotEmpty()) {
-                    IconButton(onClick = { textState.edit { replace(0, length, "") } }) { Icon(Icons.Rounded.Close, "Clear") }
+                    IconButton(onClick = { textState.edit { replace(0, length, "") } }) { Icon(Icons.Rounded.Close, stringResource(DR.string.common_clear)) }
                 }
             },
         )
@@ -157,19 +163,21 @@ fun SearchScreen(
         )
         when (val r = state.results) {
             SearchResults.Idle -> EmptyState(
-                Icons.Rounded.Search, "Find your next show",
-                "Search by title. Your recent searches show up when you tap the bar.",
+                Icons.Rounded.Search, stringResource(R.string.search_idle_title),
+                stringResource(R.string.search_idle_body),
             )
             SearchResults.Loading -> PlaceholderGrid()
             is SearchResults.Error ->
                 if (r.cloudflareUrl != null) ErrorState(
-                    r.message, onRetry = { onCloudflare(r.cloudflareUrl) }, actionLabel = "Verify in browser",
-                    icon = Icons.Rounded.Language, title = "Verification needed",
-                ) else ErrorState(r.message, onRetry)
+                    stringResource(DR.string.error_cloudflare), onRetry = { onCloudflare(r.cloudflareUrl) }, actionLabel = stringResource(DR.string.verify_in_browser),
+                    icon = Icons.Rounded.Language, title = stringResource(DR.string.verification_needed),
+                ) else ErrorState(
+                    r.message ?: stringResource(if (r.noProvider) DR.string.error_no_provider else R.string.search_failed), onRetry,
+                )
             is SearchResults.Success ->
-                if (r.items.isEmpty()) EmptyState(Icons.Rounded.SearchOff, "No results", "Nothing found for \"${state.query}\" in ${state.mode.name}. Try the other mode or a different title.")
+                if (r.items.isEmpty()) EmptyState(Icons.Rounded.SearchOff, stringResource(R.string.search_no_results), stringResource(R.string.search_no_results_body, state.query, state.mode.name))
                 else LazyVerticalGrid(
-                    GridCells.Adaptive(130.dp),
+                    GridCells.Adaptive(posterCellMinWidth()),
                     contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -183,14 +191,14 @@ fun SearchScreen(
 @Composable
 private fun RecentSearches(recents: List<String>, onPick: (String) -> Unit, onRemove: (String) -> Unit, onClear: () -> Unit) {
     if (recents.isEmpty()) {
-        EmptyState(Icons.Rounded.History, "No recent searches", "Searches you submit will appear here.")
+        EmptyState(Icons.Rounded.History, stringResource(R.string.search_no_recents), stringResource(R.string.search_no_recents_body))
         return
     }
     LazyColumn(Modifier.fillMaxSize()) {
         item {
             Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("Recent", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-                TextButton(onClick = onClear) { Icon(Icons.Rounded.DeleteSweep, null); Text("  Clear all") }
+                Text(stringResource(R.string.search_recent), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                TextButton(onClick = onClear) { Icon(Icons.Rounded.DeleteSweep, null); Text("  " + stringResource(R.string.search_clear_all)) }
             }
         }
         items(recents, key = { it }) { q ->
@@ -198,19 +206,20 @@ private fun RecentSearches(recents: List<String>, onPick: (String) -> Unit, onRe
                 if (v != SwipeToDismissBoxValue.Settled) { onRemove(q); true } else false
             })
             SwipeToDismissBox(dismiss, backgroundContent = {}) {
-                ListItem(
+                InteractiveItem(
+                    onClick = { onPick(q) }, shape = RoundedCornerShape(12.dp),
+                    menu = listOf(ContextMenuAction(stringResource(DR.string.common_remove)) { onRemove(q) }),
+                ) { ListItem(
                     headlineContent = { Text(q) },
                     leadingContent = { Icon(Icons.Rounded.History, null) },
-                    trailingContent = { IconButton(onClick = { onRemove(q) }) { Icon(Icons.Rounded.Close, "Remove") } },
+                    trailingContent = { IconButton(onClick = { onRemove(q) }) { Icon(Icons.Rounded.Close, stringResource(DR.string.common_remove)) } },
                     colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
-                    modifier = Modifier.clickableItem { onPick(q) },
-                )
+                ) }
             }
         }
     }
 }
 
-private fun Modifier.clickableItem(onClick: () -> Unit): Modifier = this.then(Modifier.clickable(onClick = onClick))
 
 private val sample = listOf(
     Anime("1", "p", "Frieren: Beyond Journey's End", subEpisodes = 28, dubEpisodes = 28),
@@ -232,7 +241,7 @@ private fun SearchPreview() = AnimadroidTheme(dynamicColor = false) {
 @Composable
 private fun SearchErrorPreview() = AnimadroidTheme(dynamicColor = false) {
     SearchScreen(
-        SearchUiState("x", results = SearchResults.Error("Cloudflare is asking for a browser check.", "https://x")),
+        SearchUiState("x", results = SearchResults.Error(null, "https://x")),
         {}, {}, {}, {}, {}, {}, {},
     )
 }

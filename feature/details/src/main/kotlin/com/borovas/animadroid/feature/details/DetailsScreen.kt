@@ -2,6 +2,9 @@
 
 package com.borovas.animadroid.feature.details
 
+import com.borovas.animadroid.core.designsystem.InteractiveItem
+import com.borovas.animadroid.core.designsystem.R as DR
+import androidx.compose.ui.res.stringResource
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -152,14 +155,14 @@ fun DetailsScreen(
             LargeFlexibleTopAppBar(
                 title = { Text(state.anime.title, maxLines = 2, overflow = TextOverflow.Ellipsis) },
                 subtitle = state.anime.year?.let { { Text(it.toString()) } },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back") } },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(R.string.details_back_cd)) } },
                 actions = {
                     if (state.episodes.isNotEmpty()) {
-                        IconButton(onClick = { showRange = true }) { Icon(Icons.Rounded.Download, "Download episodes") }
+                        IconButton(onClick = { showRange = true }) { Icon(Icons.Rounded.Download, stringResource(R.string.details_download_episodes)) }
                     }
                     IconButton(onClick = onToggleFavorite) {
-                        if (state.isFavorite) Icon(Icons.Rounded.Favorite, "Remove from favorites", tint = MaterialTheme.colorScheme.primary)
-                        else Icon(Icons.Rounded.FavoriteBorder, "Add to favorites")
+                        if (state.isFavorite) Icon(Icons.Rounded.Favorite, stringResource(R.string.details_remove_favorite), tint = MaterialTheme.colorScheme.primary)
+                        else Icon(Icons.Rounded.FavoriteBorder, stringResource(R.string.details_add_favorite))
                     }
                 },
                 scrollBehavior = scroll,
@@ -170,7 +173,7 @@ fun DetailsScreen(
                 ExtendedFloatingActionButton(
                     onClick = { onPlay(target.index) },
                     icon = { Icon(Icons.Rounded.PlayArrow, null) },
-                    text = { Text(target.label) },
+                    text = { Text(stringResource(when (target.kind) { PlayTarget.Kind.PLAY -> R.string.details_play_ep; PlayTarget.Kind.CONTINUE -> R.string.details_continue_ep; PlayTarget.Kind.REPLAY -> R.string.details_replay_ep }, target.episode)) },
                 )
             }
         },
@@ -186,21 +189,29 @@ fun DetailsScreen(
                     Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
                 )
             }
+            if (state.noRecordedDub) item {
+                Text(
+                    stringResource(R.string.details_no_recorded_dub), style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 16.dp),
+                )
+            }
             state.anime.synopsis?.takeIf { it.isNotBlank() }?.let { s -> item { Synopsis(s) } }
-            item { SectionHeader(if (state.episodes.isEmpty()) "Episodes" else "Episodes (${state.episodes.size})") }
+            item { SectionHeader(if (state.episodes.isEmpty()) stringResource(R.string.details_episodes) else stringResource(R.string.details_episodes_count, state.episodes.size)) }
             when {
                 state.loading -> item { SkeletonLoading(Modifier.fillMaxWidth().height(160.dp)) }
                 state.error != null -> item {
                     ErrorState(
-                        state.error,
+                        state.error.ifBlank {
+                            stringResource(when { state.cloudflareUrl != null -> DR.string.error_cloudflare; state.noProvider -> DR.string.error_no_provider; else -> R.string.details_load_failed })
+                        },
                         onRetry = { if (state.cloudflareUrl != null) onCloudflare(state.cloudflareUrl) else onRetry() },
-                        actionLabel = if (state.cloudflareUrl != null) "Verify in browser" else "Retry",
+                        actionLabel = stringResource(if (state.cloudflareUrl != null) DR.string.verify_in_browser else DR.string.common_retry),
                         icon = if (state.cloudflareUrl != null) Icons.Rounded.Language else Icons.Rounded.Close,
                         modifier = Modifier.height(280.dp),
                     )
                 }
                 state.episodes.isEmpty() -> item {
-                    EmptyState(Icons.Rounded.PlayArrow, "No episodes", "No ${state.mode.name} episodes were found.", Modifier.height(240.dp))
+                    EmptyState(Icons.Rounded.PlayArrow, stringResource(R.string.details_no_episodes), stringResource(R.string.details_no_episodes_body, state.mode.name), Modifier.height(240.dp))
                 }
                 else -> items(state.episodes, key = { it.id }) { ep ->
                     val index = state.episodes.indexOf(ep)
@@ -231,24 +242,24 @@ private fun RangeDialog(count: Int, onConfirm: (Int, Int) -> Unit, onDismiss: ()
     val valid = f != null && t != null && f in 1..count && t in f..count
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Download episodes") },
+        title = { Text(stringResource(R.string.details_download_episodes)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Choose a range of the $count episodes (by position in the list). Already downloaded episodes are skipped.", style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.details_range_body, count), style = MaterialTheme.typography.bodyMedium)
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedTextField(
-                        from, { from = it.filter(Char::isDigit).take(5) }, Modifier.weight(1f), label = { Text("From") }, singleLine = true,
+                        from, { from = it.filter(Char::isDigit).take(5) }, Modifier.weight(1f), label = { Text(stringResource(R.string.details_range_from)) }, singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     )
                     OutlinedTextField(
-                        to, { to = it.filter(Char::isDigit).take(5) }, Modifier.weight(1f), label = { Text("To") }, singleLine = true,
+                        to, { to = it.filter(Char::isDigit).take(5) }, Modifier.weight(1f), label = { Text(stringResource(R.string.details_range_to)) }, singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     )
                 }
             }
         },
-        confirmButton = { TextButton(enabled = valid, onClick = { onConfirm(f!! - 1, t!! - 1) }) { Text("Download") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        confirmButton = { TextButton(enabled = valid, onClick = { onConfirm(f!! - 1, t!! - 1) }) { Text(stringResource(DR.string.common_download)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(DR.string.common_cancel)) } },
     )
 }
 
@@ -263,8 +274,8 @@ private fun Header(state: DetailsUiState) {
             )
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 val a = state.anime
-                a.subEpisodes?.let { Text("SUB: $it episodes", style = MaterialTheme.typography.labelLarge) }
-                a.dubEpisodes?.let { Text("DUB: $it episodes", style = MaterialTheme.typography.labelLarge) }
+                a.subEpisodes?.let { Text(stringResource(R.string.details_sub_episodes, it), style = MaterialTheme.typography.labelLarge) }
+                a.dubEpisodes?.let { Text(stringResource(R.string.details_dub_episodes, it), style = MaterialTheme.typography.labelLarge) }
                 Text(a.providerId, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
@@ -279,7 +290,7 @@ private fun Synopsis(text: String) {
             text, style = MaterialTheme.typography.bodyMedium,
             maxLines = if (expanded) Int.MAX_VALUE else 4, overflow = TextOverflow.Ellipsis,
         )
-        TextButton(onClick = { expanded = !expanded }) { Text(if (expanded) "Show less" else "Read more") }
+        TextButton(onClick = { expanded = !expanded }) { Text(stringResource(if (expanded) R.string.details_show_less else R.string.details_read_more)) }
     }
 }
 
@@ -295,8 +306,9 @@ private fun EpisodeRow(
     onCancel: () -> Unit,
 ) {
     val finished = progress?.isFinished == true
+    InteractiveItem(onClick, Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp), shape = RoundedCornerShape(20.dp)) {
     Card(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp).clickable(onClick = onClick),
+        Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (finished) MaterialTheme.colorScheme.surfaceContainerLow else MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -306,12 +318,12 @@ private fun EpisodeRow(
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 val realTitle = ep.title?.trim()?.takeIf { it.isNotEmpty() && !it.isGenericEpisodeLabel(ep.number) }
                 Text(
-                    if (realTitle != null) "${ep.number}. $realTitle" else "Episode ${ep.number}",
+                    if (realTitle != null) "${ep.number}. $realTitle" else stringResource(R.string.details_episode_n, ep.number),
                     style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis,
                 )
-                if (finished) Text("Watched", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (finished) Text(stringResource(R.string.details_watched), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 else if (progress != null && progress.fraction > 0f) Text(
-                    "${(progress.fraction * 100).toInt()}% watched",
+                    stringResource(R.string.details_percent_watched, (progress.fraction * 100).toInt()),
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 if (progress != null && !finished && progress.fraction > 0f) {
@@ -319,9 +331,10 @@ private fun EpisodeRow(
                 }
             }
             DownloadButton(download, onDownload, onPause, onResume, onCancel)
-            if (finished) Icon(Icons.Rounded.CheckCircle, "Watched", tint = MaterialTheme.colorScheme.primary)
+            if (finished) Icon(Icons.Rounded.CheckCircle, stringResource(R.string.details_watched), tint = MaterialTheme.colorScheme.primary)
             else Icon(Icons.Rounded.PlayArrow, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
+    }
     }
 }
 
@@ -329,30 +342,30 @@ private fun EpisodeRow(
 @Composable
 private fun DownloadButton(item: DownloadItem?, onDownload: () -> Unit, onPause: () -> Unit, onResume: () -> Unit, onCancel: () -> Unit) {
     when (item?.state) {
-        null -> IconButton(onClick = onDownload) { Icon(Icons.Rounded.Download, "Download episode") }
+        null -> IconButton(onClick = onDownload) { Icon(Icons.Rounded.Download, stringResource(R.string.details_download_episode)) }
         DownloadState.QUEUED -> IconButton(onClick = onCancel) {
             Box(contentAlignment = Alignment.Center) {
                 CircularWavyProgressIndicator(Modifier.width(28.dp).height(28.dp))
-                Icon(Icons.Rounded.Close, "Cancel queued download", Modifier.width(12.dp).height(12.dp))
+                Icon(Icons.Rounded.Close, stringResource(R.string.details_cancel_queued), Modifier.width(12.dp).height(12.dp))
             }
         }
         DownloadState.DOWNLOADING -> IconButton(onClick = onPause) {
             Box(contentAlignment = Alignment.Center) {
                 CircularWavyProgressIndicator(progress = { item.percent }, modifier = Modifier.width(28.dp).height(28.dp))
-                Icon(Icons.Rounded.Pause, "Pause download", Modifier.width(12.dp).height(12.dp))
+                Icon(Icons.Rounded.Pause, stringResource(R.string.details_pause_download), Modifier.width(12.dp).height(12.dp))
             }
         }
         DownloadState.PAUSED -> IconButton(onClick = onResume) {
             Box(contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(progress = { item.percent }, modifier = Modifier.width(28.dp).height(28.dp), strokeWidth = 3.dp)
-                Icon(Icons.Rounded.PlayArrow, "Resume download", Modifier.width(14.dp).height(14.dp))
+                Icon(Icons.Rounded.PlayArrow, stringResource(R.string.details_resume_download), Modifier.width(14.dp).height(14.dp))
             }
         }
         DownloadState.COMPLETED -> Icon(
-            Icons.Rounded.DownloadDone, "Downloaded", Modifier.padding(12.dp), tint = MaterialTheme.colorScheme.primary,
+            Icons.Rounded.DownloadDone, stringResource(R.string.details_downloaded), Modifier.padding(12.dp), tint = MaterialTheme.colorScheme.primary,
         )
         DownloadState.FAILED -> IconButton(onClick = onDownload) {
-            Icon(Icons.Rounded.Refresh, "Download failed, retry", tint = MaterialTheme.colorScheme.error)
+            Icon(Icons.Rounded.Refresh, stringResource(R.string.details_download_failed_retry), tint = MaterialTheme.colorScheme.error)
         }
     }
 }

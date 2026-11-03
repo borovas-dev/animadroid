@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_placeholder">Search anime</string>
+    <string name="search_idle_title">Find your next show</string>
+    <string name="search_idle_body">Search by title. Your recent searches show up when you tap the bar.</string>
+    <string name="search_no_results">No results</string>
+    <string name="search_no_results_body">Nothing found for \"%1$s\" in %2$s. Try the other mode or a different title.</string>
+    <string name="search_no_recents">No recent searches</string>
+    <string name="search_no_recents_body">Searches you submit will appear here.</string>
+    <string name="search_recent">Recent</string>
+    <string name="search_clear_all">Clear all</string>
+    <string name="search_failed">Search failed.</string>
+</resources>

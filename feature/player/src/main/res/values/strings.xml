@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_source">Source: %1$s</string>
+    <string name="player_source_fallback">Source: %1$s (fallback)</string>
+    <string name="player_quality_auto">Auto</string>
+    <string name="player_closed_captions">Closed captions</string>
+    <string name="player_subtitles">Subtitles</string>
+    <string name="player_quality">Quality</string>
+    <string name="player_speed">Speed</string>
+    <string name="player_speed_normal">Normal</string>
+    <string name="player_pause">Pause</string>
+    <string name="player_play">Play</string>
+    <string name="player_next_episode">Next episode</string>
+    <string name="player_skip_ending">Skip Ending</string>
+    <string name="player_skip_opening">Skip Opening</string>
+    <string name="player_error_playback">Playback error</string>
+    <string name="player_error_cannot_start">Cannot start player</string>
+    <string name="player_error_stream">Failed to load stream</string>
+    <string name="player_error_switch_quality">Failed to switch quality</string>
+    <string name="player_error_no_stream">No playable stream found</string>
+    <string name="player_error_cloudflare">Blocked by Cloudflare. Solve the challenge and retry.</string>
+    <string name="player_tune">Quality, subtitles and speed</string>
+    <string name="player_previous_episode">Previous episode</string>
+    <string name="player_skipped_intro">Skipped intro</string>
+    <string name="player_skipped_outro">Skipped outro</string>
+    <string name="player_undo_skip">Undo</string>
+    <string name="player_dub">Voice-over (generated)</string>
+    <string name="player_dub_voice_missing">No offline voice installed for this language</string>
+    <string name="player_dub_install_voice">Install voice data</string>
+    <string name="player_dub_install_failed">Could not open the voice data installer</string>
+    <string name="player_dub_unsupported">Your text-to-speech engine cannot speak this language</string>
+    <string name="player_dub_no_engine">No text-to-speech engine is installed</string>
+    <string name="player_dub_no_subtitles">Voice-over needs subtitles, and none are available for this episode</string>
+    <string name="player_dub_hint">Select Dub; used only when no recorded dub exists. Reads the subtitles aloud (the provider\'s in your language, else translated).</string>
+</resources>

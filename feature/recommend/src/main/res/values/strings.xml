@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="recommend_title">For you</string>
+    <string name="recommend_refresh">Refresh recommendations</string>
+    <string name="recommend_thinking">Thinking on your device. The first run can take a minute.</string>
+    <string name="recommend_empty_title">No recommendations yet</string>
+    <string name="recommend_empty_body">Pick refresh to generate personalized picks from your watch history.</string>
+    <string name="recommend_model_downloading">The model is downloading (%1$s).</string>
+    <string name="recommend_model_waiting">waiting</string>
+    <string name="recommend_model_missing">Download the on-device model to get personalized picks. Nothing leaves your phone.</string>
+    <string name="recommend_setup">Set up in Settings</string>
+    <string name="recommend_see_all">See all</string>
+    <string name="recommend_about">Gemma 4 E2B runs entirely on this device with LiteRT-LM. Your watch history is never sent anywhere. The model file is about %1$s, is downloaded once from Hugging Face (%2$s, Apache 2.0), and needs a device with 6 GB of RAM or more.</string>
+    <string name="recommend_model_installed">Model installed (%1$s).</string>
+    <string name="recommend_delete_model">Delete model</string>
+    <string name="recommend_phase_wait_wifi">Waiting for a Wi-Fi connection</string>
+    <string name="recommend_phase_wait_net">Waiting for a connection</string>
+    <string name="recommend_phase_downloading">Downloading %1$s of %2$s</string>
+    <string name="recommend_phase_verifying">Verifying checksum</string>
+    <string name="recommend_phase_importing">Importing %1$s</string>
+    <string name="recommend_cancel">Cancel</string>
+    <string name="recommend_wifi_only">Download on Wi-Fi only</string>
+    <string name="recommend_retry_download">Retry download</string>
+    <string name="recommend_download_model">Download model (%1$s)</string>
+    <string name="recommend_use_file">Use a file from this device</string>
+    <string name="recommend_hf_token">Hugging Face token (optional)</string>
+    <string name="recommend_hf_token_hint">Only needed if Hugging Face asks for it. Stored on this device.</string>
+    <string name="recommend_problem_ram">This device has %1$s GB of RAM. The model needs a device with at least 6 GB.</string>
+    <string name="recommend_problem_32bit">The on-device model needs a 64-bit device; this one is 32-bit only.</string>
+    <string name="recommend_problem_space">Not enough free storage: %1$s needed, %2$s available.</string>
+    <string name="recommend_err_no_history">Watch or favorite something first so there is something to base picks on.</string>
+    <string name="recommend_err_no_results">The model did not suggest anything that can be watched right now. Try refreshing.</string>
+    <string name="recommend_err_generic">Could not generate recommendations.</string>
+    <string name="recommend_import_too_small">That file is too small to be the model.</string>
+    <string name="recommend_import_no_space">Not enough free storage to import: %1$s needed, %2$s available.</string>
+    <string name="recommend_import_open_failed">Could not open the selected file.</string>
+    <string name="recommend_import_failed">Import failed: %1$s</string>
+    <string name="recommend_store_failed">Could not store the model file.</string>
+    <string name="recommend_wrong_size">Downloaded file has the wrong size; it was discarded.</string>
+    <string name="recommend_checksum_mismatch">Checksum mismatch; the file was discarded. Try again.</string>
+    <string name="recommend_network_error">Network error: %1$s. Tap download to resume.</string>
+    <string name="recommend_auth_failed">Hugging Face refused the download (HTTP %1$d). Add a valid access token in settings.</string>
+    <string name="recommend_notif_downloading">Downloading on-device model</string>
+    <string name="recommend_notif_verifying">Verifying model</string>
+    <string name="recommend_notif_channel">Model download</string>
+</resources>

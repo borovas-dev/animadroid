@@ -2,6 +2,9 @@
 
 package com.borovas.animadroid.navigation
 
+import com.borovas.animadroid.core.designsystem.R as DR
+import com.borovas.animadroid.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
@@ -30,8 +33,8 @@ fun CloudflareHost(url: String?, onDismiss: () -> Unit) {
         Surface(Modifier.fillMaxSize()) {
             Column(Modifier.fillMaxSize()) {
                 TopAppBar(
-                    title = { Text("Verify you are human") },
-                    actions = { IconButton(onClick = onDismiss) { Icon(Icons.Rounded.Close, "Close") } },
+                    title = { Text(stringResource(R.string.cloudflare_verify_title)) },
+                    actions = { IconButton(onClick = onDismiss) { Icon(Icons.Rounded.Close, stringResource(DR.string.common_close)) } },
                 )
                 CloudflareSolver(
                     url = url,

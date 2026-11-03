@@ -1,0 +1,11 @@
+{
+  "revision": 2,
+  "providers": {
+    "hianime":       { "enabled": true, "baseUrls": ["https://hianime.at"],        "gfwBlocked": false, "minAppVersion": "0.1.0", "params": {} },
+    "kickassanime":  { "enabled": true, "baseUrls": ["https://kaa.lt"],            "gfwBlocked": false, "minAppVersion": "0.1.0", "params": {} },
+    "animeparadise": { "enabled": true, "baseUrls": ["https://api.animeparadise.moe"], "gfwBlocked": false, "minAppVersion": "0.1.0", "params": {} },
+    "shinden":       { "enabled": true, "baseUrls": ["https://shinden.pl"],        "gfwBlocked": true,  "minAppVersion": "0.1.0", "params": {} },
+    "anilibria":     { "enabled": true, "baseUrls": ["https://anilibria.top"],     "gfwBlocked": true,  "minAppVersion": "0.1.0", "params": {} },
+    "animefire":     { "enabled": true, "baseUrls": ["https://animefire.one"],     "gfwBlocked": true,  "minAppVersion": "0.1.0", "params": {} }
+  }
+}

@@ -1,0 +1,68 @@
+{
+ "success": true,
+ "error": null,
+ "data": {
+  "episode": {
+   "_id": "66a573ce3850dce1ed68a21c",
+   "image": "https://image.tmdb.org/t/p/w1920_and_h1080_bestv2/7xOP0rKDniTZKEaRM7seKfY9SG8.jpg",
+   "title": "Enter: Naruto Uzumaki!",
+   "uid": "a9d35391-5437-4b2a-9445-7066f14b15d5",
+   "number": "1",
+   "origin": "OGCLrfH4Gdr4yGZg",
+   "subData": [
+    {
+     "src": "13KMJl5GaxxuyYzoqV-aASt7SiMGyqgqm",
+     "label": "English",
+     "type": "ass"
+    },
+    {
+     "src": "1iKLpcrytAIpchhC83avup9VEIrcjp2qE",
+     "label": "Spanish",
+     "type": "ass"
+    },
+    {
+     "src": "1-oxlj8JCgv2cJhIzQwfIaYf0F1DY9inN",
+     "label": "Portuguese",
+     "type": "ass"
+    },
+    {
+     "src": "1tBsv-TeazYTH-nMf1wgOsB42c9dvB8mo",
+     "label": "Italian",
+     "type": "ass"
+    },
+    {
+     "src": "https://stream.animeparadise.moe/captions?url=iNF2LNuGOwWliPfifnBMVqoFFvK6FCaDnGwDnDeFiXRq-bTiZkuLYtTBivVjH64wuNKH6l52lK-s43EVELGF2MMOsDSCxFpB_8AUDvE-kaDR4y-c6vviqZc8BOtrcX9fWqnF1sFOUYTxCbVtR1LQ5BthMbLLa53A3YBZkePGqJDTbE8HqtaS1Nv7kOGPvugJfUm_n-W-UcptnNk14je-qoKwVLCu27ny_Bai4qw",
+     "label": "English",
+     "type": "vtt"
+    }
+   ],
+   "summary": "Welcome to the Village Hidden in the Leaves, where deadly serious ninja roam the land and the seriously mischievous Naruto Uzumaki causes trouble everywhere he goes.\nSource: crunchyroll",
+   "streamLink": "Yi7ml55vdtSC1B9H6IvudeFcCyy3C0u_L9h7A_0sq6frPo2_C3jhY8YSCD3dAaNl72TiRBrkZy05fSSc9w8Za5JvFUqnd8sZdXKWD3ZRJFzjEhpRRqCefkMRWu8T7gAsFFQyFKi_GxCWPKFSmjkZJwecuz_9TMZcgFCjp0wnRSYmMAMP6tOqiNzun_lGU-tZtEwQltOM65w",
+   "thumbnail": "",
+   "skipData": {
+    "intro": {
+     "start": 0,
+     "end": 0
+    },
+    "outro": {
+     "start": 1280,
+     "end": 1369
+    }
+   }
+  },
+  "episodeList": [],
+  "animeData": {
+   "_id": "OGCLrfH4Gdr4yGZg",
+   "title": "Naruto",
+   "link": "naruto",
+   "mappings": {
+    "anidb": 239,
+    "anilist": 20,
+    "myanimelist": 20,
+    "kitsu": 11,
+    "tmdb": 46260,
+    "tvdb": 78857
+   }
+  }
+ }
+}

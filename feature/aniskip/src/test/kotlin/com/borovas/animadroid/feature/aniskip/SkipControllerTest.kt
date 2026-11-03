@@ -57,4 +57,26 @@ class SkipControllerTest {
         assertEquals(SkipAction.AutoSeek(90_000, SkipSegment.OPENING), c.onPosition(20.0))
         assertEquals(SkipAction.None, SkipController(null, 0, SkipBehavior.AUTO).onPosition(20.0))
     }
+
+    @Test fun perSegmentAutoSkipWithButtonBehavior() {
+        val c = SkipController(times, 0, SkipBehavior.BUTTON, autoOpening = true)
+        assertEquals(SkipAction.AutoSeek(90_000, SkipSegment.OPENING), c.onPosition(11.0))
+        assertEquals(SkipAction.ShowButton(SkipSegment.ENDING, 1_390_000), c.onPosition(1301.0))
+    }
+
+    @Test fun autoSkipNotRepeatedAfterSeekingBack() {
+        val c = SkipController(times, 0, SkipBehavior.BUTTON, autoOpening = true)
+        assertEquals(SkipAction.AutoSeek(90_000, SkipSegment.OPENING), c.onPosition(11.0))
+        assertEquals(SkipAction.None, c.onPosition(91.0))
+        assertEquals(SkipAction.None, c.onPosition(5.0))
+        assertEquals(SkipAction.None, c.onPosition(12.0))
+        c.reset()
+        assertEquals(SkipAction.AutoSeek(90_000, SkipSegment.OPENING), c.onPosition(12.0))
+    }
+
+    @Test fun missingSegmentDoesNothing() {
+        val c = SkipController(SkipTimes(null, times.ending), 0, SkipBehavior.BUTTON, autoOpening = true, autoEnding = true)
+        assertEquals(SkipAction.None, c.onPosition(11.0))
+        assertEquals(SkipAction.AutoSeek(1_390_000, SkipSegment.ENDING), c.onPosition(1301.0))
+    }
 }

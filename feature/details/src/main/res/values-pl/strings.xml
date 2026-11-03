@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="details_back_cd">Wstecz</string>
+    <string name="details_download_episodes">Pobierz odcinki</string>
+    <string name="details_remove_favorite">Usuń z ulubionych</string>
+    <string name="details_add_favorite">Dodaj do ulubionych</string>
+    <string name="details_episodes">Odcinki</string>
+    <string name="details_episodes_count">Odcinki (%1$d)</string>
+    <string name="details_no_episodes">Brak odcinków</string>
+    <string name="details_no_episodes_body">Nie znaleziono odcinków (%1$s).</string>
+    <string name="details_load_failed">Nie udało się wczytać odcinków.</string>
+    <string name="details_range_body">Wybierz zakres spośród %1$d odcinków (według pozycji na liście). Już pobrane odcinki są pomijane.</string>
+    <string name="details_range_from">Od</string>
+    <string name="details_range_to">Do</string>
+    <string name="details_sub_episodes">SUB: %1$d odc.</string>
+    <string name="details_dub_episodes">DUB: %1$d odc.</string>
+    <string name="details_show_less">Pokaż mniej</string>
+    <string name="details_read_more">Czytaj więcej</string>
+    <string name="details_episode_n">Odcinek %1$s</string>
+    <string name="details_watched">Obejrzano</string>
+    <string name="details_percent_watched">Obejrzano %1$d%%</string>
+    <string name="details_download_episode">Pobierz odcinek</string>
+    <string name="details_cancel_queued">Anuluj pobieranie w kolejce</string>
+    <string name="details_pause_download">Wstrzymaj pobieranie</string>
+    <string name="details_resume_download">Wznów pobieranie</string>
+    <string name="details_downloaded">Pobrano</string>
+    <string name="details_download_failed_retry">Pobieranie nie powiodło się, ponów</string>
+    <string name="details_play_ep">Odtwórz odc. %1$s</string>
+    <string name="details_continue_ep">Kontynuuj odc. %1$s</string>
+    <string name="details_replay_ep">Odtwórz ponownie odc. %1$s</string>
+    <string name="details_no_recorded_dub">Brak nagranego dubbingu - generowany lektor przeczyta napisy</string>
+</resources>

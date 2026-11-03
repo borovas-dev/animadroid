@@ -4,6 +4,8 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MotionScheme
+import androidx.compose.material3.Typography
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -31,5 +33,23 @@ fun AnimadroidTheme(
         darkTheme -> DarkFallback
         else -> LightFallback
     }
-    MaterialExpressiveTheme(colorScheme = scheme, motionScheme = MotionScheme.expressive(), content = content)
+    ProvideTelevision {
+        val tv = LocalIsTelevision.current
+        val base = Typography()
+        MaterialExpressiveTheme(
+            colorScheme = scheme, motionScheme = MotionScheme.expressive(),
+            typography = if (tv) base.scaled(TV_TEXT_SCALE) else base, content = content,
+        )
+    }
+}
+
+private fun Typography.scaled(f: Float): Typography {
+    fun TextStyle.s() = copy(fontSize = fontSize * f, lineHeight = lineHeight * f)
+    return copy(
+        displayLarge = displayLarge.s(), displayMedium = displayMedium.s(), displaySmall = displaySmall.s(),
+        headlineLarge = headlineLarge.s(), headlineMedium = headlineMedium.s(), headlineSmall = headlineSmall.s(),
+        titleLarge = titleLarge.s(), titleMedium = titleMedium.s(), titleSmall = titleSmall.s(),
+        bodyLarge = bodyLarge.s(), bodyMedium = bodyMedium.s(), bodySmall = bodySmall.s(),
+        labelLarge = labelLarge.s(), labelMedium = labelMedium.s(), labelSmall = labelSmall.s(),
+    )
 }

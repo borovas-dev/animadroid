@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="health_title">源状态</string>
+    <string name="health_intro">从你自己的网络实时检测每个源（搜索、剧集、视频流）。此处失败的源在你的网络下无法使用。</string>
+    <string name="health_chain">语言 %1$s 的顺序: %2$s</string>
+    <string name="health_run_again">重新检测</string>
+    <string name="health_running">检测中…</string>
+    <string name="health_disabled">已被你停用</string>
+    <string name="health_not_in_chain">不在当前链中</string>
+    <string name="health_step_search">搜索</string>
+    <string name="health_step_episodes">剧集</string>
+    <string name="health_step_streams">视频流</string>
+    <string name="health_back">返回</string>
+    <string name="settings_source_health">源状态</string>
+    <string name="settings_source_health_desc">查看哪些源在你的网络下可用</string>
+</resources>

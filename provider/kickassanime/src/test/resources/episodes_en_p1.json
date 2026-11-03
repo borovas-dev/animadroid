@@ -1,0 +1,56 @@
+{
+ "current_page": 1,
+ "pages": [
+  {
+   "number": 1,
+   "from": "01",
+   "to": "02",
+   "eps": [
+    1,
+    2
+   ]
+  },
+  {
+   "number": 2,
+   "from": "03",
+   "to": "03",
+   "eps": [
+    3
+   ]
+  }
+ ],
+ "result": [
+  {
+   "slug": "aa83b7",
+   "title": "The Journey's End",
+   "duration_ms": 1559935,
+   "episode_number": 1,
+   "episode_string": "1",
+   "thumbnail": {
+    "formats": [
+     "jpeg",
+     "webp"
+    ],
+    "sm": "642602549d33f3e832425f22/ep-1-ad5b-sm",
+    "aspectRatio": 1.77,
+    "hq": "642602549d33f3e832425f22/ep-1-ad5b-hq"
+   }
+  },
+  {
+   "slug": "7bbf4f",
+   "title": "It Didn't Have to Be Magic...",
+   "duration_ms": 1560019,
+   "episode_number": 2,
+   "episode_string": "2",
+   "thumbnail": {
+    "formats": [
+     "jpeg",
+     "webp"
+    ],
+    "sm": "642602549d33f3e832425f22/ep-2-d817-sm",
+    "aspectRatio": 1.77,
+    "hq": "642602549d33f3e832425f22/ep-2-d817-hq"
+   }
+  }
+ ]
+}

@@ -2,6 +2,7 @@
 
 package com.borovas.animadroid.core.designsystem
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -66,8 +67,9 @@ fun AnimeCard(
     modifier: Modifier = Modifier,
     badge: String? = null,
     progress: Float? = null,
+    menu: List<ContextMenuAction> = emptyList(),
 ) {
-    Column(modifier.clip(RoundedCornerShape(24.dp)).clickable(onClick = onClick), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    InteractiveItem(onClick, modifier, menu = menu) { Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Box(Modifier.fillMaxWidth().aspectRatio(2f / 3f).clip(RoundedCornerShape(24.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh)) {
             Cover(anime.coverUrl, anime.title, Modifier.fillMaxSize())
             val b = badge ?: episodeBadge(anime)
@@ -90,7 +92,7 @@ fun AnimeCard(
             anime.title, maxLines = 2, overflow = TextOverflow.Ellipsis,
             style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(horizontal = 4.dp),
         )
-    }
+    } }
 }
 
 private fun episodeBadge(a: Anime): String? {
@@ -188,9 +190,9 @@ fun ErrorState(
     message: String,
     onRetry: (() -> Unit)?,
     modifier: Modifier = Modifier,
-    actionLabel: String = "Retry",
+    actionLabel: String = stringResource(R.string.common_retry),
     icon: ImageVector = Icons.Rounded.ErrorOutline,
-    title: String = "Something went wrong",
+    title: String = stringResource(R.string.error_default_title),
 ) {
     EmptyState(icon, title, message, modifier) {
         if (onRetry != null) Button(onClick = onRetry) { Text(actionLabel) }
@@ -228,7 +230,7 @@ fun AnimeCardPlaceholder(modifier: Modifier = Modifier) {
 @Composable
 fun PlaceholderGrid(modifier: Modifier = Modifier, count: Int = 12) {
     LazyVerticalGrid(
-        GridCells.Adaptive(120.dp), modifier,
+        GridCells.Adaptive(posterCellMinWidth() - 10.dp), modifier,
         contentPadding = PaddingValues(16.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),

@@ -10,6 +10,21 @@ interface AnimeProvider {
     val id: String
     val displayName: String
 
+    /** ML Kit-style language codes of the content this provider serves natively ("en", "pl", "zh", ...). */
+    val contentLanguages: Set<String>
+
+    /**
+     * True when search results carry a reliable `dubEpisodes` (null/0 then means "no recorded dub"). Providers that leave it
+     * unset (most of them) can't tell from a search hit, so their results must never be hidden in DUB mode.
+     */
+    val reportsDubAvailability: Boolean get() = false
+
+    /** True when the site is unreachable from mainland China; ProviderChain drops such providers for "zh". */
+    val gfwBlocked: Boolean get() = false
+
+    /** Default position among providers of the same language (lower = tried first); ties break by [id]. */
+    val priority: Int get() = 100
+
     suspend fun search(query: String, mode: TranslationMode): List<Anime>
 
     /** Optional enrichment (cover, synopsis) for the details screen. */

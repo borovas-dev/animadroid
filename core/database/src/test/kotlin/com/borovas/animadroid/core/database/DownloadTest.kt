@@ -145,6 +145,21 @@ class DownloadTest {
         conn.close()
     }
 
+    @Test fun migration3To4AddsAlternatesKeepingRows() = runBlocking {
+        helper.createDatabase(3).apply {
+            execSQL("INSERT INTO anime (providerId, animeId, title, isFavorite) VALUES ('hianime','a','T',1)")
+            close()
+        }
+        val conn = helper.runMigrationsAndValidate(4, listOf(MIGRATION_3_4))
+        conn.prepare("SELECT title, isFavorite, alternatesJson FROM anime").use { st ->
+            assertTrue(st.step())
+            assertEquals("T", st.getText(0))
+            assertEquals(1L, st.getLong(1))
+            assertTrue(st.isNull(2))
+        }
+        conn.close()
+    }
+
     @Test fun failureReasonRoundTripsAndIsClearedByProgressUpdate() = runBlocking {
         repo.upsert(item("a", "1", 1))
         repo.updateProgress("hianime", "a", "1", DownloadState.FAILED, 0, 0f, "Server returned HTTP 403")

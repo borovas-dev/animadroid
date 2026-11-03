@@ -5,7 +5,6 @@ import com.borovas.animadroid.core.model.Episode
 import com.borovas.animadroid.core.model.StreamVariant
 import com.borovas.animadroid.core.model.SkipInterval
 import com.borovas.animadroid.core.model.SubtitleTrack
-import java.net.URI
 import java.util.Base64
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -22,6 +21,7 @@ import org.jsoup.Jsoup
 /** Pure parsing helpers for hianime (ports of ani-cli v5 shell functions). */
 internal object HianimeParsers {
     const val EMBED_KEY = "otaku-embed-v1"
+    const val SERVER_NAME = "ZokoAnime"
     private val json = Json { ignoreUnknownKeys = true }
 
     /** ani-cli `b64_decode`; tolerant of missing padding and url-safe alphabet. */
@@ -36,7 +36,7 @@ internal object HianimeParsers {
         return ByteArray(data.size) { (data[it].toInt() xor k[it % k.size].toInt()).toByte() }
     }
 
-    fun deobfuscateBlob(blob: String): String = String(xor(b64Decode(blob)), Charsets.UTF_8)
+    fun deobfuscateBlob(blob: String, key: String = EMBED_KEY): String = String(xor(b64Decode(blob), key), Charsets.UTF_8)
 
     /**
      * Endpoints answer `{"status":true,"html":"..."}`. Returns the decoded html, or the raw text with
@@ -93,10 +93,10 @@ internal object HianimeParsers {
     }
 
     /** data-hash of the ZokoAnime server for [type] ("sub"/"dub"), decoded to the embed URL. */
-    fun parseEmbedUrl(payload: String, type: String): String? {
+    fun parseEmbedUrl(payload: String, type: String, server: String = SERVER_NAME): String? {
         val doc = Jsoup.parse(htmlPayload(payload))
         val hash = doc.select(".server-item[data-type=$type]")
-            .firstOrNull { it.attr("data-server-name") == "ZokoAnime" }?.attr("data-hash")
+            .firstOrNull { it.attr("data-server-name") == server }?.attr("data-hash")
         if (hash.isNullOrBlank()) return null
         return runCatching { String(b64Decode(hash), Charsets.UTF_8).trim() }.getOrNull()?.takeIf { it.isNotEmpty() }
     }
@@ -143,32 +143,6 @@ internal object HianimeParsers {
         val end = o["end"]?.jsonPrimitive?.doubleOrNull ?: return null
         return if (end > start && start >= 0) SkipInterval(start, end) else null
     }
-
-    class MasterPlaylist(val variants: List<StreamVariant>, val externalAudioUrl: String?)
-
-    fun parseMaster(text: String, masterUrl: String): MasterPlaylist {
-        val lines = text.lines().map { it.trim() }
-        val variants = ArrayList<StreamVariant>()
-        var audio: String? = null
-        var i = 0
-        while (i < lines.size) {
-            val line = lines[i]
-            if (line.startsWith("#EXT-X-STREAM-INF")) {
-                val height = Regex("RESOLUTION=\\d+x(\\d+)").find(line)?.groupValues?.get(1)?.toIntOrNull()
-                var j = i + 1
-                while (j < lines.size && (lines[j].isEmpty() || lines[j].startsWith("#"))) j++
-                if (j < lines.size) variants += StreamVariant(height, resolve(masterUrl, lines[j]))
-                i = j
-            } else if (audio == null && line.startsWith("#EXT-X-MEDIA:TYPE=AUDIO") && line.contains("DEFAULT=YES")) {
-                audio = Regex("URI=\"([^\"]*)\"").find(line)?.groupValues?.get(1)?.let { resolve(masterUrl, it) }
-            }
-            i++
-        }
-        return MasterPlaylist(variants.sortedByDescending { it.quality ?: -1 }, audio)
-    }
-
-    fun resolve(base: String, ref: String): String =
-        if (ref.startsWith("http://") || ref.startsWith("https://")) ref else URI(base).resolve(ref).toString()
 
     /** Synopsis and cover from an anime page. */
     fun parseDetails(html: String): Pair<String?, String?> {

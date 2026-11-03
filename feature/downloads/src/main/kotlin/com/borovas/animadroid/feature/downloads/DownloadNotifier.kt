@@ -35,15 +35,15 @@ class DownloadNotifier @Inject constructor(@ApplicationContext private val conte
     }
 
     fun completed(key: String, title: String, episode: String) =
-        post(key.hashCode(), "Downloaded", "$title · ep $episode", openDownloads(), grouped = true)
+        post(key.hashCode(), context.getString(R.string.downloads_notif_downloaded), context.getString(R.string.downloads_notif_body, title, episode), openDownloads(), grouped = true)
 
     fun failed(key: String, title: String, episode: String, reason: String) =
-        post(key.hashCode(), "Download failed: $title · ep $episode", reason, openDownloads(), grouped = true)
+        post(key.hashCode(), context.getString(R.string.downloads_notif_failed_title, title, episode), reason, openDownloads(), grouped = true)
 
     fun waitingForWifi(wifiOnly: Boolean) {
         post(
-            ID_WAITING, if (wifiOnly) "Waiting for Wi-Fi" else "Waiting for network",
-            "Downloads resume automatically when ${if (wifiOnly) "Wi-Fi" else "a connection"} is available",
+            ID_WAITING, context.getString(if (wifiOnly) R.string.downloads_notif_waiting_wifi else R.string.downloads_notif_waiting_network),
+            context.getString(if (wifiOnly) R.string.downloads_notif_resume_wifi else R.string.downloads_notif_resume_network),
             openDownloads(), ongoing = true,
         )
     }
@@ -59,7 +59,7 @@ class DownloadNotifier @Inject constructor(@ApplicationContext private val conte
                 .putExtra(androidx.media3.exoplayer.offline.DownloadService.KEY_FOREGROUND, true),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
-        post(ID_SYSTEM_PAUSE, "Downloads paused", DownloadPolicy.SYSTEM_PAUSE_TEXT, resume)
+        post(ID_SYSTEM_PAUSE, context.getString(R.string.downloads_notif_paused), context.getString(R.string.downloads_paused_by_system), resume)
     }
 
     fun clearPausedBySystem() = nm.cancel(ID_SYSTEM_PAUSE)
@@ -93,8 +93,8 @@ class DownloadNotifier @Inject constructor(@ApplicationContext private val conte
 
     private fun summary(tap: PendingIntent?) = NotificationCompat.Builder(context, EVENTS_CHANNEL)
         .setSmallIcon(android.R.drawable.stat_sys_download_done)
-        .setContentTitle("Downloads")
-        .setContentText("Download results")
+        .setContentTitle(context.getString(R.string.downloads_notif_results_title))
+        .setContentText(context.getString(R.string.downloads_notif_results_text))
         .setContentIntent(tap)
         .setAutoCancel(true)
         .setGroup(GROUP_RESULTS)

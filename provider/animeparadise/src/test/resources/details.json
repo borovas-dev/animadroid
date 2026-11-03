@@ -1,0 +1,29 @@
+{
+ "success": true,
+ "error": null,
+ "data": {
+  "_id": "OGCLrfH4Gdr4yGZg",
+  "title": "Naruto",
+  "link": "naruto",
+  "synopsys": "Naruto Uzumaki, a hyperactive and knuckle-headed ninja, lives in Konohagakure, the Hidden Leaf village. Moments prior to his birth, a huge demon known as the Kyuubi, the Nine-tailed Fox, attacked Konohagakure and wreaked havoc. In order to put an end to the Kyuubi's rampage, the leader of the village, the 4th Hokage, sacrificed his life and sealed the monstrous beast inside the newborn Naruto. \nShunned because of the presence of the Kyuubi inside him, Naruto struggles to find his place in the village. He strives to become the Hokage of Konohagakure, and he meets many friends and foes along the way. \n(Source: MAL Rewrite)",
+  "animeSeason": {
+   "season": "Fall",
+   "year": 2002
+  },
+  "posterImage": {
+   "large": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx20-dE6UHbFFg1A5.jpg",
+   "medium": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx20-dE6UHbFFg1A5.jpg",
+   "small": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/small/bx20-dE6UHbFFg1A5.jpg",
+   "tiny": "https://media.kitsu.app/anime/11/poster_image/tiny-47d378c5faf258491fd1a2025fc1507c.jpeg",
+   "original": "https://media.kitsu.app/anime/11/poster_image/4512d403727b2a19a6eb7e7a959be0c3.jpg"
+  },
+  "mappings": {
+   "anidb": 239,
+   "anilist": 20,
+   "myanimelist": 20,
+   "kitsu": 11,
+   "tmdb": 46260,
+   "tvdb": 78857
+  }
+ }
+}

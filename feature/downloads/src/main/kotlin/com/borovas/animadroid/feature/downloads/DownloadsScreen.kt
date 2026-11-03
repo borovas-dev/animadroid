@@ -2,6 +2,11 @@
 
 package com.borovas.animadroid.feature.downloads
 
+import com.borovas.animadroid.core.designsystem.InteractiveItem
+import com.borovas.animadroid.core.designsystem.ContextMenuAction
+import com.borovas.animadroid.core.designsystem.R as DR
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import android.text.format.Formatter
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -128,9 +133,9 @@ fun DownloadsScreen(
         modifier.nestedScroll(scroll.nestedScrollConnection),
         topBar = {
             LargeFlexibleTopAppBar(
-                title = { Text("Downloads") },
+                title = { Text(stringResource(R.string.downloads_title)) },
                 subtitle = {
-                    Text(if (state.groups.isEmpty()) "Nothing saved yet" else "Storage used: " + Formatter.formatShortFileSize(context, state.totalBytes))
+                    Text(if (state.groups.isEmpty()) stringResource(R.string.downloads_nothing_saved) else stringResource(R.string.downloads_storage_used, Formatter.formatShortFileSize(context, state.totalBytes)))
                 },
                 scrollBehavior = scroll,
             )
@@ -139,8 +144,8 @@ fun DownloadsScreen(
     ) { pad ->
         if (state.groups.isEmpty()) {
             EmptyState(
-                Icons.Rounded.Download, "No downloads yet",
-                "Tap the download button next to an episode to save it for offline viewing.",
+                Icons.Rounded.Download, stringResource(R.string.downloads_empty_title),
+                stringResource(R.string.downloads_empty_body),
                 Modifier.padding(top = pad.calculateTopPadding()),
             )
         } else {
@@ -165,13 +170,13 @@ fun DownloadsScreen(
 
     confirmItem?.let { item ->
         ConfirmDialog(
-            "Delete episode ${item.episodeNumber}?", "The downloaded file of ${item.title} will be removed from this device.",
+            stringResource(R.string.downloads_delete_episode_title, item.episodeNumber), stringResource(R.string.downloads_delete_episode_body, item.title),
             onConfirm = { onRemove(item); confirmItem = null }, onDismiss = { confirmItem = null },
         )
     }
     confirmGroup?.let { group ->
         ConfirmDialog(
-            "Delete all of ${group.title}?", "All ${group.items.size} downloaded or queued episodes will be removed from this device.",
+            stringResource(R.string.downloads_delete_all_title, group.title), pluralStringResource(R.plurals.downloads_delete_all_body, group.items.size, group.items.size),
             onConfirm = { onRemoveGroup(group); confirmGroup = null }, onDismiss = { confirmGroup = null },
         )
     }
@@ -183,8 +188,8 @@ private fun ConfirmDialog(title: String, text: String, onConfirm: () -> Unit, on
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = { Text(text) },
-        confirmButton = { TextButton(onClick = onConfirm) { Text("Delete") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        confirmButton = { TextButton(onClick = onConfirm) { Text(stringResource(DR.string.common_delete)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(DR.string.common_cancel)) } },
     )
 }
 
@@ -197,7 +202,7 @@ private fun WaitingBanner() {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Icon(Icons.Rounded.Wifi, null, tint = MaterialTheme.colorScheme.onTertiaryContainer)
             Text(
-                "Waiting for Wi-Fi. Downloads continue automatically once connected (change this in Settings).",
+                stringResource(R.string.downloads_waiting_banner),
                 style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onTertiaryContainer,
             )
         }
@@ -228,11 +233,11 @@ private fun GroupCard(
                 Column(Modifier.weight(1f)) {
                     Text(group.title, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     Text(
-                        "${group.items.size} episode${if (group.items.size == 1) "" else "s"} · " + Formatter.formatShortFileSize(context, group.totalBytes),
+                        pluralStringResource(R.plurals.downloads_episode_count, group.items.size, group.items.size) + " · " + Formatter.formatShortFileSize(context, group.totalBytes),
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                IconButton(onClick = onRemoveGroup) { Icon(Icons.Rounded.Delete, "Delete all episodes of ${group.title}") }
+                IconButton(onClick = onRemoveGroup) { Icon(Icons.Rounded.Delete, stringResource(R.string.downloads_delete_group_cd, group.title)) }
             }
             group.items.forEach { item ->
                 EpisodeRow(item, onPlay = { onPlay(item) }, onPause = { onPause(item) }, onResume = { onResume(item) }, onRetry = { onRetry(item) }, onRemove = { onRemove(item) })
@@ -254,20 +259,32 @@ private fun EpisodeRow(
     val size = Formatter.formatShortFileSize(context, item.bytes)
     val pct = (item.percent * 100).toInt()
     val status = when (item.state) {
-        DownloadState.QUEUED -> "Queued"
+        DownloadState.QUEUED -> stringResource(R.string.downloads_status_queued)
         DownloadState.DOWNLOADING -> "$pct% · $size"
-        DownloadState.PAUSED -> item.failureReason ?: "Paused · $pct%"
-        DownloadState.COMPLETED -> "Downloaded · $size"
-        DownloadState.FAILED -> "Failed: ${item.failureReason ?: "unknown reason"} · tap retry"
+        DownloadState.PAUSED -> item.failureReason?.let { if (it == DownloadPolicy.SYSTEM_PAUSE_TEXT) stringResource(R.string.downloads_paused_by_system) else it }
+            ?: stringResource(R.string.downloads_status_paused, pct)
+        DownloadState.COMPLETED -> stringResource(R.string.downloads_status_downloaded, size)
+        DownloadState.FAILED -> stringResource(R.string.downloads_status_failed, item.failureReason ?: stringResource(R.string.downloads_unknown_reason))
     }
+    val menu = buildList {
+        if (item.isPlayable) add(ContextMenuAction(stringResource(DR.string.common_open), onPlay))
+        when (item.state) {
+            DownloadState.PAUSED -> add(ContextMenuAction(stringResource(DR.string.common_resume), onResume))
+            DownloadState.FAILED -> add(ContextMenuAction(stringResource(DR.string.common_retry), onRetry))
+            DownloadState.DOWNLOADING -> add(ContextMenuAction(stringResource(DR.string.common_pause), onPause))
+            else -> Unit
+        }
+        add(ContextMenuAction(stringResource(if (item.state == DownloadState.COMPLETED) DR.string.common_delete else DR.string.common_remove), onRemove))
+    }
+    InteractiveItem(onClick = onPlay, shape = RoundedCornerShape(16.dp), menu = menu, enabled = item.isPlayable) {
     Row(
-        Modifier.fillMaxWidth().then(if (item.isPlayable) Modifier.clickable(onClick = onPlay) else Modifier)
+        Modifier.fillMaxWidth()
             .padding(start = 16.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
-                "Episode ${item.episodeNumber}" + (item.quality?.let { " · ${it}p" } ?: ""),
+                stringResource(R.string.downloads_episode, item.episodeNumber) + (item.quality?.let { " · ${it}p" } ?: ""),
                 style = MaterialTheme.typography.titleSmall,
             )
             Text(
@@ -287,22 +304,23 @@ private fun EpisodeRow(
         }
         when (item.state) {
             DownloadState.COMPLETED -> {
-                IconButton(onClick = onPlay) { Icon(Icons.Rounded.PlayArrow, "Play episode ${item.episodeNumber} offline") }
-                IconButton(onClick = onRemove) { Icon(Icons.Rounded.Delete, "Delete episode ${item.episodeNumber}") }
+                IconButton(onClick = onPlay) { Icon(Icons.Rounded.PlayArrow, stringResource(R.string.downloads_play_offline_cd, item.episodeNumber)) }
+                IconButton(onClick = onRemove) { Icon(Icons.Rounded.Delete, stringResource(R.string.downloads_delete_episode_cd, item.episodeNumber)) }
             }
             DownloadState.PAUSED -> {
-                IconButton(onClick = onResume) { Icon(Icons.Rounded.PlayArrow, "Resume") }
-                IconButton(onClick = onRemove) { Icon(Icons.Rounded.Close, "Cancel") }
+                IconButton(onClick = onResume) { Icon(Icons.Rounded.PlayArrow, stringResource(DR.string.common_resume)) }
+                IconButton(onClick = onRemove) { Icon(Icons.Rounded.Close, stringResource(DR.string.common_cancel)) }
             }
             DownloadState.FAILED -> {
-                IconButton(onClick = onRetry) { Icon(Icons.Rounded.Refresh, "Retry") }
-                IconButton(onClick = onRemove) { Icon(Icons.Rounded.Close, "Remove") }
+                IconButton(onClick = onRetry) { Icon(Icons.Rounded.Refresh, stringResource(DR.string.common_retry)) }
+                IconButton(onClick = onRemove) { Icon(Icons.Rounded.Close, stringResource(DR.string.common_remove)) }
             }
             else -> {
-                IconButton(onClick = onPause) { Icon(Icons.Rounded.Pause, "Pause") }
-                IconButton(onClick = onRemove) { Icon(Icons.Rounded.Close, "Cancel") }
+                IconButton(onClick = onPause) { Icon(Icons.Rounded.Pause, stringResource(DR.string.common_pause)) }
+                IconButton(onClick = onRemove) { Icon(Icons.Rounded.Close, stringResource(DR.string.common_cancel)) }
             }
         }
+    }
     }
 }
 

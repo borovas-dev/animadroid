@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_placeholder">搜索动漫</string>
+    <string name="search_idle_title">发现你的下一部番</string>
+    <string name="search_idle_body">按标题搜索。点按搜索栏即可看到最近的搜索。</string>
+    <string name="search_no_results">没有结果</string>
+    <string name="search_no_results_body">在 %2$s 中未找到“%1$s”。请尝试另一种模式或其他标题。</string>
+    <string name="search_no_recents">没有最近的搜索</string>
+    <string name="search_no_recents_body">你搜索过的内容会显示在这里。</string>
+    <string name="search_recent">最近</string>
+    <string name="search_clear_all">全部清除</string>
+    <string name="search_failed">搜索失败。</string>
+</resources>

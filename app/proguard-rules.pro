@@ -14,3 +14,14 @@
 -keep class com.google.android.gms.internal.mlkit_common.** { *; }
 -keep class com.google.firebase.components.** { *; }
 -dontwarn com.google.mlkit.**
+
+# Hilt resolves @HiltViewModel classes by their *name* string at runtime (HiltViewModelFactory). If R8 renames
+# the class (e.g. PlayerViewModel -> qz3) the lookup misses, the factory falls back to reflection and the app
+# dies with "Cannot create an instance of class qz3 / NoSuchMethodException: <init> []". Keep the names.
+-keepnames class * extends androidx.lifecycle.ViewModel
+-keepnames @dagger.hilt.android.lifecycle.HiltViewModel class *
+# Hilt-generated ViewModel bindings/keys are only reachable reflectively (name -> provider map in HiltViewModelFactory).
+-keep class **_HiltModules { *; }
+-keep class **_HiltModules$* { *; }
+-keep class **_HiltModules_*_LazyMapKey { *; }
+-keep class **_Factory_Impl { *; }

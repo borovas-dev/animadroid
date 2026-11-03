@@ -20,6 +20,7 @@ import javax.inject.Singleton
 class FakeProvider : AnimeProvider {
     override val id = HianimeProvider.ID
     override val displayName = "Fake"
+    override val contentLanguages = setOf("en")
     @Volatile var blockOnce = false
 
     val anime = Anime("fake-anime-1", id, "Fake Adventure", synopsis = "A story told by tests.", subEpisodes = 3, dubEpisodes = 0)

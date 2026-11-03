@@ -10,6 +10,7 @@ import com.borovas.animadroid.core.model.StreamSet
 import com.borovas.animadroid.core.model.TranslationMode
 import com.borovas.animadroid.core.model.WatchEntry
 import com.borovas.animadroid.provider.api.AnimeProvider
+import com.borovas.animadroid.provider.api.ProviderChain
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
@@ -57,6 +58,7 @@ private class FakeSettings : SettingsRepository {
 private class FakeProvider(private val catalog: Map<String, List<Anime>>) : AnimeProvider {
     override val id = "hianime"
     override val displayName = "Fake"
+    override val contentLanguages = setOf("en")
     override suspend fun search(query: String, mode: TranslationMode) = catalog[query] ?: emptyList()
     override suspend fun episodes(anime: Anime, mode: TranslationMode): List<Episode> = emptyList()
     override suspend fun streams(anime: Anime, episode: Episode, mode: TranslationMode): StreamSet = error("unused")
@@ -77,7 +79,7 @@ class RecommendationServiceTest {
     )
 
     private fun service(engine: FakeEngine, cache: FakeCache = FakeCache(), now: Long = 1_000, library: LibraryRepository = FakeLibrary(listOf(w(frieren)))) =
-        RecommendationService(engine, library, FakeSettings(), mapOf("hianime" to FakeProvider(catalog)), cache, RecommendationService.Clock { now })
+        RecommendationService(engine, library, FakeSettings(), ProviderChain(mapOf("hianime" to FakeProvider(catalog)), FakeSettings()), cache, RecommendationService.Clock { now })
 
     @Test fun endToEndFiltersUnwatchableAndWatched() = runTest {
         val json = """```json

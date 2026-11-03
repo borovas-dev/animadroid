@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="recommend_title">为你推荐</string>
+    <string name="recommend_refresh">刷新推荐</string>
+    <string name="recommend_thinking">正在你的设备上生成。首次运行可能需要一分钟。</string>
+    <string name="recommend_empty_title">暂无推荐</string>
+    <string name="recommend_empty_body">点按刷新，根据你的观看历史生成个性化推荐。</string>
+    <string name="recommend_model_downloading">模型正在下载（%1$s）。</string>
+    <string name="recommend_model_waiting">等待中</string>
+    <string name="recommend_model_missing">下载设备端模型即可获得个性化推荐，数据不会离开你的手机。</string>
+    <string name="recommend_setup">前往设置</string>
+    <string name="recommend_see_all">查看全部</string>
+    <string name="recommend_about">Gemma 4 E2B 通过 LiteRT-LM 完全在本设备上运行，你的观看历史不会发送到任何地方。模型文件约 %1$s，只需从 Hugging Face（%2$s，Apache 2.0）下载一次，设备需要至少 6 GB 内存。</string>
+    <string name="recommend_model_installed">模型已安装（%1$s）。</string>
+    <string name="recommend_delete_model">删除模型</string>
+    <string name="recommend_phase_wait_wifi">正在等待 Wi-Fi 连接</string>
+    <string name="recommend_phase_wait_net">正在等待网络连接</string>
+    <string name="recommend_phase_downloading">正在下载 %1$s / %2$s</string>
+    <string name="recommend_phase_verifying">正在校验文件</string>
+    <string name="recommend_phase_importing">正在导入 %1$s</string>
+    <string name="recommend_cancel">取消</string>
+    <string name="recommend_wifi_only">仅通过 Wi-Fi 下载</string>
+    <string name="recommend_retry_download">重试下载</string>
+    <string name="recommend_download_model">下载模型（%1$s）</string>
+    <string name="recommend_use_file">使用设备上的文件</string>
+    <string name="recommend_hf_token">Hugging Face 令牌（可选）</string>
+    <string name="recommend_hf_token_hint">仅在 Hugging Face 要求时才需要，仅保存在此设备上。</string>
+    <string name="recommend_problem_ram">此设备内存为 %1$s GB，模型需要至少 6 GB 内存的设备。</string>
+    <string name="recommend_problem_32bit">设备端模型需要 64 位设备，此设备仅支持 32 位。</string>
+    <string name="recommend_problem_space">存储空间不足：需要 %1$s，可用 %2$s。</string>
+    <string name="recommend_err_no_history">请先观看或收藏一些番剧，这样才能据此推荐。</string>
+    <string name="recommend_err_no_results">模型没有给出目前可以观看的推荐。请尝试刷新。</string>
+    <string name="recommend_err_generic">无法生成推荐。</string>
+    <string name="recommend_import_too_small">该文件太小，不可能是模型文件。</string>
+    <string name="recommend_import_no_space">存储空间不足，无法导入：需要 %1$s，可用 %2$s。</string>
+    <string name="recommend_import_open_failed">无法打开所选文件。</string>
+    <string name="recommend_import_failed">导入失败：%1$s</string>
+    <string name="recommend_store_failed">无法保存模型文件。</string>
+    <string name="recommend_wrong_size">下载的文件大小不正确，已被丢弃。</string>
+    <string name="recommend_checksum_mismatch">校验和不匹配，文件已被丢弃。请重试。</string>
+    <string name="recommend_network_error">网络错误：%1$s。点按下载即可继续。</string>
+    <string name="recommend_auth_failed">Hugging Face 拒绝了下载（HTTP %1$d）。请在设置中添加有效的访问令牌。</string>
+    <string name="recommend_notif_downloading">正在下载设备端模型</string>
+    <string name="recommend_notif_verifying">正在校验模型</string>
+    <string name="recommend_notif_channel">模型下载</string>
+</resources>

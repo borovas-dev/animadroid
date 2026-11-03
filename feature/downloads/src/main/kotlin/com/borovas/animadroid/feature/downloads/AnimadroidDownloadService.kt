@@ -92,12 +92,12 @@ class AnimadroidDownloadService : DownloadService(
         val avg = if (percents.isEmpty()) -1f else percents.average().toFloat()
 
         val title = when {
-            active.isEmpty() && paused.isNotEmpty() -> "Downloads paused"
-            active.size > 1 -> "Downloading ${active.size} episodes"
-            else -> "Downloading episode"
+            active.isEmpty() && paused.isNotEmpty() -> getString(R.string.downloads_notif_paused)
+            active.size > 1 -> resources.getQuantityString(R.plurals.downloads_notif_downloading_many, active.size, active.size)
+            else -> getString(R.string.downloads_notif_downloading_one)
         }
         val text = when {
-            notMetRequirements != 0 && active.isNotEmpty() -> "Waiting for Wi-Fi"
+            notMetRequirements != 0 && active.isNotEmpty() -> getString(R.string.downloads_notif_waiting_wifi)
             label.isNotEmpty() -> label
             else -> ""
         }
@@ -114,9 +114,9 @@ class AnimadroidDownloadService : DownloadService(
             .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
             .setCategory(NotificationCompat.CATEGORY_PROGRESS)
         if (active.isNotEmpty()) b.setProgress(100, avg.coerceAtLeast(0f).toInt(), avg < 0f)
-        if (active.isNotEmpty()) b.addAction(0, "Pause all", action(ACTION_PAUSE_ALL, 1))
-        if (paused.isNotEmpty()) b.addAction(0, "Resume all", action(ACTION_RESUME_ALL, 2))
-        b.addAction(0, "Cancel all", action(ACTION_CANCEL_ALL, 3))
+        if (active.isNotEmpty()) b.addAction(0, getString(R.string.downloads_notif_pause_all), action(ACTION_PAUSE_ALL, 1))
+        if (paused.isNotEmpty()) b.addAction(0, getString(R.string.downloads_notif_resume_all), action(ACTION_RESUME_ALL, 2))
+        b.addAction(0, getString(R.string.downloads_notif_cancel_all), action(ACTION_CANCEL_ALL, 3))
         return b.build()
     }
 

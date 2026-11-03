@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="player_source">Źródło: %1$s</string>
+    <string name="player_source_fallback">Źródło: %1$s (zapasowe)</string>
+    <string name="player_quality_auto">Auto</string>
+    <string name="player_closed_captions">Napisy dla niesłyszących</string>
+    <string name="player_subtitles">Napisy</string>
+    <string name="player_quality">Jakość</string>
+    <string name="player_speed">Prędkość</string>
+    <string name="player_speed_normal">Normalna</string>
+    <string name="player_pause">Wstrzymaj</string>
+    <string name="player_play">Odtwórz</string>
+    <string name="player_next_episode">Następny odcinek</string>
+    <string name="player_skip_ending">Pomiń zakończenie</string>
+    <string name="player_skip_opening">Pomiń czołówkę</string>
+    <string name="player_error_playback">Błąd odtwarzania</string>
+    <string name="player_error_cannot_start">Nie można uruchomić odtwarzacza</string>
+    <string name="player_error_stream">Nie udało się wczytać strumienia</string>
+    <string name="player_error_switch_quality">Nie udało się zmienić jakości</string>
+    <string name="player_error_no_stream">Nie znaleziono strumienia do odtworzenia</string>
+    <string name="player_error_cloudflare">Zablokowane przez Cloudflare. Rozwiąż weryfikację i spróbuj ponownie.</string>
+    <string name="player_tune">Jakość, napisy i prędkość</string>
+    <string name="player_previous_episode">Poprzedni odcinek</string>
+    <string name="player_skipped_intro">Pominięto czołówkę</string>
+    <string name="player_skipped_outro">Pominięto zakończenie</string>
+    <string name="player_undo_skip">Cofnij</string>
+    <string name="player_dub">Lektor (generowany)</string>
+    <string name="player_dub_voice_missing">Brak głosu offline dla tego języka</string>
+    <string name="player_dub_install_voice">Zainstaluj dane głosu</string>
+    <string name="player_dub_install_failed">Nie można otworzyć instalatora danych głosu</string>
+    <string name="player_dub_unsupported">Twój syntezator mowy nie obsługuje tego języka</string>
+    <string name="player_dub_no_engine">Nie zainstalowano syntezatora mowy</string>
+    <string name="player_dub_no_subtitles">Lektor potrzebuje napisów, a dla tego odcinka ich brak</string>
+    <string name="player_dub_hint">Wybierz Dubbing; działa tylko, gdy nie ma nagranego dubbingu. Czyta napisy na głos (z serwisu w Twoim języku, w innym razie przetłumaczone).</string>
+</resources>

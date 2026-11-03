@@ -8,9 +8,9 @@ import com.borovas.animadroid.core.model.Anime
 import com.borovas.animadroid.core.model.LibraryRepository
 import com.borovas.animadroid.core.model.SettingsRepository
 import com.borovas.animadroid.core.model.TranslationMode
-import com.borovas.animadroid.provider.api.AnimeProvider
 import com.borovas.animadroid.provider.api.CloudflareChallengeException
 import com.borovas.animadroid.provider.api.CloudflareSolved
+import com.borovas.animadroid.provider.api.ProviderChain
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,7 +30,8 @@ sealed interface SearchResults {
     data object Idle : SearchResults
     data object Loading : SearchResults
     data class Success(val items: List<Anime>) : SearchResults
-    data class Error(val message: String, val cloudflareUrl: String? = null) : SearchResults
+    /** [message] null = show a localized default (generic failure, or "no provider" when [noProvider]); [cloudflareUrl] set = browser check needed. */
+    data class Error(val message: String?, val cloudflareUrl: String? = null, val noProvider: Boolean = false) : SearchResults
 }
 
 data class SearchUiState(
@@ -42,7 +43,7 @@ data class SearchUiState(
 
 @HiltViewModel
 class SearchViewModel @Inject constructor(
-    private val providers: Map<String, @JvmSuppressWildcards AnimeProvider>,
+    private val chain: ProviderChain,
     private val library: LibraryRepository,
     private val settings: SettingsRepository,
 ) : ViewModel() {
@@ -90,24 +91,31 @@ class SearchViewModel @Inject constructor(
         results.value = SearchResults.Loading
         job = viewModelScope.launch {
             val s = settings.settings.first()
-            val provider = providers[s.providerId] ?: providers.values.firstOrNull()
-            if (provider == null) {
-                results.value = SearchResults.Error("No anime provider is available.")
+            if (chain.chainFor(s).isEmpty()) {
+                results.value = SearchResults.Error(null, noProvider = true)
                 return@launch
             }
             results.value = try {
                 val m = modeOverride ?: s.mode
-                val found = provider.search(q, m)
-                // Dub mode only lists shows that actually have dubbed episodes (when the count is known).
-                SearchResults.Success(if (m == TranslationMode.DUB) found.filter { (it.dubEpisodes ?: if (it.subEpisodes == null) 1 else 0) > 0 } else found)
+                val found = chain.search(q, m)
+                SearchResults.Success(
+                    if (m == TranslationMode.DUB) found.filter { dubModeVisible(it, chain.provider(it.providerId)?.reportsDubAvailability == true, s.dubEnabled) } else found,
+                )
             } catch (e: CancellationException) {
                 throw e
             } catch (e: CloudflareChallengeException) {
-                SearchResults.Error("Cloudflare is asking for a browser check.", e.url)
+                SearchResults.Error(null, e.url)
             } catch (e: Exception) {
-                SearchResults.Error(e.message ?: "Search failed.")
+                SearchResults.Error(e.message)
             }
         }
     }
 }
 
+
+/**
+ * Whether a search hit is listed in DUB mode. With the generated voice-over on, every show is (it can be read from its subtitles).
+ * Otherwise only shows with a recorded dub; when the provider can't say ([providerKnowsDubs] false) the show stays visible.
+ */
+internal fun dubModeVisible(anime: Anime, providerKnowsDubs: Boolean, voiceOverEnabled: Boolean): Boolean =
+    voiceOverEnabled || !providerKnowsDubs || (anime.dubEpisodes ?: 0) > 0

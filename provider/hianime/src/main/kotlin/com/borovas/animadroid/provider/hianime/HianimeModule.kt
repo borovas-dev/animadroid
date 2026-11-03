@@ -6,6 +6,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import dagger.multibindings.StringKey
+import com.borovas.animadroid.core.remoteconfig.RemoteConfigRepository
 import com.borovas.animadroid.provider.api.AnimeProvider
 import javax.inject.Singleton
 import okhttp3.OkHttpClient
@@ -17,5 +18,6 @@ object HianimeModule {
     @Singleton
     @IntoMap
     @StringKey(HianimeProvider.ID)
-    fun hianimeProvider(client: OkHttpClient): AnimeProvider = HianimeProvider(client)
+    fun hianimeProvider(client: OkHttpClient, remote: RemoteConfigRepository): AnimeProvider =
+        HianimeProvider(client) { remote.forProvider(HianimeProvider.ID) }
 }

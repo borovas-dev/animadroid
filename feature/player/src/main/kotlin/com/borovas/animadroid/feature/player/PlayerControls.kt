@@ -2,6 +2,8 @@
 
 package com.borovas.animadroid.feature.player
 
+import com.borovas.animadroid.core.designsystem.R as DR
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -55,6 +57,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.focus.focusRequester
 import com.borovas.animadroid.core.model.SkipTimes
 import kotlinx.coroutines.flow.StateFlow
 import java.util.Locale
@@ -82,6 +85,7 @@ internal fun PlayerControls(
     onInteraction: () -> Unit,
     modifier: Modifier = Modifier,
     scrubPreview: ScrubPreviewSource? = null,
+    playFocus: androidx.compose.ui.focus.FocusRequester? = null,
 ) {
     val iconColors = IconButtonDefaults.iconButtonColors(contentColor = Color.White)
     Box(
@@ -95,7 +99,7 @@ internal fun PlayerControls(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (!locked) {
-                IconButton(onBack, colors = iconColors) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back") }
+                IconButton(onBack, colors = iconColors) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(DR.string.common_back)) }
                 Text(
                     state.title, color = Color.White, style = MaterialTheme.typography.titleMedium,
                     maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f),
@@ -107,7 +111,7 @@ internal fun PlayerControls(
                 Icon(if (locked) Icons.Rounded.Lock else Icons.Rounded.LockOpen, if (locked) "Unlock" else "Lock")
             }
             if (!locked) {
-                IconButton(onSettings, colors = iconColors) { Icon(Icons.Rounded.Tune, "Quality, subtitles and speed") }
+                IconButton(onSettings, colors = iconColors) { Icon(Icons.Rounded.Tune, stringResource(R.string.player_tune)) }
             }
         }
 
@@ -119,22 +123,22 @@ internal fun PlayerControls(
                 horizontalArrangement = Arrangement.spacedBy(32.dp),
             ) {
                 IconButton(onPrevious, enabled = state.hasPrevious, colors = iconColors, modifier = Modifier.size(56.dp)) {
-                    Icon(Icons.Rounded.SkipPrevious, "Previous episode", Modifier.size(36.dp))
+                    Icon(Icons.Rounded.SkipPrevious, stringResource(R.string.player_previous_episode), Modifier.size(36.dp))
                 }
                 FilledIconToggleButton(
                     checked = state.isPlaying,
                     onCheckedChange = { onPlayPause() },
                     shapes = IconButtonDefaults.toggleableShapes(),
-                    modifier = Modifier.size(84.dp),
+                    modifier = Modifier.size(84.dp).then(if (playFocus != null) Modifier.focusRequester(playFocus) else Modifier),
                 ) {
                     Icon(
                         if (state.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                        if (state.isPlaying) "Pause" else "Play",
+                        stringResource(if (state.isPlaying) R.string.player_pause else R.string.player_play),
                         Modifier.size(44.dp),
                     )
                 }
                 IconButton(onNext, enabled = state.hasNext, colors = iconColors, modifier = Modifier.size(56.dp)) {
-                    Icon(Icons.Rounded.SkipNext, "Next episode", Modifier.size(36.dp))
+                    Icon(Icons.Rounded.SkipNext, stringResource(R.string.player_next_episode), Modifier.size(36.dp))
                 }
             }
 
@@ -216,6 +220,8 @@ internal fun PlayerSettingsSheet(
     onSubtitle: (TextTrackOption?) -> Unit,
     onTranslated: () -> Unit,
     onSpeed: (Float) -> Unit,
+    onDubEnabled: (Boolean) -> Unit,
+    onInstallVoice: () -> Unit,
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(
@@ -223,16 +229,16 @@ internal fun PlayerSettingsSheet(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             if (state.qualityOptions.size > 1) {
-                Text("Quality", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.player_quality), style = MaterialTheme.typography.titleMedium)
                 ChipRow {
                     state.qualityOptions.forEach { q ->
                         FilterChip(selected = state.selectedHeight == q.height, onClick = { onQuality(q.height) }, label = { Text(q.label) })
                     }
                 }
             }
-            Text("Subtitles", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.player_subtitles), style = MaterialTheme.typography.titleMedium)
             ChipRow {
-                FilterChip(selected = state.textOff && !state.translatedSelected, onClick = { onSubtitle(null) }, label = { Text("Off") })
+                FilterChip(selected = state.textOff && !state.translatedSelected, onClick = { onSubtitle(null) }, label = { Text(stringResource(DR.string.common_off)) })
                 state.textTracks.forEach { t ->
                     FilterChip(
                         selected = !state.textOff && t.selected && !state.translatedSelected,
@@ -243,10 +249,21 @@ internal fun PlayerSettingsSheet(
                     FilterChip(selected = state.translatedSelected, onClick = onTranslated, label = { Text(tr.label) })
                 }
             }
-            Text("Speed", style = MaterialTheme.typography.titleMedium)
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(stringResource(R.string.player_dub), style = MaterialTheme.typography.titleMedium)
+                androidx.compose.material3.Switch(checked = state.dubEnabled, onCheckedChange = onDubEnabled)
+            }
+            Text(stringResource(R.string.player_dub_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (state.dubEnabled && state.dubVoiceMissing) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(stringResource(R.string.player_dub_voice_missing), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                    androidx.compose.material3.TextButton(onInstallVoice) { Text(stringResource(R.string.player_dub_install_voice)) }
+                }
+            }
+            Text(stringResource(R.string.player_speed), style = MaterialTheme.typography.titleMedium)
             ChipRow {
                 speeds.forEach { s ->
-                    FilterChip(selected = state.speed == s, onClick = { onSpeed(s) }, label = { Text(if (s == 1f) "Normal" else "${s}x") })
+                    FilterChip(selected = state.speed == s, onClick = { onSpeed(s) }, label = { Text(if (s == 1f) stringResource(R.string.player_speed_normal) else "${s}x") })
                 }
             }
         }

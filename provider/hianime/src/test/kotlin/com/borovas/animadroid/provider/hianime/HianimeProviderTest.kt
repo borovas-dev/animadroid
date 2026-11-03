@@ -1,6 +1,7 @@
 package com.borovas.animadroid.provider.hianime
 
 import com.borovas.animadroid.core.model.Anime
+import com.borovas.animadroid.core.remoteconfig.ProviderRemoteConfig
 import com.borovas.animadroid.core.model.Episode
 import com.borovas.animadroid.core.model.TranslationMode
 import com.borovas.animadroid.core.network.CloudflareInterceptor
@@ -26,10 +27,12 @@ class HianimeProviderTest {
 
     private fun res(name: String) = javaClass.classLoader!!.getResource(name)!!.readText()
     private fun b64(s: String) = Base64.getEncoder().encodeToString(s.toByteArray())
-    private fun provider(): HianimeProvider = HianimeProvider(
-        OkHttpClient.Builder().addInterceptor(CloudflareInterceptor()).build(),
-        server.url("/").toString().trimEnd('/'),
-    )
+    private fun origin() = server.url("/").toString().trimEnd('/')
+    private fun provider(
+        base: () -> String = ::origin, mirrors: List<String>? = null, params: Map<String, String> = emptyMap(),
+    ): HianimeProvider = HianimeProvider(OkHttpClient.Builder().addInterceptor(CloudflareInterceptor()).build()) {
+        ProviderRemoteConfig(baseUrls = mirrors ?: listOf(base()), params = params)
+    }
 
     @Before fun setUp() {
         server = MockWebServer()
@@ -121,5 +124,36 @@ class HianimeProviderTest {
     @Test fun detailsNeverThrows() = runTest {
         cloudflare = true
         assertEquals(anime, provider().details(anime))
+    }
+
+    @Test fun baseUrlIsReadPerRequest() = runTest {
+        var base = "http://127.0.0.1:1"
+        val p = provider(base = { base })
+        try { p.search("x", TranslationMode.SUB); fail() } catch (_: com.borovas.animadroid.provider.api.ProviderException) {}
+        base = origin()
+        assertTrue(p.search("x", TranslationMode.SUB).isNotEmpty())
+    }
+
+    @Test fun mirrorIsTriedOnConnectionFailure() = runTest {
+        val p = provider(mirrors = listOf("http://127.0.0.1:1", origin()))
+        assertTrue(p.search("x", TranslationMode.SUB).isNotEmpty())
+    }
+
+    @Test fun serverNameParamIsUsed() = runTest {
+        try {
+            provider(params = mapOf("serverName" to "HD-1")).streams(anime, Episode("1", "1"), TranslationMode.SUB)
+            fail()
+        } catch (e: com.borovas.animadroid.provider.api.ProviderException) {
+            assertTrue(e.message!!.contains("HD-1"))
+        }
+    }
+
+    @Test fun xorKeyParamIsUsed() = runTest {
+        try {
+            provider(params = mapOf("xorKey" to "another-key")).streams(anime, Episode("1", "1"), TranslationMode.SUB)
+            fail()
+        } catch (e: com.borovas.animadroid.provider.api.ProviderException) {
+            assertTrue(e.message!!.contains("decode") || e.message!!.contains("config"))
+        }
     }
 }

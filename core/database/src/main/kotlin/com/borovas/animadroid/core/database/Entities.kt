@@ -4,6 +4,8 @@ import androidx.room3.Entity
 import androidx.room3.PrimaryKey
 import com.borovas.animadroid.core.model.Anime
 import com.borovas.animadroid.core.model.EpisodeProgress
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.decodeFromString
 
 @Entity(tableName = "anime", primaryKeys = ["providerId", "animeId"])
 data class AnimeEntity(
@@ -18,6 +20,8 @@ data class AnimeEntity(
     val isFavorite: Boolean = false,
     val favoritedAt: Long? = null,
     val lastWatchedAt: Long? = null,
+    /** JSON object {providerId: animeId} of [Anime.alternates]; null when none. */
+    val alternatesJson: String? = null,
 )
 
 @Entity(tableName = "episode_progress", primaryKeys = ["providerId", "animeId", "episodeNumber"])
@@ -58,11 +62,21 @@ data class DownloadEntity(
 fun AnimeEntity.toModel() = Anime(
     id = animeId, providerId = providerId, title = title, coverUrl = coverUrl, synopsis = synopsis,
     subEpisodes = subEpisodes, dubEpisodes = dubEpisodes, malId = malId,
+    alternates = decodeAlternates(alternatesJson),
 )
 
 fun Anime.toEntity() = AnimeEntity(
     providerId = providerId, animeId = id, title = title, coverUrl = coverUrl, synopsis = synopsis,
     malId = malId, subEpisodes = subEpisodes, dubEpisodes = dubEpisodes,
+    alternatesJson = encodeAlternates(alternates),
 )
 
 fun EpisodeProgressEntity.toModel() = EpisodeProgress(providerId, animeId, episodeNumber, positionMs, durationMs, updatedAt)
+
+private val alternatesJsonFormat = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
+
+internal fun encodeAlternates(map: Map<String, String>): String? =
+    map.takeIf { it.isNotEmpty() }?.let { alternatesJsonFormat.encodeToString<Map<String, String>>(it) }
+
+internal fun decodeAlternates(json: String?): Map<String, String> =
+    json?.let { runCatching { alternatesJsonFormat.decodeFromString<Map<String, String>>(it) }.getOrNull() } ?: emptyMap()

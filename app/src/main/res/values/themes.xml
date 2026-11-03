@@ -7,8 +7,8 @@
     </style>
 
     <style name="Theme.Animadroid.Splash" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">#FF1C1B20</item>
-        <item name="windowSplashScreenAnimatedIcon">@android:drawable/ic_media_play</item>
+        <item name="windowSplashScreenBackground">@color/ic_launcher_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
         <item name="postSplashScreenTheme">@style/Theme.Animadroid</item>
     </style>
 </resources>
