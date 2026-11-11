@@ -1,6 +1,6 @@
 [versions]
 agp = "9.6.0-alpha02"
-kotlin = "2.5.0-Beta2"
+kotlin = "2.5.0-RC"
 ksp = "2.3.13"
 hilt = "2.60.1"
 hiltAndroidx = "1.4.0"
