@@ -28,7 +28,7 @@ junit = "4.13.2"
 turbine = "1.2.1"
 roborazzi = "1.77.0"
 robolectric = "4.17"
-androidxTestExt = "1.4.0-alpha03"
+androidxTestExt = "1.4.0-alpha04"
 
 [libraries]
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
