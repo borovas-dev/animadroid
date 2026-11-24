@@ -10,7 +10,9 @@ APP="com.borovas.animadroid$SUFFIX"
 adb install -r app/build/outputs/apk/debug/app-debug.apk >/dev/null
 adb install -r -t app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk >/dev/null
 rc=0
-for t in settingsTogglePersists homeRendersContinueWatching cloudflareErrorOffersVerification; do
+# Every non-@Ignore'd @Test in AppFlowTest, so new tests are picked up automatically.
+TESTS=$(awk '/Ignore/ {ign=1} /@Test fun / {if (!ign) {sub(/.*@Test fun /, ""); sub(/\(.*/, ""); print}; ign=0}' app/src/androidTest/kotlin/com/borovas/animadroid/AppFlowTest.kt)
+for t in $TESTS; do
   echo "== $t"
   timeout 120 adb shell am instrument -w -e class "com.borovas.animadroid.AppFlowTest#$t" "$APP.test/com.borovas.animadroid.HiltTestRunner" | tail -4 || rc=1
   adb shell am force-stop "$APP.test"; adb shell am force-stop "$APP"
