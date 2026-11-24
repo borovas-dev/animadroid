@@ -2,18 +2,23 @@ package com.borovas.animadroid
 
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performImeAction
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.performTextInput
 import com.borovas.animadroid.core.model.Anime
 import com.borovas.animadroid.core.model.LibraryRepository
 import com.borovas.animadroid.core.model.SettingsRepository
 import com.borovas.animadroid.core.model.SkipBehavior
 import com.borovas.animadroid.core.model.TranslationMode
+import com.borovas.animadroid.provider.api.ProviderChain
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import javax.inject.Inject
@@ -40,6 +45,7 @@ class AppFlowTest {
 
     @Inject lateinit var library: LibraryRepository
     @Inject lateinit var settings: SettingsRepository
+    @Inject lateinit var chain: ProviderChain
 
     @Before fun setUp() {
         // Root cause of the old "instrumentation hangs" (not the shared emulator): the app has endless animations
@@ -48,7 +54,9 @@ class AppFlowTest {
         // Drive the clock by hand instead (see [waitForText]).
         hilt.inject()
         runBlocking {
-            settings.update { it.copy(skipBehavior = SkipBehavior.AUTO, mode = TranslationMode.SUB) }
+            // Only the fake provider may answer: the other (real) providers would hit the network and hide its failures.
+            val others = chain.ids.toSet() - FakeProviderModule.instance.id
+            settings.update { it.copy(skipBehavior = SkipBehavior.AUTO, mode = TranslationMode.SUB, disabledProviders = others) }
             library.removeFromHistory(FakeProviderModule.instance.id, FakeProviderModule.instance.anime.id)
         }
         scenario = androidx.test.core.app.ActivityScenario.launch(MainActivity::class.java)
@@ -80,6 +88,23 @@ class AppFlowTest {
         waitForInput()
         lastInput().performTextInput(q); settle()
         lastInput().performImeAction(); settle()
+    }
+
+    /**
+     * Settings is a LazyColumn: rows below the fold are not composed until scrolled to. [androidx.compose.ui.test.performScrollToNode]
+     * waits for idleness, which never happens with the manual clock, so invoke the ScrollToIndex semantics action directly.
+     */
+    private fun scrollSettingsTo(text: String) {
+        val lists = compose.onAllNodes(
+            hasScrollToIndexAction() and SemanticsMatcher.keyIsDefined(SemanticsProperties.VerticalScrollAxisRange),
+        )
+        for (index in 0..40) {
+            if (compose.onAllNodes(hasText(text, substring = true)).fetchSemanticsNodes().isNotEmpty()) return
+            val list = lists.fetchSemanticsNodes().last()
+            compose.runOnUiThread { list.config[SemanticsActions.ScrollToIndex].action?.invoke(index) }
+            settle()
+        }
+        throw AssertionError("'$text' not reachable by scrolling Settings")
     }
 
     private fun waitForText(text: String, timeoutMs: Long = 15_000) {
@@ -125,7 +150,7 @@ class AppFlowTest {
     @Test fun settingsTogglePersists() {
         waitForText("Home")
         tab("Settings")
-        waitForText("Show button")
+        scrollSettingsTo("Show button")
         compose.onNodeWithText("Show button").performClick(); settle()
         val end = System.currentTimeMillis() + 5_000
         while (runBlocking { settings.settings.first().skipBehavior } != SkipBehavior.BUTTON) {
@@ -135,6 +160,7 @@ class AppFlowTest {
         scenario.recreate()
         assertEquals(SkipBehavior.BUTTON, runBlocking { settings.settings.first().skipBehavior })
         tab("Settings")
+        scrollSettingsTo("Show button")
         waitForText("Show button")
     }
 

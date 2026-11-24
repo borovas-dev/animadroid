@@ -20,14 +20,16 @@ jobs:
           new=$(printf 'commit=%s\nscript_sha256=%s\n' "$sha" "$hash")
           echo "sha=$sha" >> "$GITHUB_OUTPUT"
           echo "hash=$hash" >> "$GITHUB_OUTPUT"
-          if [ "$new" = "$(cat .github/upstream-ani-cli.txt)" ]; then echo "changed=false" >> "$GITHUB_OUTPUT"; else echo "changed=true" >> "$GITHUB_OUTPUT"; fi
+          # Only the script itself matters to the providers; docs/CI-only upstream commits change `commit=` but not the hash.
+          old_hash=$(sed -n 's/^script_sha256=//p' .github/upstream-ani-cli.txt)
+          if [ "$hash" = "$old_hash" ]; then echo "changed=false" >> "$GITHUB_OUTPUT"; else echo "changed=true" >> "$GITHUB_OUTPUT"; fi
           printf '%s\n' "$new" > "$RUNNER_TEMP/new.txt"
       - name: Open issue
         if: steps.cmp.outputs.changed == 'true'
         env: { GH_TOKEN: "${{ github.token }}" }
         run: |
           old=$(sed -n 's/^commit=//p' .github/upstream-ani-cli.txt)
-          gh issue create --title "ani-cli changed upstream ($(echo "${{ steps.cmp.outputs.sha }}" | cut -c1-7))" \
+          new_url=$(gh issue create --title "ani-cli changed upstream ($(echo "${{ steps.cmp.outputs.sha }}" | cut -c1-7))" \
             --body "pystardust/ani-cli master moved from \`$old\` to \`${{ steps.cmp.outputs.sha }}\` (script sha256 \`${{ steps.cmp.outputs.hash }}\`).
 
           Compare: https://github.com/pystardust/ani-cli/compare/${old}...${{ steps.cmp.outputs.sha }}
@@ -37,4 +39,10 @@ jobs:
           \`\`\`
           commit=${{ steps.cmp.outputs.sha }}
           script_sha256=${{ steps.cmp.outputs.hash }}
-          \`\`\`"
+          \`\`\`")
+          # Only the latest upstream alert stays open: close the older ones, pointing at the new one.
+          new_number=${new_url##*/}
+          for n in $(gh issue list --state open --search "ani-cli changed upstream in:title" --json number --jq '.[].number'); do
+            [ "$n" = "$new_number" ] && continue
+            gh issue close "$n" --comment "Superseded by #$new_number."
+          done
