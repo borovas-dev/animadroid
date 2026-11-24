@@ -29,10 +29,7 @@ jobs:
         env: { GH_TOKEN: "${{ github.token }}" }
         run: |
           old=$(sed -n 's/^commit=//p' .github/upstream-ani-cli.txt)
-          if gh issue list --state open --search "ani-cli changed upstream in:title" --json number --jq 'length' | grep -qv '^0$'; then
-            echo "An upstream-change issue is already open; not opening another."; exit 0
-          fi
-          gh issue create --title "ani-cli changed upstream ($(echo "${{ steps.cmp.outputs.sha }}" | cut -c1-7))" \
+          new_url=$(gh issue create --title "ani-cli changed upstream ($(echo "${{ steps.cmp.outputs.sha }}" | cut -c1-7))" \
             --body "pystardust/ani-cli master moved from \`$old\` to \`${{ steps.cmp.outputs.sha }}\` (script sha256 \`${{ steps.cmp.outputs.hash }}\`).
 
           Compare: https://github.com/pystardust/ani-cli/compare/${old}...${{ steps.cmp.outputs.sha }}
@@ -42,4 +39,10 @@ jobs:
           \`\`\`
           commit=${{ steps.cmp.outputs.sha }}
           script_sha256=${{ steps.cmp.outputs.hash }}
-          \`\`\`"
+          \`\`\`")
+          # Only the latest upstream alert stays open: close the older ones, pointing at the new one.
+          new_number=${new_url##*/}
+          for n in $(gh issue list --state open --search "ani-cli changed upstream in:title" --json number --jq '.[].number'); do
+            [ "$n" = "$new_number" ] && continue
+            gh issue close "$n" --comment "Superseded by #$new_number."
+          done

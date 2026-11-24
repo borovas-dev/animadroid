@@ -1,0 +1,36 @@
+name: live-smoke
+# Weekly: do the providers still work against the real sites? Skipped tests locally; enabled here via LIVE_TESTS=1.
+on:
+  schedule: [{ cron: "0 7 * * 1" }]
+  workflow_dispatch:
+permissions:
+  contents: read
+  issues: write
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # animefire (beta) is left out: its API answers HTTP 403 to this client; add it back once that is solved. shinden has its own gate (SHINDEN_LIVE, Cloudflare).
+        provider: [hianime, anilibria, animeparadise, kickassanime]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with: { distribution: temurin, java-version: 25 }
+      - uses: android-actions/setup-android@v4
+      - run: sdkmanager "platforms;android-37.2" "build-tools;37.0.0"
+      - uses: gradle/actions/setup-gradle@v6
+      - name: Live smoke test
+        env: { LIVE_TESTS: "1" }
+        run: ./gradlew :provider:${{ matrix.provider }}:testDebugUnitTest --tests '*LiveSmokeTest*' --stacktrace
+      - name: Report failure
+        if: failure()
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          title="Live smoke failing: ${{ matrix.provider }}"
+          if [ "$(gh issue list --state open --search "$title in:title" --json number --jq length)" = "0" ]; then
+            gh issue create --title "$title" --body "The weekly live smoke test for \`${{ matrix.provider }}\` failed: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+          The site may be down or have changed (domain, key, markup). Check \`config/providers.json\` (see config/README.md) or the provider code."
+          fi
