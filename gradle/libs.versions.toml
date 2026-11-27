@@ -1,5 +1,5 @@
 [versions]
-agp = "9.6.0-alpha06"
+agp = "9.6.0-alpha07"
 kotlin = "2.5.0-RC2"
 ksp = "2.3.14"
 hilt = "2.60.1"
